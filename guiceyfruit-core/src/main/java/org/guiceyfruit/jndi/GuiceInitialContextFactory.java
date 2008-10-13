@@ -16,29 +16,22 @@
 
 package org.guiceyfruit.jndi;
 
-import com.google.common.collect.Lists;
-import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.name.Names;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import java.util.StringTokenizer;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
-import org.guiceyfruit.jndi.internal.Classes;
+import org.guiceyfruit.Injectors;
 import org.guiceyfruit.jndi.internal.JndiContext;
 
 /**
  * A factory of the Guice JNDI provider which creates an injector from all the available modules
- * specified in the space separated {@link #MODULE_CLASS_NAMES} property.
+ * specified in the space separated {@link Injectors#MODULE_CLASS_NAMES} property.
  *
  * For more details of how this JNDI provider works see
  * <a href="http://code.google.com/p/camel-extra/wiki/GuiceJndi">the wiki documentation</a>
@@ -46,7 +39,6 @@ import org.guiceyfruit.jndi.internal.JndiContext;
  * @version $Revision: 656978 $
  */
 public class GuiceInitialContextFactory implements InitialContextFactory {
-  public static final String MODULE_CLASS_NAMES = "com.google.inject.modules";
   public static final String NAME_PREFIX = "com.google.inject.jndi/";
 
   /**
@@ -58,28 +50,7 @@ public class GuiceInitialContextFactory implements InitialContextFactory {
    */
   public Context getInitialContext(final Hashtable environment) throws NamingException {
     try {
-      List<Module> modules = Lists.newArrayList();
-
-      // lets bind the properties 
-      modules.add(new AbstractModule() {
-        protected void configure() {
-          Names.bindProperties(binder(), environment);
-        }
-      });
-
-      Object moduleValue = environment.get(MODULE_CLASS_NAMES);
-      if (moduleValue instanceof String) {
-        String names = (String) moduleValue;
-        StringTokenizer iter = new StringTokenizer(names);
-        while (iter.hasMoreTokens()) {
-          String moduleName = iter.nextToken();
-          Module module = loadModule(moduleName);
-          if (module != null) {
-            modules.add(module);
-          }
-        }
-      }
-      Injector injector = Guice.createInjector(modules);
+      Injector injector = Injectors.createInjector(environment);
       Context context = null;
       Binding<Context> binding = null;
       try {
@@ -125,12 +96,6 @@ public class GuiceInitialContextFactory implements InitialContextFactory {
       }
     }
     return answer;
-  }
-
-  private Module loadModule(String moduleName)
-      throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-    Class<?> type = Classes.loadClass(moduleName, GuiceInitialContextFactory.class.getClassLoader());
-    return (Module) type.newInstance();
   }
 
 }
