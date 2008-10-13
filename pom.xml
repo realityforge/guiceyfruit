@@ -12,4 +12,56 @@
     <module>guice</module>
     <!-- <module>guiceyfruit-spring-converter</module> -->
   </modules>
+
+  <build>  
+    <defaultGoal>install</defaultGoal>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <source>1.5</source>
+            <target>1.5</target>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-idea-plugin</artifactId>
+          <configuration>
+            <downloadSources>true</downloadSources>
+            <downloadJavadocs>true</downloadJavadocs>
+          </configuration>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-release-plugin</artifactId>
+            <configuration>
+                <tagBase>https://guiceyfruit.googlecode.com/svn/tags</tagBase>
+                <useReleaseProfile>false</useReleaseProfile>
+                <preparationGoals>clean install</preparationGoals>
+                <goals>deploy</goals>
+                <arguments>-Prelease,deploy</arguments>
+                <autoVersionSubmodules>true</autoVersionSubmodules>
+            </configuration>
+        </plugin>
+
+
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!--forkMode>pertest</forkMode-->
+          <childDelegation>false</childDelegation>
+          <useFile>true</useFile>
+          <failIfNoTests>false</failIfNoTests>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
