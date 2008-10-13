@@ -39,7 +39,7 @@ import org.guiceyfruit.jndi.internal.JndiContext;
  * @version $Revision: 656978 $
  */
 public class GuiceInitialContextFactory implements InitialContextFactory {
-  public static final String NAME_PREFIX = "com.google.inject.jndi/";
+  public static final String NAME_PREFIX = "org.guiceyfruit.jndi/";
 
   /**
    * Creates a new context with the given environment.
