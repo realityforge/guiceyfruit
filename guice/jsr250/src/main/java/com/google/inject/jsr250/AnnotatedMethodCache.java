@@ -18,7 +18,6 @@
 
 package com.google.inject.jsr250;
 
-import com.sun.tools.corba.se.idl.InvalidArgument;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -42,7 +41,7 @@ class AnnotatedMethodCache {
   /**
    * Looks up the method which is annotated for the given type
    */
-  public Method getMethod(Class<?> type) throws InvalidArgument {
+  public Method getMethod(Class<?> type) {
     // if we are invoked concurrently it doesn't matter if we look up the method
     // concurrently - its the same instance that will be overwritten in the map
     Method method = methodCache.get(type);
@@ -50,7 +49,7 @@ class AnnotatedMethodCache {
       method = findMethodWithAnnotation(type, annotationType);
       if (method != null) {
         if (method.getParameterTypes().length != 0) {
-          throw new InvalidArgument("Method should have no arguments for @PostConstruct " + method);
+          throw new IllegalArgumentException("Method should have no arguments for @PostConstruct " + method);
         }
         methodCache.put(type, method);
       }
