@@ -35,6 +35,13 @@
 
     <!-- test dependencies -->
 
+	  <dependency>
+      <groupId>${groupId}</groupId>
+      <artifactId>guice-core</artifactId>
+      <version>${version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

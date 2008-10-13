@@ -170,7 +170,9 @@
     <module>spring</module>
     <module>struts2-plugin</module>
 		<module>assistedinject</module>
-		<module>commands</module>
+		
+		<!-- TODO requires jarjar integration -->
+    <!-- <module>commands</module> -->
 		<module>multibindings</module>
 		<module>throwingproviders</module>
   </modules>
