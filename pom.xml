@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.guiceyfruit</groupId>
+  <artifactId>guice-mavenized</artifactId>
+  <version>2.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>GuiceyFruit Framework</name>
+
+  <modules>
+    <module>guice</module>
+    <!-- <module>guiceyfruit-spring-converter</module> -->
+  </modules>
+</project>
