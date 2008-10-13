@@ -9,6 +9,12 @@
   <name>GuiceyFruit Framework</name>
   <url>http://guiceyfruit.googlecode.com/</url>
 
+  <modules>
+    <module>guice</module>
+    <module>guiceyfruit-core</module>
+    <module>guiceyfruit-spring-converter</module>
+  </modules>
+
   <repositories>
     <repository>
       <id>guiceyfruit.release</id>
@@ -23,11 +29,25 @@
     </repository>
   </repositories>
 
-  <modules>
-    <module>guice</module>
-    <module>guiceyfruit-core</module>
-    <module>guiceyfruit-spring-converter</module>
-  </modules>
+  <distributionManagement>
+    <repository>
+      <id>guiceyfruit-release</id>
+      <name>Camel Extra Maven repository of releases</name>
+      <url>dav:https://guiceyfruit.googlecode.com/svn/maven2/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>guiceyfruit-snapshot</id>
+      <name>Camel Extra Maven repository of snapshots</name>
+      <url>dav:https://guiceyfruit.googlecode.com/svn/maven2/snapshots</url>
+      <uniqueVersion>false</uniqueVersion>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <scm>
+    <connection>scm:svn:http://guiceyfruit.googlecode.com/svn/trunk</connection>
+    <developerConnection>scm:svn:https://guiceyfruit.googlecode.com/svn/trunk</developerConnection>
+    <url>http://guiceyfruit.googlecode.com/svn/trunk/</url>
+  </scm>
 
   <dependencyManagement>
     <dependencies>
