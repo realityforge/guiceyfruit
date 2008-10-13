@@ -59,6 +59,7 @@ public class AllTests {
     suite.addTestSuite(InjectionPointTest.class);
     suite.addTestSuite(InjectorTest.class);
     suite.addTestSuite(IntegrationTest.class);
+    suite.addTestSuite(CloseTest.class);
     suite.addTestSuite(KeyTest.class);
     suite.addTestSuite(LoggerInjectionTest.class);
     suite.addTestSuite(ModuleTest.class);

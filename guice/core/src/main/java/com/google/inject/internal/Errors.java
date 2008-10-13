@@ -322,7 +322,7 @@ public final class Errors implements Serializable {
     return addMessage(null, messageFormat, arguments);
   }
 
-  private Errors addMessage(Throwable cause, String messageFormat, Object... arguments) {
+  public Errors addMessage(Throwable cause, String messageFormat, Object... arguments) {
     String message = format(messageFormat, arguments);
     addMessage(new Message(stripDuplicates(sources), message, cause));
     return this;

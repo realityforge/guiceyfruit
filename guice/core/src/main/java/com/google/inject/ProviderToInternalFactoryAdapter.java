@@ -18,12 +18,15 @@ package com.google.inject;
 
 import com.google.inject.internal.Errors;
 import com.google.inject.internal.ErrorsException;
+import com.google.inject.spi.Closeable;
 import com.google.inject.spi.Dependency;
+import com.google.inject.spi.Closer;
+import com.google.inject.spi.CloseErrors;
 
 /**
  * @author crazybob@google.com (Bob Lee)
  */
-class ProviderToInternalFactoryAdapter<T> implements Provider<T> {
+class ProviderToInternalFactoryAdapter<T> implements Provider<T>, Closeable {
 
   private final InjectorImpl injector;
   private final InternalFactory<? extends T> internalFactory;
@@ -47,6 +50,13 @@ class ProviderToInternalFactoryAdapter<T> implements Provider<T> {
       return t;
     } catch (ErrorsException e) {
       throw new ProvisionException(errors.merge(e.getErrors()));
+    }
+  }
+
+  public void close(Closer closer, CloseErrors errors) {
+    if (internalFactory instanceof Closeable) {
+      Closeable closeable = (Closeable) internalFactory;
+      closeable.close(closer, errors);
     }
   }
 

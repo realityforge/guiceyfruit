@@ -20,7 +20,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.Maps;
 import com.google.inject.internal.Errors;
 import com.google.inject.internal.ErrorsException;
+import com.google.inject.spi.AnnotationProviderFactory;
 import com.google.inject.spi.InjectionPoint;
+import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -57,6 +59,14 @@ class CreationTimeMemberInjector {
       Set<InjectionPoint> injectionPoints) {
     checkNotNull(source);
     outstandingInjections.put(instance, source);
+  }
+
+  /**
+   * Finds all the instances of the {@link com.google.inject.spi.AnnotationProviderFactory} instances
+   * which are registered to provide custom annotation driven injection points
+   */
+  public Map<Class<? extends Annotation>, AnnotationProviderFactory> annotationProviderFactories() {
+    return injector.annotationProviderFactories();
   }
 
   /**

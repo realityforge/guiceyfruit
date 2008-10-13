@@ -40,6 +40,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * A constructor, field or method that can receive injections. Typically this is a member with the
@@ -53,37 +56,53 @@ public final class InjectionPoint implements Serializable {
   private final boolean optional;
   private final Member member;
   private final ImmutableList<Dependency<?>> dependencies;
+  private final AnnotationProviderFactory<?> annotationProviderFactory;
+
+  static InjectionPoint customInjectionPoint(Member member, AnnotationProviderFactory<?> annotationProviderFactory) {
+    if (member instanceof Field) {
+      return new InjectionPoint((Field) member, false, annotationProviderFactory);
+    }
+    else {
+      return new InjectionPoint((Method) member, false, annotationProviderFactory);
+    }
+  }
 
   private InjectionPoint(Member member,
       ImmutableList<Dependency<?>> dependencies, boolean optional) {
     this.member = member;
     this.dependencies = dependencies;
     this.optional = optional;
+    this.annotationProviderFactory = null;
   }
 
-  InjectionPoint(Method method) {
+  InjectionPoint(Method method, boolean optional,
+      AnnotationProviderFactory<?> annotationProviderFactory) {
     this.member = method;
-
-    Inject inject = method.getAnnotation(Inject.class);
-    this.optional = inject.optional();
+    this.optional = optional;
+    this.annotationProviderFactory = annotationProviderFactory;
 
     this.dependencies = forMember(method, method.getGenericParameterTypes(),
         method.getParameterAnnotations());
   }
 
+  InjectionPoint(Method method) {
+    this(method, method.getAnnotation(Inject.class).optional(), null);
+  }
+
   InjectionPoint(Constructor<?> constructor) {
     this.member = constructor;
     this.optional = false;
+    this.annotationProviderFactory = null;
     // TODO(jessewilson): make sure that if @Inject it exists, its not optional
     this.dependencies = forMember(constructor, constructor.getGenericParameterTypes(),
         constructor.getParameterAnnotations());
   }
 
-  InjectionPoint(Field field) {
+  InjectionPoint(Field field, boolean optional,
+      AnnotationProviderFactory<?> annotationProviderFactory) {
     this.member = field;
-
-    Inject inject = field.getAnnotation(Inject.class);
-    this.optional = inject.optional();
+    this.optional = optional;
+    this.annotationProviderFactory = annotationProviderFactory;
 
     Annotation[] annotations = field.getAnnotations();
 
@@ -98,6 +117,10 @@ public final class InjectionPoint implements Serializable {
 
     this.dependencies = ImmutableList.<Dependency<?>>of(
         newDependency(key, Nullability.allowsNull(annotations), -1));
+  }
+
+  InjectionPoint(Field field) {
+    this(field, field.getAnnotation(Inject.class).optional(), null);
   }
 
   private ImmutableList<Dependency<?>> forMember(Member member, Type[] genericParameterTypes,
@@ -153,6 +176,17 @@ public final class InjectionPoint implements Serializable {
    */
   public boolean isOptional() {
     return optional;
+  }
+
+  /**
+   * Returns the custom annotation provider factory for custom injection points or null for regular
+   * @Inject injection points
+   *
+   * @return the custom annotation provider factory for custom injection points or null for regular
+   * injection points
+   */
+  public AnnotationProviderFactory<?> getAnnotationProviderFactory() {
+    return annotationProviderFactory;
   }
 
   @Override public boolean equals(Object o) {
@@ -235,10 +269,10 @@ public final class InjectionPoint implements Serializable {
    *      field with multiple binding annotations. When such an exception is thrown, the valid
    *      injection points are still added to the collection.
    */
-  public static void addForStaticMethodsAndFields(Class<?> type, Collection<InjectionPoint> sink) {
+  public static void addForStaticMethodsAndFields(Map<Class<? extends Annotation>,AnnotationProviderFactory> customInjections, Class<?> type, Collection<InjectionPoint> sink) {
     Errors errors = new Errors();
-    addInjectionPoints(type, Factory.FIELDS, true, sink, errors);
-    addInjectionPoints(type, Factory.METHODS, true, sink, errors);
+    addInjectionPoints(customInjections, type, Factory.FIELDS, true, sink, errors);
+    addInjectionPoints(customInjections, type, Factory.METHODS, true, sink, errors);
     ConfigurationException.throwNewIfNonEmpty(errors);
   }
 
@@ -251,16 +285,18 @@ public final class InjectionPoint implements Serializable {
    *      field with multiple binding annotations. When such an exception is thrown, the valid
    *      injection points are still added to the collection.
    */
-  public static void addForInstanceMethodsAndFields(Class<?> type,
+  public static void addForInstanceMethodsAndFields(Map<Class<? extends Annotation>,AnnotationProviderFactory> customInjections, Class<?> type,
       Collection<InjectionPoint> sink) {
     // TODO (crazybob): Filter out overridden members.
     Errors errors = new Errors();
-    addInjectionPoints(type, Factory.FIELDS, false, sink, errors);
-    addInjectionPoints(type, Factory.METHODS, false, sink, errors);
+    addInjectionPoints(customInjections, type, Factory.FIELDS, false, sink, errors);
+    addInjectionPoints(customInjections, type, Factory.METHODS, false, sink, errors);
     ConfigurationException.throwNewIfNonEmpty(errors);
   }
 
-  private static <M extends Member & AnnotatedElement> void addInjectionPoints(Class<?> type,
+  private static <M extends Member & AnnotatedElement> void addInjectionPoints(
+      Map<Class<? extends Annotation>,AnnotationProviderFactory> customInjections,
+      Class<?> type,
       Factory<M> factory, boolean statics, Collection<InjectionPoint> injectionPoints,
       Errors errors) {
     if (type == Object.class) {
@@ -268,13 +304,15 @@ public final class InjectionPoint implements Serializable {
     }
 
     // Add injectors for superclass first.
-    addInjectionPoints(type.getSuperclass(), factory, statics, injectionPoints, errors);
+    addInjectionPoints(customInjections, type.getSuperclass(), factory, statics, injectionPoints, errors);
 
     // Add injectors for all members next
-    addInjectorsForMembers(type, factory, statics, injectionPoints, errors);
+    addInjectorsForMembers(customInjections, type, factory, statics, injectionPoints, errors);
   }
 
-  private static <M extends Member & AnnotatedElement> void addInjectorsForMembers(Class<?> type,
+  private static <M extends Member & AnnotatedElement> void addInjectorsForMembers(
+      Map<Class<? extends Annotation>,AnnotationProviderFactory> customInjections,
+      Class<?> type,
       Factory<M> factory, boolean statics, Collection<InjectionPoint> injectionPoints,
       Errors errors) {
     for (M member : factory.getMembers(type)) {
@@ -283,15 +321,35 @@ public final class InjectionPoint implements Serializable {
       }
 
       Inject inject = member.getAnnotation(Inject.class);
-      if (inject == null) {
+      if (inject != null) {
+        try {
+          injectionPoints.add(factory.create(member));
+        } catch (ConfigurationException e) {
+          if (!inject.optional()) {
+            errors.merge(e.getErrorMessages());
+          }
+        }
         continue;
       }
 
-      try {
-        injectionPoints.add(factory.create(member));
-      } catch (ConfigurationException e) {
-        if (!inject.optional()) {
-          errors.merge(e.getErrorMessages());
+      if (!customInjections.isEmpty()) {
+        Set<Entry<Class<? extends Annotation>,AnnotationProviderFactory>> entries = customInjections
+            .entrySet();
+        for (Entry<Class<? extends Annotation>, AnnotationProviderFactory> entry : entries) {
+          Class<? extends Annotation> annotationType = entry.getKey();
+          AnnotationProviderFactory annotationProviderFactory = entry.getValue();
+          Annotation annotation = member.getAnnotation(annotationType);
+          if (annotation != null) {
+            try {
+              InjectionPoint injectionPoint = InjectionPoint.customInjectionPoint(member, annotationProviderFactory);
+              injectionPoints.add(injectionPoint);
+            } catch (ConfigurationException e) {
+              if (!inject.optional()) {
+                errors.merge(e.getErrorMessages());
+              }
+            }
+            break;
+          }
         }
       }
     }

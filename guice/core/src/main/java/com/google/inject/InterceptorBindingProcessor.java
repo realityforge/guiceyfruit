@@ -18,6 +18,7 @@ package com.google.inject;
 
 import com.google.inject.internal.Errors;
 import com.google.inject.spi.InterceptorBinding;
+import com.google.inject.spi.ConstructorInterceptorBinding;
 
 /**
  * Handles {@link Binder#bindInterceptor} commands.
@@ -37,6 +38,12 @@ class InterceptorBindingProcessor extends AbstractProcessor {
   @Override public Boolean visitInterceptorBinding(InterceptorBinding command) {
     proxyFactoryBuilder.intercept(
         command.getClassMatcher(), command.getMethodMatcher(), command.getInterceptors());
+    return true;
+  }
+
+  @Override public Boolean visitConstructorInterceptorBinding(ConstructorInterceptorBinding command) {
+    proxyFactoryBuilder.constructorIntercept(
+        command.getClassMatcher(), command.getInterceptors());
     return true;
   }
 

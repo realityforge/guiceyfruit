@@ -177,6 +177,84 @@ public class Matchers {
   }
 
   /**
+   * Returns a matcher which matches classes which have a public method annotated
+   * with a given annotation.
+   */
+  public static Matcher<AnnotatedElement> methodAnnotatedWith(
+      final Annotation annotation) {
+    return new MethodAnnotatedWith(annotation);
+  }
+
+  /**
+   * Returns a matcher which matches classes which have a public method annotated
+   * with a given annotation.
+   */
+  public static Matcher<AnnotatedElement> methodAnnotatedWith(
+      final Class<? extends Annotation> annotationType) {
+    return new MethodAnnotatedWith(annotationType);
+  }
+
+
+  private static class MethodAnnotatedWith extends AbstractMatcher<AnnotatedElement>
+      implements Serializable {
+    private final Class<? extends Annotation> annotationType;
+
+    public MethodAnnotatedWith(Annotation annotation) {
+      checkNotNull(annotation, "annotation");
+      this.annotationType = annotation.annotationType();
+      checkForRuntimeRetention(annotationType);
+    }
+
+    public MethodAnnotatedWith(Class<? extends Annotation> annotationType) {
+      checkNotNull(annotationType, "annotationType");
+      this.annotationType = annotationType;
+      checkForRuntimeRetention(annotationType);
+    }
+
+    public boolean matches(AnnotatedElement element) {
+      if (element instanceof Class) {
+        Class type = (Class) element;
+        if (matchesClass(type)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    protected boolean matchesClass(Class type) {
+      Method[] methods = type.getDeclaredMethods();
+      for (Method method : methods) {
+        Annotation fromElement = method.getAnnotation(annotationType);
+        if (fromElement != null) {
+          return true;
+        }
+      }
+      if (!Object.class.equals(type)) {
+        Class superclass = type.getSuperclass();
+        if (superclass != null) {
+          return matchesClass(superclass);
+        }
+      }
+      return false;
+    }
+
+    @Override public boolean equals(Object other) {
+      return other instanceof MethodAnnotatedWith
+          && ((MethodAnnotatedWith) other).annotationType.equals(annotationType);
+    }
+
+    @Override public int hashCode() {
+      return 37 * annotationType.hashCode();
+    }
+
+    @Override public String toString() {
+      return "methodAnnotatedWith(" + annotationType + ")";
+    }
+
+    private static final long serialVersionUID = 0;
+  }
+
+  /**
    * Returns a matcher which matches subclasses of the given type (as well as
    * the given type).
    */

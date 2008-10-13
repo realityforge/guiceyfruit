@@ -48,6 +48,10 @@ public abstract class DefaultElementVisitor<V> implements ElementVisitor<V> {
     return visitElement(command);
   }
 
+  public V visitConstructorInterceptorBinding(ConstructorInterceptorBinding command) {
+    return visitElement(command);
+  }
+
   public V visitScopeBinding(ScopeBinding command) {
     return visitElement(command);
   }

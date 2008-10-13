@@ -30,6 +30,7 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Set;
 import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.ConstructorInterceptor;
 
 /**
  * Creates a Module from a collection of component elements.
@@ -66,6 +67,11 @@ public class ModuleWriter {
 
       public Void visitInterceptorBinding(InterceptorBinding element) {
         writeBindInterceptor(binder, element);
+        return null;
+      }
+
+      public Void visitConstructorInterceptorBinding(ConstructorInterceptorBinding element) {
+        writeBindConstructorInterceptor(binder, element);
         return null;
       }
 
@@ -114,6 +120,13 @@ public class ModuleWriter {
     binder.withSource(element.getSource()).bindInterceptor(
         element.getClassMatcher(), element.getMethodMatcher(),
         interceptors.toArray(new MethodInterceptor[interceptors.size()]));
+  }
+
+  protected void writeBindConstructorInterceptor(final Binder binder, final ConstructorInterceptorBinding element) {
+    List<ConstructorInterceptor> interceptors = element.getInterceptors();
+    binder.withSource(element.getSource()).bindConstructorInterceptor(
+        element.getClassMatcher(),
+        interceptors.toArray(new ConstructorInterceptor[interceptors.size()]));
   }
 
   protected void writeBindScope(final Binder binder, final ScopeBinding element) {

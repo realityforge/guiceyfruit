@@ -28,6 +28,7 @@ import com.google.inject.spi.InjectionPoint;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.AccessibleObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,8 @@ import net.sf.cglib.proxy.NoOp;
 import net.sf.cglib.reflect.FastClass;
 import net.sf.cglib.reflect.FastConstructor;
 import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.ConstructorInterceptor;
+import org.aopalliance.intercept.ConstructorInvocation;
 
 /**
  * Proxies classes applying interceptors to methods as specified in
@@ -48,10 +51,12 @@ import org.aopalliance.intercept.MethodInterceptor;
 class ProxyFactory implements ConstructionProxyFactory {
 
   final List<MethodAspect> methodAspects;
+  final List<ConstructorAspect> constructorAspects;
   final ConstructionProxyFactory defaultFactory;
 
-  ProxyFactory(List<MethodAspect> methodAspects) {
+  ProxyFactory(List<MethodAspect> methodAspects, List<ConstructorAspect> constructorAspects) {
     this.methodAspects = methodAspects;
+    this.constructorAspects = constructorAspects;
     defaultFactory = new DefaultConstructionProxyFactory();
   }
 
@@ -83,7 +88,7 @@ class ProxyFactory implements ConstructionProxyFactory {
       }
     }
     if (applicableAspects.isEmpty()) {
-      return defaultFactory.get(errors, injectionPoint);
+      return wrapConstructorProxy(defaultFactory.get(errors, injectionPoint));
     }
 
     // Get list of methods from cglib.
@@ -116,7 +121,7 @@ class ProxyFactory implements ConstructionProxyFactory {
     }
     if (!anyMatched) {
       // not test-covered
-      return defaultFactory.get(errors, injectionPoint);
+      return wrapConstructorProxy(defaultFactory.get(errors, injectionPoint));
     }
 
     // Create callbacks.
@@ -150,7 +155,7 @@ class ProxyFactory implements ConstructionProxyFactory {
     // Store callbacks.
     Enhancer.registerStaticCallbacks(proxied, callbacks);
 
-    return createConstructionProxy(proxied, injectionPoint);
+    return wrapConstructorProxy(createConstructionProxy(proxied, injectionPoint));
   }
 
   /**
@@ -169,13 +174,74 @@ class ProxyFactory implements ConstructionProxyFactory {
       public T newInstance(Object... arguments) throws InvocationTargetException {
         return (T) fastConstructor.newInstance(arguments);
       }
+
       public InjectionPoint getInjectionPoint() {
         return injectionPoint;
       }
+
       public Constructor<T> getConstructor() {
         return standardConstructor;
       }
     };
+  }
+
+  private <T> ConstructionProxy<T> wrapConstructorProxy(final ConstructionProxy<?> constructionProxy) {
+    if (constructorAspects.isEmpty()) {
+      return (ConstructionProxy<T>) constructionProxy;
+    }
+    else {
+      // lets wrap the construction proxy to process the interceptors
+      return new ConstructionProxy<T>() {
+        public T newInstance(final Object... arguments) throws InvocationTargetException {
+          @SuppressWarnings("unchecked")
+          T answer = (T) constructionProxy.newInstance(arguments);
+          for (ConstructorAspect aspect : constructorAspects) {
+            List<ConstructorInterceptor> interceptors = aspect.interceptors();
+            for (ConstructorInterceptor interceptor : interceptors) {
+              final T currentValue = answer;
+              ConstructorInvocation invocation = new ConstructorInvocation() {
+                public Constructor getConstructor() {
+                  return constructionProxy.getConstructor();
+                }
+
+                public Object[] getArguments() {
+                  return arguments;
+                }
+
+                public Object proceed() throws Throwable {
+                  return currentValue;
+                }
+
+                public Object getThis() {
+                  // TODO
+                  return currentValue;
+                }
+
+                public AccessibleObject getStaticPart() {
+                  // TODO
+                  return null;
+                }
+              };
+              try {
+                answer = (T) interceptor.construct(invocation);
+              }
+              catch (Throwable throwable) {
+                throw new InvocationTargetException(throwable);
+              }
+            }
+          }
+          return answer;
+        }
+
+        public InjectionPoint getInjectionPoint() {
+          return constructionProxy.getInjectionPoint();
+        }
+
+        public Constructor<T> getConstructor() {
+          return (Constructor<T>) constructionProxy.getConstructor();
+        }
+      };
+    }
   }
 
   static class MethodInterceptorsPair {

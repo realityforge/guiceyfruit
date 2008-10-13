@@ -18,8 +18,10 @@ package com.google.inject;
 
 import static com.google.inject.matcher.Matchers.any;
 import junit.framework.TestCase;
+import org.aopalliance.intercept.ConstructorInterceptor;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.aopalliance.intercept.ConstructorInvocation;
 
 /**
  * @author crazybob@google.com (Bob Lee)
@@ -61,6 +63,38 @@ public class IntegrationTest extends TestCase {
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
       count++;
       return methodInvocation.proceed();
+    }
+  }
+
+  public void testConstructorInterceptor() throws Exception {
+    final PostConstructInterceptor counter = new PostConstructInterceptor();
+
+    Injector injector = Guice.createInjector(new AbstractModule() {
+      protected void configure() {
+        bind(Foo.class);
+        bindConstructorInterceptor(any(), counter);
+      }
+    });
+
+    Foo foo = injector.getInstance(Key.get(Foo.class));
+    foo.foo();
+    assertTrue(foo.invoked);
+    assertEquals(1, counter.count);
+
+    foo = injector.getInstance(Foo.class);
+    foo.foo();
+    assertTrue(foo.invoked);
+    assertEquals(2, counter.count);
+
+  }
+
+  static class PostConstructInterceptor implements ConstructorInterceptor {
+
+    int count;
+
+    public Object construct(ConstructorInvocation constructorInvocation) throws Throwable {
+      count++;
+      return constructorInvocation.proceed();
     }
   }
 

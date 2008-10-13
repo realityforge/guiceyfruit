@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.aopalliance.intercept.ConstructorInterceptor;
 import org.aopalliance.intercept.MethodInterceptor;
 
 /**
@@ -132,6 +133,12 @@ public final class Elements {
         Matcher<? super Method> methodMatcher,
         MethodInterceptor... interceptors) {
       elements.add(new InterceptorBinding(getSource(), classMatcher, methodMatcher, interceptors));
+    }
+
+    public void bindConstructorInterceptor(
+        Matcher<? super Class<?>> classMatcher,
+        ConstructorInterceptor... interceptors) {
+      elements.add(new ConstructorInterceptorBinding(getSource(), classMatcher, interceptors));
     }
 
     public void bindScope(Class<? extends Annotation> annotationType, Scope scope) {

@@ -38,6 +38,11 @@ public interface ElementVisitor<V> {
   V visitInterceptorBinding(InterceptorBinding interceptorBinding);
 
   /**
+   * Visit a registration of constructor interceptors for matching classes.
+   */
+  V visitConstructorInterceptorBinding(ConstructorInterceptorBinding constructorInterceptorBinding);
+  
+  /**
    * Visit a registration of a scope annotation with the scope that implements it.
    */
   V visitScopeBinding(ScopeBinding scopeBinding);

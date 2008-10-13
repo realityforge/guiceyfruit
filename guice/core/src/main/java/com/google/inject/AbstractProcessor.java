@@ -26,6 +26,7 @@ import com.google.inject.spi.ProviderLookup;
 import com.google.inject.spi.ScopeBinding;
 import com.google.inject.spi.StaticInjectionRequest;
 import com.google.inject.spi.TypeConverterBinding;
+import com.google.inject.spi.ConstructorInterceptorBinding;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,6 +68,10 @@ abstract class AbstractProcessor implements ElementVisitor<Boolean> {
   }
 
   public Boolean visitInterceptorBinding(InterceptorBinding interceptorBinding) {
+    return false;
+  }
+
+  public Boolean visitConstructorInterceptorBinding(ConstructorInterceptorBinding constructorInterceptorBinding) {
     return false;
   }
 

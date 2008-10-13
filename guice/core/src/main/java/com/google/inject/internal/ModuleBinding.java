@@ -38,6 +38,7 @@ import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.Message;
 import com.google.inject.util.Providers;
 import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -206,7 +207,8 @@ public final class ModuleBinding<T> implements Binding<T> {
       // lookup the injection points, adding any errors to the binder's errors list
       List<InjectionPoint> injectionPointsList = Lists.newArrayList();
       try {
-        InjectionPoint.addForInstanceMethodsAndFields(instance.getClass(), injectionPointsList);
+        // TODO need the map?
+        InjectionPoint.addForInstanceMethodsAndFields(Collections.EMPTY_MAP, instance.getClass(), injectionPointsList);
       } catch (ConfigurationException e) {
         for (Message message : e.getErrorMessages()) {
           binder.addError(message);
@@ -224,7 +226,8 @@ public final class ModuleBinding<T> implements Binding<T> {
       // lookup the injection points, adding any errors to the binder's errors list
       List<InjectionPoint> injectionPointsList = Lists.newArrayList();
       try {
-        InjectionPoint.addForInstanceMethodsAndFields(provider.getClass(), injectionPointsList);
+        // TODO need the map?
+        InjectionPoint.addForInstanceMethodsAndFields(Collections.EMPTY_MAP, provider.getClass(), injectionPointsList);
       } catch (ConfigurationException e) {
         for (Message message : e.getErrorMessages()) {
           binder.addError(message);

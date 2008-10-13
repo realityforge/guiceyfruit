@@ -16,6 +16,11 @@
 
 package com.google.inject;
 
+import com.google.inject.internal.CloseableProvider;
+import com.google.inject.spi.CloseErrors;
+import com.google.inject.spi.Closer;
+import com.google.inject.spi.Closers;
+
 /**
  * Built in scope implementations.
  *
@@ -29,8 +34,8 @@ public class Scopes {
    * One instance per {@link Injector}. Also see {@code @}{@link Singleton}.
    */
   public static final Scope SINGLETON = new Scope() {
-    public <T> Provider<T> scope(Key<T> key, final Provider<T> creator) {
-      return new Provider<T>() {
+    public <T> Provider<T> scope(final Key<T> key, final Provider<T> creator) {
+      return new CloseableProvider<T>() {
 
         private volatile T instance;
 
@@ -51,6 +56,13 @@ public class Scopes {
             }
           }
           return instance;
+        }
+
+        public void close(Closer closer, CloseErrors errors) {
+          synchronized (Injector.class) {
+            Closers.close(key, instance, closer, errors);
+            instance = null;
+          }
         }
 
         public String toString() {

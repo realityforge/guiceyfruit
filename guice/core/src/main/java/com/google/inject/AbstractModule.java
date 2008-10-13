@@ -26,6 +26,7 @@ import com.google.inject.spi.Message;
 import com.google.inject.spi.TypeConverter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import org.aopalliance.intercept.ConstructorInterceptor;
 import org.aopalliance.intercept.MethodInterceptor;
 
 /**
@@ -164,6 +165,15 @@ public abstract class AbstractModule implements Module {
       Matcher<? super Method> methodMatcher,
       MethodInterceptor... interceptors) {
     binder.bindInterceptor(classMatcher, methodMatcher, interceptors);
+  }
+
+  /**
+   * @see Binder#bindConstructorInterceptor(com.google.inject.matcher.Matcher,
+   * org.aopalliance.intercept.ConstructorInterceptor[])
+   */
+  protected void bindConstructorInterceptor(Matcher<? super Class<?>> classMatcher,
+      ConstructorInterceptor... interceptors) {
+    binder.bindConstructorInterceptor(classMatcher, interceptors);
   }
 
   /**

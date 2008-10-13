@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.aopalliance.intercept.ConstructorInterceptor;
 import org.aopalliance.intercept.MethodInterceptor;
 
 /**
@@ -32,6 +33,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 class ProxyFactoryBuilder {
 
   final List<MethodAspect> methodAspects = Lists.newArrayList();
+  final List<ConstructorAspect> constructorAspects = Lists.newArrayList();
 
   /**
    * Applies the given method interceptor to the methods matched by the class and method matchers.
@@ -55,8 +57,26 @@ class ProxyFactoryBuilder {
     return intercept(classMatcher, methodMatcher, Arrays.asList(interceptors));
   }
 
+  /**
+   * Applies the given constructor interceptor to the methods matched by the class and method matchers.
+   *
+   * @param classMatcher matches classes the interceptor should apply to. For example: {@code
+   * only(Runnable.class)}.
+   * @param interceptors to apply
+   */
+  public ProxyFactoryBuilder constructorIntercept(Matcher<? super Class<?>> classMatcher,
+      List<ConstructorInterceptor> interceptors) {
+    constructorAspects.add(new ConstructorAspect(classMatcher, interceptors));
+    return this;
+  }
+
+  public ProxyFactoryBuilder constructorIntercept(Matcher<? super Class<?>> classMatcher,
+      ConstructorInterceptor... interceptors) {
+    return constructorIntercept(classMatcher, Arrays.asList(interceptors));
+  }
+
   /** Creates a {@code ProxyFactory}. */
   public ProxyFactory create() {
-    return new ProxyFactory(new ArrayList<MethodAspect>(methodAspects));
+    return new ProxyFactory(new ArrayList<MethodAspect>(methodAspects), new ArrayList<ConstructorAspect>(constructorAspects));
   }
 }

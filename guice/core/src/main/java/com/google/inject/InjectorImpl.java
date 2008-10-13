@@ -16,6 +16,7 @@
 
 package com.google.inject;
 
+import com.google.common.base.Objects;
 import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -23,17 +24,28 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 import com.google.inject.internal.Annotations;
 import com.google.inject.internal.BytecodeGen.Visibility;
 import static com.google.inject.internal.BytecodeGen.newFastClass;
 import com.google.inject.internal.Classes;
+import com.google.inject.internal.CloseErrorsImpl;
+import com.google.inject.internal.CloseableProvider;
+import com.google.inject.internal.CompositeCloser;
 import com.google.inject.internal.ConfigurationException;
 import com.google.inject.internal.Errors;
 import com.google.inject.internal.ErrorsException;
 import com.google.inject.internal.FailableCache;
 import com.google.inject.internal.MatcherAndConverter;
 import com.google.inject.internal.ToStringBuilder;
+import com.google.inject.matcher.Matcher;
+import com.google.inject.spi.InjectionAnnotation;
+import com.google.inject.spi.AnnotationProviderFactory;
 import com.google.inject.spi.BindingTargetVisitor;
+import com.google.inject.spi.CloseErrors;
+import com.google.inject.spi.CloseFailedException;
+import com.google.inject.spi.Closeable;
+import com.google.inject.spi.Closer;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.util.Providers;
@@ -50,6 +62,8 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import net.sf.cglib.reflect.FastClass;
 import net.sf.cglib.reflect.FastMethod;
 
@@ -627,7 +641,7 @@ class InjectorImpl implements Injector {
         throws ErrorsException {
       List<InjectionPoint> injectionPoints = Lists.newArrayList();
       try {
-        InjectionPoint.addForInstanceMethodsAndFields(type, injectionPoints);
+        InjectionPoint.addForInstanceMethodsAndFields(annotationProviderFactories(), type, injectionPoints);
       } catch (ConfigurationException e) {
         errors.merge(e.getErrorMessages());
       }
@@ -680,6 +694,18 @@ class InjectorImpl implements Injector {
     }
   }
 
+  InternalFactory<?> createCustomInternalFactory(final AnnotatedElement annotatedElement, final AnnotationProviderFactory<?> customFactory) {
+    return new InternalFactoryToProviderAdapter(new Provider() {
+      public Object get() {
+        Provider<?> provider = customFactory.createProvider(annotatedElement);
+       return provider.get();
+      }
+      @Override public String toString() {
+        return customFactory.toString();
+      }
+    });
+  }
+
   class SingleFieldInjector implements SingleMemberInjector {
     final Field field;
     final InternalFactory<?> factory;
@@ -694,7 +720,14 @@ class InjectorImpl implements Injector {
 
       // Ewwwww...
       field.setAccessible(true);
-      factory = injector.getInternalFactory(dependency.getKey(), errors.withSource(dependency));
+
+      final AnnotationProviderFactory<?> customFactory = injectionPoint.getAnnotationProviderFactory();
+      if (customFactory != null) {
+        factory = createCustomInternalFactory(field, customFactory);
+      }
+      else {
+        factory = injector.getInternalFactory(dependency.getKey(), errors.withSource(dependency));
+      }
     }
 
     public InjectionPoint getInjectionPoint() {
@@ -746,16 +779,24 @@ class InjectorImpl implements Injector {
     SingleParameterInjector<?>[] parameterInjectors
         = new SingleParameterInjector<?>[parameters.size()];
     int index = 0;
-    for (Dependency<?> parameter : parameters) {
-      errors.pushSource(parameter);
-      try {
-        parameterInjectors[index] = createParameterInjector(parameter, errors);
-      } catch (ErrorsException rethrownBelow) {
-        // rethrown below
-      } finally {
-        errors.popSource(parameter);
+    AnnotationProviderFactory<?> customFactory = injectionPoint.getAnnotationProviderFactory();
+    if (parameters.size() == 1 && customFactory != null) {
+      InternalFactory<?> internalFactory = createCustomInternalFactory(
+          (AnnotatedElement) injectionPoint.getMember(), customFactory);
+      parameterInjectors[0] = new SingleParameterInjector(injectionPoint.getDependencies().get(0), internalFactory);      
+    }
+    else {
+      for (Dependency<?> parameter : parameters) {
+        errors.pushSource(parameter);
+        try {
+          parameterInjectors[index] = createParameterInjector(parameter, errors);
+        } catch (ErrorsException rethrownBelow) {
+          // rethrown below
+        } finally {
+          errors.popSource(parameter);
+        }
+        index++;
       }
-      index++;
     }
 
     errors.throwIfNecessary();
@@ -924,7 +965,7 @@ class InjectorImpl implements Injector {
   <T> Provider<T> getProviderOrThrow(final Key<T> key, Errors errors) throws ErrorsException {
     final InternalFactory<? extends T> factory = getInternalFactory(key, errors);
 
-    return new Provider<T>() {
+    return new CloseableProvider<T>() {
       public T get() {
         final Errors errors = new Errors();
         try {
@@ -946,6 +987,13 @@ class InjectorImpl implements Injector {
           return t;
         } catch (ErrorsException e) {
           throw new ProvisionException(errors.merge(e.getErrors()));
+        }
+      }
+
+      public void close(Closer closer, CloseErrors errors) {
+        if (factory instanceof Closeable) {
+          Closeable closeable = (Closeable) factory;
+          closeable.close(closer, errors);
         }
       }
 
@@ -1009,5 +1057,110 @@ class InjectorImpl implements Injector {
     return new ToStringBuilder(Injector.class)
         .add("bindings", explicitBindings)
         .toString();
+  }
+
+  /** Iterates through all bindings closing any {@link Closeable} providers which have pre destroy hooks */
+  public void close() throws CloseFailedException {
+    Set<Closer> closers = getInstancesOf(Closer.class);
+    if (closers.isEmpty()) {
+      return;
+    }
+    Closer closer = new CompositeCloser(closers);
+    CloseErrorsImpl errors = new CloseErrorsImpl(this);
+
+    Set<Entry<Key<?>,Binding<?>>> entries = getBindings().entrySet();
+    for (Entry<Key<?>, Binding<?>> entry : entries) {
+      Binding<?> binding = entry.getValue();
+      Provider<?> provider = binding.getProvider();
+      if (provider instanceof Closeable) {
+        Closeable closeable = (Closeable) provider;
+        closeable.close(closer, errors);
+      }
+    }
+
+    errors.throwIfNecessary();
+  }
+
+  /**
+   * Returns a collection of all instances of the given base type
+   * @param baseClass the base type of objects required
+   * @param <T> the base type
+   * @return a set of objects returned from this injector
+   */
+  public <T> Set<T> getInstancesOf(Class<T> baseClass) {
+    Set<T> answer = Sets.newHashSet();
+    Set<Entry<Key<?>, Binding<?>>> entries = getBindings().entrySet();
+    for (Entry<Key<?>, Binding<?>> entry : entries) {
+      Key<?> key = entry.getKey();
+      if (baseClass.isAssignableFrom(key.getRawType())) {
+        Object value = getInstance(key);
+        if (value != null) {
+          T castValue = baseClass.cast(value);
+          answer.add(castValue);
+        }
+      }
+    }
+    return answer;
+  }
+
+  /**
+   * Returns a collection of all instances matching the given matcher
+   * @param matcher matches the types to return instances
+   * @return a set of objects returned from this injector
+   */
+  public <T> Set<T> getInstancesOf(Matcher<Class<T>> matcher) {
+    Set<T> answer = Sets.newHashSet();
+    Set<Entry<Key<?>, Binding<?>>> entries = getBindings().entrySet();
+    for (Entry<Key<?>, Binding<?>> entry : entries) {
+      Key<?> key = entry.getKey();
+      if (matcher.matches((Class<T>) key.getRawType())) {
+        Object value = getInstance(key);
+        answer.add((T) value);
+      }
+    }
+    return answer;
+  }
+
+
+  /**
+   * Finds all the instances of the {@link com.google.inject.spi.AnnotationProviderFactory} instances
+   * which are registered to provide custom annotation driven injection points
+   */
+  public Map<Class<? extends Annotation>, AnnotationProviderFactory> annotationProviderFactories() {
+    Map<Class<? extends Annotation>, AnnotationProviderFactory> answer = Maps.newHashMap();
+    Set<Entry<Key<?>, Binding<?>>> entries = getBindings().entrySet();
+    for (Entry<Key<?>, Binding<?>> entry : entries) {
+      final Key<?> key = entry.getKey();
+      final Class<?> type = key.getRawType();
+      if (AnnotationProviderFactory.class.isAssignableFrom(type)) {
+        InjectionAnnotation injectionAnnotation = type.getAnnotation(InjectionAnnotation.class);
+        if (injectionAnnotation != null) {
+          Class<? extends Annotation> annotationType = injectionAnnotation.value();
+
+          // let avoid injecting anything yet
+          AnnotationProviderFactory factory = new AnnotationProviderFactory() {
+            public Class getAnnotationType() {
+              return type;
+            }
+
+            public Provider createProvider(final AnnotatedElement member) {
+              return new Provider() {
+                public Object get() {
+                  AnnotationProviderFactory factory = (AnnotationProviderFactory) getInstance(key);
+                  Objects.nonNull(factory, "Should have an instance for key " + key);
+                  return factory.createProvider(member).get();
+                }
+
+                @Override public String toString() {
+                  return "AnnotationProvider:" + key + " using " + type.getName();
+                }
+              };
+            }
+          };
+          answer.put(annotationType, factory);
+        }
+      }
+    }
+    return answer;
   }
 }

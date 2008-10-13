@@ -16,6 +16,7 @@
 
 package com.google.inject;
 
+import com.google.inject.spi.CloseFailedException;
 import java.util.List;
 import java.util.Map;
 
@@ -120,4 +121,13 @@ public interface Injector {
    * dependencies ahead of time.
    */
   <T> T getInstance(Class<T> type);
+
+  /**
+   * Closes down any singleton resources in this injector by applying any bound
+   * {@link com.google.inject.spi.Closer} strategy implementations to the singleton objects.
+   *
+   * Typically all objects that can be will be closed and a single exception will be thrown
+   * indicating all of the exceptions that occurred while closing all of the resources.
+   */
+  void close() throws CloseFailedException;
 }

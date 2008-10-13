@@ -30,6 +30,7 @@ import com.google.inject.spi.Dependency;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.Elements;
 import com.google.inject.spi.InjectionPoint;
+import com.google.inject.spi.CloseFailedException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -320,6 +321,10 @@ class InjectorBuilder {
     public <T> T getInstance(Class<T> type) {
       throw new UnsupportedOperationException(
         "Injector.getInstance(Class<T>) is not supported in Stage.TOOL");
+    }
+    public void close() throws CloseFailedException {
+      throw new UnsupportedOperationException(
+        "Injector.close() is not supported in Stage.TOOL");
     }
   }
 }

@@ -17,6 +17,7 @@
 package com.google.inject.servlet;
 
 import com.google.inject.Injector;
+import com.google.inject.spi.CloseFailedException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -39,6 +40,16 @@ public abstract class GuiceServletContextListener
 
   public void contextDestroyed(ServletContextEvent servletContextEvent) {
     ServletContext servletContext = servletContextEvent.getServletContext();
+    Object value = servletContext.getAttribute(INJECTOR_NAME);
+    if (value instanceof Injector) {
+      Injector injector = (Injector) value;
+      try {
+        injector.close();
+      }
+      catch (CloseFailedException e) {
+        servletContext.log("Failed to close injector. Reason: " + e, e);
+      }
+    }
     servletContext.removeAttribute(INJECTOR_NAME);
   }
 

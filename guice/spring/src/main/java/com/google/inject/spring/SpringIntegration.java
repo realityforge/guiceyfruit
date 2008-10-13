@@ -20,9 +20,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.beans.factory.InitializingBean;
 
 /**
  * Integrates Guice with Spring.
@@ -32,6 +34,18 @@ import org.springframework.beans.factory.ListableBeanFactory;
 public class SpringIntegration {
   private SpringIntegration() {}
 
+
+  /**
+   * Binds the Spring lifecycles to the current binder
+   *
+   * @param binder the binder to install
+   */
+  public static void bindLifecycle(Binder binder) {
+    binder.bindConstructorInterceptor(Matchers.subclassesOf(InitializingBean.class),
+        new InitializingBeanInterceptor());
+    binder.bind(DisposableBeanCloser.class);
+  }
+  
   /**
    * Creates a provider which looks up objects from Spring using the given name.
    * Expects a binding to {@link

@@ -20,12 +20,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.inject.internal.Errors;
 import com.google.inject.internal.ErrorsException;
 import com.google.inject.internal.SourceProvider;
+import com.google.inject.spi.Closeable;
 import com.google.inject.spi.Dependency;
+import com.google.inject.spi.Closer;
+import com.google.inject.spi.CloseErrors;
 
 /**
  * @author crazybob@google.com (Bob Lee)
 */
-class InternalFactoryToProviderAdapter<T> implements InternalFactory<T> {
+class InternalFactoryToProviderAdapter<T> implements InternalFactory<T>, Closeable {
 
   private final Provider<? extends T> provider;
   private final Object source;
@@ -49,6 +52,13 @@ class InternalFactoryToProviderAdapter<T> implements InternalFactory<T> {
       Errors userErrors = ProvisionException.getErrors(userException);
       throw errors.withSource(source)
           .errorInProvider(userException, userErrors).toException();
+    }
+  }
+
+  public void close(Closer closer, CloseErrors errors) {
+    if (provider instanceof Closeable) {
+      Closeable closeable = (Closeable) provider;
+      closeable.close(closer, errors);
     }
   }
 

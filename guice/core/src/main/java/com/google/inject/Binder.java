@@ -25,6 +25,7 @@ import com.google.inject.spi.TypeConverter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.ConstructorInterceptor;
 
 /**
  * Collects configuration information (primarily <i>bindings</i>) which will be
@@ -198,6 +199,16 @@ public interface Binder {
    */
   void bindInterceptor(Matcher<? super Class<?>> classMatcher,
       Matcher<? super Method> methodMatcher, MethodInterceptor... interceptors);
+
+  /**
+   * Binds a constructor interceptor to matching classes.
+   *
+   * @param classMatcher matches classes the interceptor should apply to. For
+   *     example: {@code only(Runnable.class)}.
+   * @param interceptors to bind
+   */
+  void bindConstructorInterceptor(Matcher<? super Class<?>> classMatcher,
+      ConstructorInterceptor... interceptors);
 
   /**
    * Binds a scope to an annotation.

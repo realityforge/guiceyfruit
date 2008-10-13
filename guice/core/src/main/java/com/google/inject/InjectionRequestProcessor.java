@@ -23,10 +23,14 @@ import com.google.inject.InjectorImpl.SingleMemberInjector;
 import com.google.inject.internal.ConfigurationException;
 import com.google.inject.internal.Errors;
 import com.google.inject.internal.ErrorsException;
+import com.google.inject.spi.AnnotationProviderFactory;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.InjectionRequest;
 import com.google.inject.spi.StaticInjectionRequest;
+import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Handles {@link Binder#requestInjection} and {@link Binder#requestStaticInjection} commands.
@@ -54,8 +58,9 @@ class InjectionRequestProcessor extends AbstractProcessor {
   @Override public Boolean visitInjectionRequest(InjectionRequest command) {
     List<InjectionPoint> injectionPointsList = Lists.newArrayList();
     try {
-      InjectionPoint.addForInstanceMethodsAndFields(
-          command.getInstance().getClass(), injectionPointsList);
+      Map<Class<? extends Annotation>,AnnotationProviderFactory> customInjections = memberInjector
+          .annotationProviderFactories();
+      InjectionPoint.addForInstanceMethodsAndFields(customInjections, command.getInstance().getClass(), injectionPointsList);
     } catch (ConfigurationException e) {
       errors.merge(e.getErrorMessages());
     }
@@ -92,7 +97,8 @@ class InjectionRequestProcessor extends AbstractProcessor {
       Errors errorsForMember = errors.withSource(source);
       List<InjectionPoint> injectionPoints = Lists.newArrayList();
       try {
-        InjectionPoint.addForStaticMethodsAndFields(type, injectionPoints);
+        // TODO need the map?
+        InjectionPoint.addForStaticMethodsAndFields(Collections.EMPTY_MAP, type, injectionPoints);
       } catch (ConfigurationException e) {
         errors.merge(e.getErrorMessages());
       }
