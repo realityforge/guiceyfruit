@@ -104,27 +104,17 @@ public class Injectors {
     return answer;
   }
 
-  public static <T> Class<?> getKeyType(Key<?> key) {
-    Class<?> keyType = null;
-    TypeLiteral<?> typeLiteral = key.getTypeLiteral();
-    Type type = typeLiteral.getType();
-    if (type instanceof Class) {
-      keyType = (Class<?>) type;
-    }
-    return keyType;
-  }
-
   /**
    * Returns a collection of all instances matching the given matcher
    * @param matcher matches the types to return instances
    * @return a set of objects returned from this injector
    */
-  public static <T> Set<T> getInstancesOf(Injector injector, Matcher<Class<T>> matcher) {
+  public static <T> Set<T> getInstancesOf(Injector injector, Matcher<Class> matcher) {
     Set<T> answer = Sets.newHashSet();
     Set<Entry<Key<?>, Binding<?>>> entries = injector.getBindings().entrySet();
     for (Entry<Key<?>, Binding<?>> entry : entries) {
       Key<?> key = entry.getKey();
-      Class<T> keyType = (Class<T>) getKeyType(key);
+      Class<?> keyType = getKeyType(key);
       if (keyType != null && matcher.matches(keyType)) {
         Binding<?> binding = entry.getValue();
         Object value = binding.getProvider().get();
@@ -132,6 +122,17 @@ public class Injectors {
       }
     }
     return answer;
+  }
+
+
+  protected static <T> Class<?> getKeyType(Key<?> key) {
+    Class<?> keyType = null;
+    TypeLiteral<?> typeLiteral = key.getTypeLiteral();
+    Type type = typeLiteral.getType();
+    if (type instanceof Class) {
+      keyType = (Class<?>) type;
+    }
+    return keyType;
   }
 
   protected static Module loadModule(String moduleName)
