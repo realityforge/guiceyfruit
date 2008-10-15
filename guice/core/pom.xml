@@ -70,6 +70,8 @@
             <exclude>**/BytecodeGenTest.*</exclude>
             <exclude>**/BinderTest.*</exclude>
             <exclude>**/ScopesTest.*</exclude>
+            <exclude>**/ParentInjectorTest.*</exclude>
+            <exclude>**/OverrideModuleTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>

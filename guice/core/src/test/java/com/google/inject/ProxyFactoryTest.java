@@ -17,6 +17,7 @@
 
 package com.google.inject;
 
+import com.google.common.collect.Lists;
 import com.google.inject.internal.Errors;
 import com.google.inject.internal.ErrorsException;
 import static com.google.inject.matcher.Matchers.annotatedWith;
@@ -27,6 +28,7 @@ import com.google.inject.spi.InjectionPoint;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import junit.framework.TestCase;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -36,13 +38,15 @@ import org.aopalliance.intercept.MethodInvocation;
  */
 public class ProxyFactoryTest extends TestCase {
 
+  List<MethodAspect> aspects = Lists.newArrayList();
+  List<ConstructorAspect> constructorAspects = Lists.newArrayList();
+
   public void testSimpleCase()
       throws NoSuchMethodException, InvocationTargetException, ErrorsException {
     SimpleInterceptor interceptor = new SimpleInterceptor();
 
-    ProxyFactoryBuilder builder = new ProxyFactoryBuilder();
-    builder.intercept(any(), any(), interceptor);
-    ProxyFactory factory = builder.create();
+    aspects.add(new MethodAspect(any(), any(), interceptor));
+    ProxyFactory factory = createProxyFactory();
 
     ConstructionProxy<Simple> constructionProxy = factory
         .createConstructionProxy(new Errors(), InjectionPoint.forConstructorOf(Simple.class));
@@ -74,11 +78,8 @@ public class ProxyFactoryTest extends TestCase {
       throws NoSuchMethodException, InvocationTargetException, ErrorsException {
     SimpleInterceptor interceptor = new SimpleInterceptor();
 
-    ProxyFactoryBuilder builder = new ProxyFactoryBuilder();
-
-    builder.intercept(
-        only(Bar.class), annotatedWith(Intercept.class), interceptor);
-    ProxyFactory factory = builder.create();
+    aspects.add(new MethodAspect(only(Bar.class), annotatedWith(Intercept.class), interceptor));
+    ProxyFactory factory = createProxyFactory();
 
     ConstructionProxy<Foo> fooFactory =
         factory.get(new Errors(), InjectionPoint.forConstructorOf(Foo.class));
@@ -131,9 +132,8 @@ public class ProxyFactoryTest extends TestCase {
       throws InvocationTargetException, NoSuchMethodException, ErrorsException {
     SimpleInterceptor interceptor = new SimpleInterceptor();
 
-    ProxyFactoryBuilder builder = new ProxyFactoryBuilder();
-    builder.intercept(any(), any(), interceptor);
-    ProxyFactory factory = builder.create();
+    aspects.add(new MethodAspect(any(), any(), interceptor));
+    ProxyFactory factory = createProxyFactory();
 
     ConstructionProxy<A> constructor =
         factory.get(new Errors(), InjectionPoint.forConstructorOf(A.class));
@@ -147,9 +147,8 @@ public class ProxyFactoryTest extends TestCase {
       throws NoSuchMethodException, InvocationTargetException, ErrorsException {
     SimpleInterceptor interceptor = new SimpleInterceptor();
 
-    ProxyFactoryBuilder builder = new ProxyFactoryBuilder();
-    builder.intercept(not(any()), not(any()), interceptor);
-    ProxyFactory factory = builder.create();
+    aspects.add(new MethodAspect(not(any()), not(any()), interceptor));
+    ProxyFactory factory = createProxyFactory();
 
     ConstructionProxy<A> constructor =
         factory.get(new Errors(), InjectionPoint.forConstructorOf(A.class));
@@ -158,6 +157,10 @@ public class ProxyFactoryTest extends TestCase {
     assertEquals(A.class, a.getClass());
   }
 
+  protected ProxyFactory createProxyFactory() {
+    return new ProxyFactory(aspects, constructorAspects);
+  }
+      
   static class A {
     final int i;
     @Inject public A(int i) {
@@ -171,9 +174,8 @@ public class ProxyFactoryTest extends TestCase {
     DoubleInterceptor doubleInterceptor = new DoubleInterceptor();
     CountingInterceptor countingInterceptor = new CountingInterceptor();
 
-    ProxyFactoryBuilder builder = new ProxyFactoryBuilder();
-    builder.intercept(any(), any(), doubleInterceptor, countingInterceptor);
-    ProxyFactory factory = builder.create();
+    aspects.add(new MethodAspect(any(), any(), doubleInterceptor, countingInterceptor));
+    ProxyFactory factory = createProxyFactory();
 
     ConstructionProxy<Counter> constructor =
         factory.get(new Errors(), InjectionPoint.forConstructorOf(Counter.class));
