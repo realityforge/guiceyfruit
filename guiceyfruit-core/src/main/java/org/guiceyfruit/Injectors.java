@@ -124,8 +124,10 @@ public class Injectors {
     return answer;
   }
 
-
-  protected static <T> Class<?> getKeyType(Key<?> key) {
+  /**
+   * Returns the key type of the given key
+   */
+  public static <T> Class<?> getKeyType(Key<?> key) {
     Class<?> keyType = null;
     TypeLiteral<?> typeLiteral = key.getTypeLiteral();
     Type type = typeLiteral.getType();
