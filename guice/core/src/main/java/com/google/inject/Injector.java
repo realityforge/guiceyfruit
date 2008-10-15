@@ -123,6 +123,41 @@ public interface Injector {
   <T> T getInstance(Class<T> type);
 
   /**
+   * Returns a new injector that inherits all state from this injector. All
+   * bindings, scopes, interceptors and type converters are inherited -- they
+   * are visible to the child injector. Elements of the child injector are not
+   * visible to its parent.
+   *
+   * <p>Just-in-time bindings created for child injectors will be created in an
+   * ancestor injector whenever possible. This allows for scoped instances to be
+   * shared between injectors. Use explicit bindings to prevent bindings from
+   * being shared with the parent injector.
+   *
+   * <p>No key may be bound by both an injector and one of its ancestors. This
+   * includes just-in-time bindings. The lone exception is the key for {@code
+   * Injector.class}, which is bound by each injector to itself.
+   */
+  Injector createChildInjector(Iterable<? extends Module> modules);
+
+  /**
+   * Returns a new injector that inherits all state from this injector. All
+   * bindings, scopes, interceptors and type converters are inherited -- they
+   * are visible to the child injector. Elements of the child injector are not
+   * visible to its parent.
+   *
+   * <p>Just-in-time bindings created for child injectors will be created in an
+   * ancestor injector whenever possible. This allows for scoped instances to be
+   * shared between injectors. Use explicit bindings to prevent bindings from
+   * being shared with the parent injector.
+   *
+   * <p>No key may be bound by both an injector and one of its ancestors. This
+   * includes just-in-time bindings. The lone exception is the key for {@code
+   * Injector.class}, which is bound by each injector to itself.
+   */
+  Injector createChildInjector(Module... modules);
+
+
+  /**
    * Closes down any singleton resources in this injector by applying any bound
    * {@link com.google.inject.spi.Closer} strategy implementations to the singleton objects.
    *

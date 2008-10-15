@@ -28,26 +28,26 @@ import com.google.inject.spi.ConstructorInterceptorBinding;
  */
 class InterceptorBindingProcessor extends AbstractProcessor {
 
-  private final ProxyFactoryBuilder proxyFactoryBuilder;
+  private final State state;
 
-  InterceptorBindingProcessor(Errors errors) {
+  InterceptorBindingProcessor(Errors errors, State state) {
     super(errors);
-    proxyFactoryBuilder = new ProxyFactoryBuilder();
+    this.state = state;
   }
 
   @Override public Boolean visitInterceptorBinding(InterceptorBinding command) {
-    proxyFactoryBuilder.intercept(
-        command.getClassMatcher(), command.getMethodMatcher(), command.getInterceptors());
+    state.addMethodAspect(new MethodAspect(
+        command.getClassMatcher(), command.getMethodMatcher(), command.getInterceptors()));
     return true;
   }
 
   @Override public Boolean visitConstructorInterceptorBinding(ConstructorInterceptorBinding command) {
-    proxyFactoryBuilder.constructorIntercept(
-        command.getClassMatcher(), command.getInterceptors());
+    state.addConstructorAspect(new ConstructorAspect(
+        command.getClassMatcher(), command.getInterceptors()));
     return true;
   }
 
   ProxyFactory createProxyFactory() {
-    return proxyFactoryBuilder.create();
+    return new ProxyFactory(state.getMethodAspects(), state.getConstructorAspects());
   }
 }

@@ -43,8 +43,7 @@ import org.aopalliance.intercept.ConstructorInterceptor;
 import org.aopalliance.intercept.ConstructorInvocation;
 
 /**
- * Proxies classes applying interceptors to methods as specified in
- * {@link ProxyFactoryBuilder}.
+ * Proxies classes applying interceptors to methods.
  *
  * @author crazybob@google.com (Bob Lee)
  */

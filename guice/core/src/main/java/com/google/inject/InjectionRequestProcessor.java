@@ -42,12 +42,14 @@ import java.util.Map;
 class InjectionRequestProcessor extends AbstractProcessor {
 
   private final List<StaticInjection> staticInjections = Lists.newArrayList();
-  private final CreationTimeMemberInjector memberInjector;
+  private final Initializer memberInjector;
+  private final Map<Class<? extends Annotation>, AnnotationProviderFactory> customInjections;
 
-  InjectionRequestProcessor(Errors errors,
-      CreationTimeMemberInjector memberInjector) {
+  InjectionRequestProcessor(Errors errors, Initializer memberInjector,
+      Map<Class<? extends Annotation>, AnnotationProviderFactory> customInjections) {
     super(errors);
     this.memberInjector = memberInjector;
+    this.customInjections = customInjections;
   }
 
   @Override public Boolean visitStaticInjectionRequest(StaticInjectionRequest command) {
@@ -58,8 +60,6 @@ class InjectionRequestProcessor extends AbstractProcessor {
   @Override public Boolean visitInjectionRequest(InjectionRequest command) {
     List<InjectionPoint> injectionPointsList = Lists.newArrayList();
     try {
-      Map<Class<? extends Annotation>,AnnotationProviderFactory> customInjections = memberInjector
-          .annotationProviderFactories();
       InjectionPoint.addForInstanceMethodsAndFields(customInjections, command.getInstance().getClass(), injectionPointsList);
     } catch (ConfigurationException e) {
       errors.merge(e.getErrorMessages());
