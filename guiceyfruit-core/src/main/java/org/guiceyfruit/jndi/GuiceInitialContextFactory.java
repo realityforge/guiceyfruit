@@ -17,8 +17,10 @@
 package org.guiceyfruit.jndi;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
+import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
 import java.util.Hashtable;
 import java.util.Map;
@@ -57,20 +59,23 @@ public class GuiceInitialContextFactory implements InitialContextFactory {
       Injector injector = Injectors.createInjector(environment, new AbstractModule() {
         protected void configure() {
           bind(Context.class).toProvider(new Provider<Context>() {
+            @Inject Injector injector;
+
             public Context get() {
-              return new JndiContext(environment);
+              JndiContext context = new JndiContext(environment);
+              Properties jndiNames = createJndiNamesProperties(environment);
+              try {
+                JndiBindings.bindInjectorAndBindings(context, injector, jndiNames);
+                return context;
+              }
+              catch (NamingException e) {
+                throw new ProvisionException("Failed to create JNDI bindings. Reason: " + e, e);
+              }
             }
           }).in(Scopes.SINGLETON);
         }
       });
-      Context context = injector.getInstance(Context.class);
-
-      Properties jndiNames = createJndiNamesProperties(environment);
-      JndiBindings.bindInjectorAndBindings(context, injector, jndiNames);
-      return context;
-    }
-    catch (NamingException e) {
-      throw e;
+      return injector.getInstance(Context.class);
     }
     catch (Exception e) {
       NamingException exception = new NamingException(e.getMessage());
