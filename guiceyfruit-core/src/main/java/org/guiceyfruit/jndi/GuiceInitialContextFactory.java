@@ -16,8 +16,10 @@
 
 package org.guiceyfruit.jndi;
 
-import com.google.inject.Binding;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
+import com.google.inject.Scopes;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,21 +52,19 @@ public class GuiceInitialContextFactory implements InitialContextFactory {
    */
   public Context getInitialContext(final Hashtable environment) throws NamingException {
     try {
-      Injector injector = Injectors.createInjector(environment);
-      Context context = null;
-      Binding<Context> binding = null;
-      try {
-        binding = injector.getBinding(Context.class);
-      }
-      catch (Exception e) {
-        // ignore as there might not be a binding
-      }
-      if (binding != null) {
-        context = binding.getProvider().get();
-      }
-      if (context == null) {
-        context = new JndiContext(environment);
-      }
+      // lets avoid infinite recursion with a provider creating an InitialContext by binding the
+      // singleton initial context into the injector
+      Injector injector = Injectors.createInjector(environment, new AbstractModule() {
+        protected void configure() {
+          bind(Context.class).toProvider(new Provider<Context>() {
+            public Context get() {
+              return new JndiContext(environment);
+            }
+          }).in(Scopes.SINGLETON);
+        }
+      });
+      Context context = injector.getInstance(Context.class);
+
       Properties jndiNames = createJndiNamesProperties(environment);
       JndiBindings.bindInjectorAndBindings(context, injector, jndiNames);
       return context;

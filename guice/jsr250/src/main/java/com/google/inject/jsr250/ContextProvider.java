@@ -20,6 +20,7 @@ package com.google.inject.jsr250;
 
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
+import com.google.inject.Singleton;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -29,6 +30,7 @@ import javax.naming.NamingException;
  *
  * @version $Revision: 1.1 $
  */
+@Singleton
 public class ContextProvider implements Provider<Context> {
   public Context get() {
     try {

@@ -29,14 +29,15 @@ import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.name.Names;
+import com.google.inject.util.Modules;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
-import org.guiceyfruit.jndi.internal.Classes;
 import org.guiceyfruit.jndi.GuiceInitialContextFactory;
+import org.guiceyfruit.jndi.internal.Classes;
 
 /** @version $Revision: 1.1 $ */
 public class Injectors {
@@ -47,14 +48,16 @@ public class Injectors {
    * along with any other modules passed as an argument.
    *
    * @param environment the properties used to create the injector
+   * @param overridingModules any modules which override the modules referenced in the environment
+   *  such as to provide the actual JNDI context
    * @return
    * @throws ClassNotFoundException
    * @throws IllegalAccessException
    * @throws InstantiationException
    */
-  public static Injector createInjector(final Map environment, Module... otherModules)
+  public static Injector createInjector(final Map environment, Module... overridingModules)
       throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-    List<Module> modules = Lists.newArrayList(otherModules);
+    List<Module> modules = Lists.newArrayList();
 
     // lets bind the properties
     modules.add(new AbstractModule() {
@@ -71,11 +74,12 @@ public class Injectors {
         String moduleName = iter.nextToken();
         Module module = loadModule(moduleName);
         if (module != null) {
+          System.out.println("Loaded module: " + moduleName);
           modules.add(module);
         }
       }
     }
-    Injector injector = Guice.createInjector(modules);
+    Injector injector = Guice.createInjector(Modules.override(modules).with(overridingModules));
     return injector;
   }
 

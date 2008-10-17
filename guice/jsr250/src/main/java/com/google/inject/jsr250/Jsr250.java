@@ -69,6 +69,6 @@ public final class Jsr250 {
    */
   public static void bindJndi(Binder binder) {
     // lets bind the default JNDI context
-    binder.bind(Context.class).toProvider(ContextProvider.class);
+    binder.bind(Context.class).toProvider(ContextProvider.class).asEagerSingleton();
   }
 }
