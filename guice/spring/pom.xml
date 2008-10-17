@@ -3,11 +3,11 @@
   <parent>
     <groupId>org.guiceyfruit</groupId>
     <artifactId>guice</artifactId>
-    <version>2.0-beta-2</version>
+    <version>2.0-SNAPSHOT</version>
   </parent>
   <groupId>org.guiceyfruit</groupId>
   <artifactId>guice-spring</artifactId>
-  <version>2.0-beta-2</version>
+  <version>2.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>guice-spring</name>
   <dependencies>
