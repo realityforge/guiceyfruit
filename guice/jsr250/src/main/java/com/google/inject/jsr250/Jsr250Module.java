@@ -64,4 +64,12 @@ public class Jsr250Module extends AbstractModule {
   public void setResourceInjection(boolean resourceInjection) {
     this.resourceInjection = resourceInjection;
   }
+
+  /**
+   * a builder method to disable the use of resource injection
+   */
+  public Jsr250Module noResourceInjection() {
+    setResourceInjection(false);
+    return this;
+  }
 }
