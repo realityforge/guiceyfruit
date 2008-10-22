@@ -22,6 +22,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Guice;
 import org.guiceyfruit.Injectors;
+import org.guiceyfruit.Configuration;
 
 /**
  * @version $Revision: 1.1 $
