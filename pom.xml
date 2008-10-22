@@ -12,6 +12,7 @@
   <modules>
     <module>guice</module>
     <module>guiceyfruit-core</module>
+    <module>guiceyfruit-junit3</module>
     <module>guiceyfruit-spring-converter</module>
   </modules>
 
@@ -55,13 +56,11 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>3.8.1</version>
-        <scope>test</scope>
       </dependency>
         <dependency>
           <groupId>org.hamcrest</groupId>
           <artifactId>hamcrest-all</artifactId>
           <version>1.2-dev1</version>
-          <scope>test</scope>
         </dependency>
       <dependency>
         <groupId>org.easymock</groupId>

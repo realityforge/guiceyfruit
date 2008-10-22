@@ -74,7 +74,6 @@ public class Injectors {
         String moduleName = iter.nextToken();
         Module module = loadModule(moduleName);
         if (module != null) {
-          System.out.println("Loaded module: " + moduleName);
           modules.add(module);
         }
       }
