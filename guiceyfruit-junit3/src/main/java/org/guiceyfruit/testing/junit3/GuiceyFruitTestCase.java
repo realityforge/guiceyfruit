@@ -82,6 +82,7 @@ public class GuiceyFruitTestCase extends TestCase {
                 throw new IllegalArgumentException("Class " + type.getName() + " is not a Guice Module!", e);
             }
         }
+        //System.out.println("Creating Guice Injector from module: " + moduleType.getName());
         Module module = moduleType.newInstance();
         return Guice.createInjector(module);
     }
