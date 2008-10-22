@@ -48,14 +48,6 @@ public class Jsr250Module extends AbstractModule {
     }
   }
 
-  /**
-   * A strategy method to bind a JNDI context which by default uses {@link
-   * com.google.inject.jsr250.ContextProvider} to use the InitialContext
-   */
-  protected void bindJndiContext() {
-    bind(Context.class).toProvider(ContextProvider.class).in(Scopes.SINGLETON);
-  }
-
   public boolean isResourceInjection() {
     return resourceInjection;
   }
@@ -66,10 +58,10 @@ public class Jsr250Module extends AbstractModule {
   }
 
   /**
-   * a builder method to disable the use of resource injection
+   * A strategy method to bind a JNDI context which by default uses {@link
+   * com.google.inject.jsr250.ContextProvider} to use the InitialContext
    */
-  public Jsr250Module noResourceInjection() {
-    setResourceInjection(false);
-    return this;
+  protected void bindJndiContext() {
+    bind(Context.class).toProvider(ContextProvider.class).in(Scopes.SINGLETON);
   }
 }

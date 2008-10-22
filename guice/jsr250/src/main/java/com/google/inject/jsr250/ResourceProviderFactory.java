@@ -20,6 +20,7 @@ package com.google.inject.jsr250;
 
 import com.google.common.base.Objects;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.spi.AnnotationProviderFactory;
@@ -40,13 +41,11 @@ import javax.naming.NamingException;
  */
 @InjectionAnnotation(Resource.class)
 public class ResourceProviderFactory<T> implements AnnotationProviderFactory<T> {
-  private final Context context;
+  private final Injector injector;
 
-  // TODO not sure why we absolutely must annotate this single constructor?
-  // see http://groups.google.com/group/google-guice/browse_thread/thread/2a252b1a3f7b3779
   @Inject
-  public ResourceProviderFactory(Context context) {
-    this.context = context;
+  public ResourceProviderFactory(Injector injector) {
+    this.injector = injector;
   }
 
   public Provider<T> createProvider(AnnotatedElement member) {
@@ -54,7 +53,9 @@ public class ResourceProviderFactory<T> implements AnnotationProviderFactory<T> 
     Objects.nonNull(resource, "@Resource is missing!");
     if (resource != null) {
       String name = getJndiName(resource, member);
-      return new ResourceProvider<T>(name);
+      ResourceProvider<T> provider = injector.getInstance(ResourceProvider.class);
+      provider.setName(name);
+      return provider;
     }
     return null;
   }
@@ -82,20 +83,31 @@ public class ResourceProviderFactory<T> implements AnnotationProviderFactory<T> 
     return answer;
   }
 
-  class ResourceProvider<T> implements Provider<T> {
-    private final String name;
+  public static class ResourceProvider<T> implements Provider<T> {
+    private final Context context;
+    private String name;
 
-    public ResourceProvider(String name) {
-      this.name = name;
+    @Inject
+    public ResourceProvider(Context context) {
+      this.context = context;
     }
 
     public T get() {
+      Objects.nonNull(name, "name");
       try {
         return (T) context.lookup(name);
       }
       catch (NamingException e) {
         throw new ProvisionException("Failed to find name '" + name + "' in JNDI. Cause: " + e, e);
       }
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
     }
 
     @Override public String toString() {
