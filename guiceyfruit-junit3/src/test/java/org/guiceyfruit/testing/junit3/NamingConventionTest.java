@@ -34,7 +34,7 @@ public class NamingConventionTest extends GuiceyTestCase {
     assertEquals("cheese.hello", "Cheddar James", cheese.sayHello("James"));
   }
 
-  public static class Configuration extends AbstractModule {
+  public static class TestModule extends AbstractModule {
     protected void configure() {
       bind(Cheese.class).to(Cheddar.class);
     }

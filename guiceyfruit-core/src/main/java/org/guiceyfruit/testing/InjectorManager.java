@@ -26,6 +26,7 @@ import com.google.inject.Module;
 import com.google.inject.internal.CloseErrorsImpl;
 import com.google.inject.spi.CloseErrors;
 import com.google.inject.spi.CloseFailedException;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -44,6 +45,7 @@ public class InjectorManager {
   private Map<Object, Injector> injectors = new ConcurrentHashMap<Object, Injector>();
   private AtomicInteger initializeCounter = new AtomicInteger(0);
   private CloseableScope testScope = new CloseableScope();
+  private static final String NESTED_MODULE_CLASS = "TestModule";
 
   public void beforeClasses() {
     int counter = initializeCounter.incrementAndGet();
@@ -128,8 +130,11 @@ public class InjectorManager {
    * Factory method to create a Guice Injector for some kind of test object <p/> The default
    * implementation will use the system property <code>org.guiceyfruit.modules</code> (see {@link
    * Injectors#MODULE_CLASS_NAMES} otherwise if that is not set it will look for the {@link
-   * Configuration} annotation and use the module defined on that otherwise it will try look for the
-   * inner class called <code>ClassName$Configuration</code>
+   * UseModule} annotation and use the module defined on that otherwise it will try look for the
+   * inner public static class "TestModule"
+   *
+   * @see org.guiceyfruit.testing.UseModule
+   * @see #NESTED_MODULE_CLASS
    */
   protected Injector createInjectorForTestClass(Class<?> objectType)
       throws IllegalAccessException, InstantiationException, ClassNotFoundException {
@@ -143,12 +148,12 @@ public class InjectorManager {
       }
     }
     Class<? extends Module> moduleType;
-    Configuration config = objectType.getAnnotation(Configuration.class);
+    UseModule config = objectType.getAnnotation(UseModule.class);
     if (config != null) {
       moduleType = config.value();
     }
     else {
-      String name = objectType.getName() + "$Configuration";
+      String name = objectType.getName() + "$" + NESTED_MODULE_CLASS;
       Class<?> type;
       try {
         type = objectType.getClassLoader().loadClass(name);
@@ -158,7 +163,11 @@ public class InjectorManager {
           type = Thread.currentThread().getContextClassLoader().loadClass(name);
         }
         catch (ClassNotFoundException e2) {
-          throw new ClassNotFoundException("Class " + name + " not found: " + e, e);
+          throw new ClassNotFoundException("Class " + objectType.getName()
+              + " does not have a @UseModule annotation nor does it have a nested class called "
+              + NESTED_MODULE_CLASS
+              + " available on the classpath. Please see: http://code.google.com/p/guiceyfruit/wiki/Testing"
+              + e, e);
         }
       }
       try {
@@ -169,9 +178,20 @@ public class InjectorManager {
             e);
       }
     }
+    int modifiers = moduleType.getModifiers();
+    if (Modifier.isAbstract(modifiers) || !Modifier.isPublic(modifiers)) {
+      throw new IllegalArgumentException(
+          "Class " + moduleType.getName() + " must be a public class which is non abstract");
+    }
+    try {
+      moduleType.getConstructor();
+    }
+    catch (NoSuchMethodException e) {
+      throw new IllegalArgumentException(
+          "Class " + moduleType.getName() + " must have a zero argument constructor", e);
+    }
     //System.out.println("Creating Guice Injector from module: " + moduleType.getName());
     Module module = moduleType.newInstance();
     return Guice.createInjector(module, testModule);
   }
-
 }

@@ -39,11 +39,9 @@ public class NamingConventionTest {
     Assert.assertEquals("cheese.sayHello", "Cheddar James", cheese.sayHello("James"));
   }
 
-  public static class Configuration extends AbstractModule {
-
+  public static class TestModule extends AbstractModule {
     protected void configure() {
       bind(Cheese.class).to(Cheddar.class);
-
     }
   }
 }

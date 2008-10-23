@@ -19,12 +19,12 @@
 package org.guiceyfruit.testing.junit3;
 
 import com.google.inject.Inject;
-import org.guiceyfruit.testing.Configuration;
+import org.guiceyfruit.testing.UseModule;
 import org.guiceyfruit.testing.junit3.example.Cheese;
 import org.guiceyfruit.testing.junit3.example.EdamModule;
 
 /** @version $Revision: 1.1 $ */
-@Configuration(EdamModule.class)
+@UseModule(EdamModule.class)
 public class AnnotationTest extends GuiceyTestCase {
 
   @Inject

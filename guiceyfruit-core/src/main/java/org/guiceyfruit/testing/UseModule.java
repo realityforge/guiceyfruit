@@ -16,30 +16,24 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.testing.testng;
+package org.guiceyfruit.testing;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import org.guiceyfruit.testing.testng.example.Cheddar;
-import org.guiceyfruit.testing.testng.example.Cheese;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import com.google.inject.Module;
+import java.lang.annotation.Documented;
+import static java.lang.annotation.ElementType.TYPE;
+import java.lang.annotation.Retention;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.Target;
 
-/** @version $Revision: 1.1 $ */
-public class NamingConventionTest extends GuiceyTestCase {
-  @Inject
-  Cheese cheese;
-
-  @Test
-  public void testSomething() {
-    System.out.println("Running!");
-
-    Assert.assertEquals("Cheddar James", cheese.sayHello("James"), "cheese.sayHello");
-  }
-
-  public static class TestModule extends AbstractModule {
-    protected void configure() {
-      bind(Cheese.class).to(Cheddar.class);
-    }
-  }
+/**
+ * Specifies the default Guice Module to use when running the test case when using <a
+ * href="http://code.google.com/p/guiceyfruit/wiki/Testing">Guicey Testing</a>
+ *
+ * @version $Revision: 1.1 $
+ */
+@Target({ TYPE })
+@Retention(RUNTIME)
+@Documented
+public @interface UseModule {
+  Class<? extends Module> value();
 }

@@ -21,7 +21,7 @@ package org.guiceyfruit.testing.junit4;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.jsr250.Jsr250Module;
-import org.guiceyfruit.testing.Configuration;
+import org.guiceyfruit.testing.UseModule;
 import org.guiceyfruit.testing.junit4.counter.InstanceCounter;
 import org.guiceyfruit.testing.junit4.counter.SingletonCounter;
 import org.guiceyfruit.testing.junit4.counter.MethodCounter;
@@ -32,8 +32,8 @@ import org.junit.runner.RunWith;
 
 /** @version $Revision: 1.1 $ */
 @RunWith(GuiceyJUnit4.class)
-@Configuration(ScopeTest.Configuration.class)
-//@Configuration(Jsr250Module.class)
+@UseModule(ScopeTest.Configuration.class)
+//@UseModule(Jsr250Module.class)
 public class ScopeTest {
   protected static final boolean verbose = false;
 

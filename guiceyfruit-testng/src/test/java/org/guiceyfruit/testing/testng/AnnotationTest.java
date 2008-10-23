@@ -19,14 +19,14 @@
 package org.guiceyfruit.testing.testng;
 
 import com.google.inject.Inject;
-import org.guiceyfruit.testing.Configuration;
+import org.guiceyfruit.testing.UseModule;
 import org.guiceyfruit.testing.testng.example.Cheese;
 import org.guiceyfruit.testing.testng.example.EdamModule;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /** @version $Revision: 1.1 $ */
-@Configuration(EdamModule.class)
+@UseModule(EdamModule.class)
 public class AnnotationTest extends GuiceyTestCase {
   @Inject
   Cheese cheese;

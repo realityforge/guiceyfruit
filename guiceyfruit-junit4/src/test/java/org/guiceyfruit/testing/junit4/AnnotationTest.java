@@ -19,7 +19,7 @@
 package org.guiceyfruit.testing.junit4;
 
 import com.google.inject.Inject;
-import org.guiceyfruit.testing.Configuration;
+import org.guiceyfruit.testing.UseModule;
 import org.guiceyfruit.testing.junit4.example.Cheese;
 import org.guiceyfruit.testing.junit4.example.EdamModule;
 import org.junit.Assert;
@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 
 /** @version $Revision: 1.1 $ */
 @RunWith(GuiceyJUnit4.class)
-@Configuration(EdamModule.class)
+@UseModule(EdamModule.class)
 public class AnnotationTest {
   @Inject
   Cheese cheese;
