@@ -15,24 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.guiceyfruit.testing.junit3;
 
 import com.google.inject.Inject;
+import org.guiceyfruit.Configuration;
 import org.guiceyfruit.testing.junit3.example.Cheese;
 import org.guiceyfruit.testing.junit3.example.EdamModule;
-import org.guiceyfruit.Configuration;
 
-/**
- * @version $Revision: 1.1 $
- */
+/** @version $Revision: 1.1 $ */
 @Configuration(EdamModule.class)
 public class AnnotationTest extends GuiceyTestCase {
 
-    @Inject
-    Cheese cheese;
+  @Inject Cheese cheese;
 
-    public void testInjection() throws Exception {
-        assertNotNull("has a cheese", cheese);
-        assertEquals("cheese.hello", "Edam James", cheese.sayHello("James"));
-    }
+  public void testInjection() throws Exception {
+    assertNotNull("has a cheese", cheese);
+    assertEquals("cheese.hello", "Edam James", cheese.sayHello("James"));
+  }
 }

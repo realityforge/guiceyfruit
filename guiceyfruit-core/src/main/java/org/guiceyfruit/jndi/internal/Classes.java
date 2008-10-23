@@ -22,11 +22,12 @@ package org.guiceyfruit.jndi.internal;
 public class Classes {
 
   /**
-   * Attempts to load the class of the given name from the thread context class loader first
-   * then the given class loader second
-   * 
+   * Attempts to load the class of the given name from the thread context class loader first then
+   * the given class loader second
+   *
    * @param name the name of the class
-   * @param loader the class loader to use if the thread context class loader cannot find the class
+   * @param loader the class loader to use if the thread context class loader cannot find the
+   * class
    * @return the class loaded
    * @throws ClassNotFoundException if the class could not be found
    */

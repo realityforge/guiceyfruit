@@ -15,52 +15,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.guiceyfruit.testing.junit3;
 
-import junit.framework.TestCase;
 import com.google.inject.Injector;
-import org.guiceyfruit.Injectors;
+import junit.framework.TestCase;
 import org.guiceyfruit.Configuration;
+import org.guiceyfruit.Injectors;
 
-/**
- * @version $Revision: 1.1 $
- */
+/** @version $Revision: 1.1 $ */
 public class GuiceyTestCase extends TestCase {
-    private Injector injector;
-    public static final String TEST_MODULES = "org.guiceyfruit.test.modules";
+  private Injector injector;
+  public static final String TEST_MODULES = "org.guiceyfruit.test.modules";
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
 
-        injector = createInjector();
-        assertNotNull("Should have a Guice Injector created", injector);
-        injector.injectMembers(this);
+    injector = createInjector();
+    assertNotNull("Should have a Guice Injector created", injector);
+    injector.injectMembers(this);
+  }
+
+  /**
+   * Factory method to create the Guice Injector. <p/> The default implementation will use the
+   * system property <code>org.guiceyfruit.modules</code> (see {@link
+   * Injectors#MODULE_CLASS_NAMES} otherwise if that is not set it will look for the {@link
+   * Configuration} annotation and use the module defined on that otherwise it will try look for
+   * the inner class called <code>TestClass$Configuration</code>
+   */
+  protected Injector createInjector() throws Exception {
+    return Injectors.createInjectorForTest(this);
+  }
+
+  @Override
+  protected void tearDown() throws Exception {
+    if (injector != null) {
+      injector.close();
+      injector = null;
     }
+    super.tearDown();
 
-    /**
-     * Factory method to create the Guice Injector.
-     * <p/>
-     * The default implementation will use the system property
-     * <code>org.guiceyfruit.modules</code> (see {@link Injectors#MODULE_CLASS_NAMES}
-     * otherwise
-     * if that is not set it will look for the {@link Configuration}
-     * annotation and use the module defined on that otherwise it
-     * will try look for the inner class called <code>TestClass$Configuration</code>
-     *
-     * @return
-     */
-    protected Injector createInjector() throws Exception {
-        return Injectors.createInjectorForTest(this);
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        if (injector != null) {
-            injector.close();
-            injector = null;
-        }
-        super.tearDown();
-
-    }
+  }
 }

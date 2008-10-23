@@ -35,10 +35,9 @@ import org.guiceyfruit.jndi.internal.JndiContext;
 
 /**
  * A factory of the Guice JNDI provider which creates an injector from all the available modules
- * specified in the space separated {@link Injectors#MODULE_CLASS_NAMES} property.
- *
- * For more details of how this JNDI provider works see
- * <a href="http://code.google.com/p/camel-extra/wiki/GuiceJndi">the wiki documentation</a>
+ * specified in the space separated {@link Injectors#MODULE_CLASS_NAMES} property. <p/> For more
+ * details of how this JNDI provider works see <a href="http://code.google.com/p/camel-extra/wiki/GuiceJndi">the
+ * wiki documentation</a>
  *
  * @version $Revision: 656978 $
  */
@@ -85,8 +84,9 @@ public class GuiceInitialContextFactory implements InitialContextFactory {
   }
 
   /**
-   * Creates a properties object containing all of the values whose keys start with
-   * {@link #NAME_PREFIX} with the prefix being removed on the key
+   * Creates a properties object containing all of the values whose keys start with {@link
+   * #NAME_PREFIX} with the prefix being removed on the key
+   *
    * @return a properties object
    */
   private Properties createJndiNamesProperties(Hashtable environment) {

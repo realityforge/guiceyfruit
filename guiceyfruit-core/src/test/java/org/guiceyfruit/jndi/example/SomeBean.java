@@ -23,14 +23,14 @@ import com.google.inject.name.Named;
 
 /** @version $Revision: 1.1 $ */
 public class SomeBean {
-  @Inject @Named("someBean.name")
-  String name;
+  @Inject @Named("someBean.name") String name;
 
   public String getName() {
     return name;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "SomeBean[" + name + "]";
   }
 }

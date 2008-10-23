@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.guiceyfruit.testing.junit4;
 
 import com.google.inject.Inject;
@@ -25,19 +26,15 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * @version $Revision: 1.1 $
- */
-@RunWith(GuiceyJUnit4.class)
-@Configuration(EdamModule.class)
+/** @version $Revision: 1.1 $ */
+@RunWith(GuiceyJUnit4.class) @Configuration(EdamModule.class)
 public class AnnotationTest {
-    @Inject
-    Cheese cheese;
+  @Inject Cheese cheese;
 
-    @Test
-    public void testSomething() {
-        System.out.println("Running!");
+  @Test
+  public void testSomething() {
+    System.out.println("Running!");
 
-        Assert.assertEquals("cheese.sayHello", "Edam James", cheese.sayHello("James"));
-    }
+    Assert.assertEquals("cheese.sayHello", "Edam James", cheese.sayHello("James"));
+  }
 }

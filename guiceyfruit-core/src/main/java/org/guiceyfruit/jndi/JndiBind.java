@@ -29,11 +29,9 @@ import java.lang.annotation.Target;
 /**
  * Marks an injection point so that it is bound to the current JNDI context with some JNDI name
  *
- * @version $Revision: 1.1 $ */
-@Target({ METHOD, CONSTRUCTOR, FIELD, TYPE})
-@Retention(RUNTIME)
-@Documented
-@BindingAnnotation
+ * @version $Revision: 1.1 $
+ */
+@Target({ METHOD, CONSTRUCTOR, FIELD, TYPE }) @Retention(RUNTIME) @Documented @BindingAnnotation
 public @interface JndiBind {
 
   /**

@@ -179,6 +179,13 @@
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
           <failIfNoTests>false</failIfNoTests>
+
+          <systemProperties>
+             <property>
+              <name>org.guiceyfruit.modules</name>
+              <value>${org.guiceyfruit.modules}</value>
+            </property>
+          </systemProperties>
         </configuration>
       </plugin>
     </plugins>

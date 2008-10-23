@@ -39,7 +39,8 @@ public class Cheese {
     return type;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "Cheese[" + type + "]";
 
   }

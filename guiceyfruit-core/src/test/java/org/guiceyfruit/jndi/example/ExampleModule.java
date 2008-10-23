@@ -29,14 +29,12 @@ public class ExampleModule extends AbstractModule {
     bind(SomeBean.class);
   }
 
-  @Provides
-  @JndiBind("blah")
+  @Provides @JndiBind("blah")
   public MyBean blah() {
     return new MyBean(new AnotherBean("Blah.another"), "Blah");
   }
 
-  @Provides
-  @JndiBind("foo")
+  @Provides @JndiBind("foo")
   public MyBean foo() {
     return new MyBean(new AnotherBean("Foo.another"), "Foo");
   }

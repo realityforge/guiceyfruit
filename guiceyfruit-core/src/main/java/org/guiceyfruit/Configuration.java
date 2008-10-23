@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.guiceyfruit;
 
 import com.google.inject.Module;
-
 import java.lang.annotation.Documented;
 import static java.lang.annotation.ElementType.TYPE;
 import java.lang.annotation.Retention;
@@ -26,14 +26,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 
 /**
- * Specifies the default Guice Module to use when running the test case
- * when using <a href="http://code.google.com/p/guiceyfruit/wiki/Testing">Guicey Testing</a>
+ * Specifies the default Guice Module to use when running the test case when using <a
+ * href="http://code.google.com/p/guiceyfruit/wiki/Testing">Guicey Testing</a>
  *
  * @version $Revision: 1.1 $
  */
-@Target({ TYPE })
-@Retention(RUNTIME)
-@Documented
+@Target({ TYPE }) @Retention(RUNTIME) @Documented
 public @interface Configuration {
-    Class<? extends Module> value();
+  Class<? extends Module> value();
 }

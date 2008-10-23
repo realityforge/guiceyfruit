@@ -44,16 +44,13 @@ public class Injectors {
   public static final String MODULE_CLASS_NAMES = "org.guiceyfruit.modules";
 
   /**
-   * Creates an injector from the given properties, loading any modules define by the {@link #MODULE_CLASS_NAMES} property value (space separated)
-   * along with any other modules passed as an argument.
+   * Creates an injector from the given properties, loading any modules define by the {@link
+   * #MODULE_CLASS_NAMES} property value (space separated) along with any other modules passed as
+   * an argument.
    *
    * @param environment the properties used to create the injector
    * @param overridingModules any modules which override the modules referenced in the environment
-   *  such as to provide the actual JNDI context
-   * @return
-   * @throws ClassNotFoundException
-   * @throws IllegalAccessException
-   * @throws InstantiationException
+   * such as to provide the actual JNDI context
    */
   public static Injector createInjector(final Map environment, Module... overridingModules)
       throws ClassNotFoundException, IllegalAccessException, InstantiationException {
@@ -82,9 +79,9 @@ public class Injectors {
     return injector;
   }
 
-
   /**
    * Returns a collection of all instances of the given base type
+   *
    * @param baseClass the base type of objects required
    * @param <T> the base type
    * @return a set of objects returned from this injector
@@ -109,6 +106,7 @@ public class Injectors {
 
   /**
    * Returns a collection of all instances matching the given matcher
+   *
    * @param matcher matches the types to return instances
    * @return a set of objects returned from this injector
    */
@@ -127,9 +125,7 @@ public class Injectors {
     return answer;
   }
 
-  /**
-   * Returns the key type of the given key
-   */
+  /** Returns the key type of the given key */
   public static <T> Class<?> getKeyType(Key<?> key) {
     Class<?> keyType = null;
     TypeLiteral<?> typeLiteral = key.getTypeLiteral();
@@ -142,55 +138,57 @@ public class Injectors {
 
   protected static Module loadModule(String moduleName)
       throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-    Class<?> type = Classes.loadClass(moduleName, GuiceInitialContextFactory.class.getClassLoader());
+    Class<?> type = Classes.loadClass(moduleName, GuiceInitialContextFactory.class.getClassLoader())
+        ;
     return (Module) type.newInstance();
   }
 
-    /**
-     * Factory method to create a Guice Injector for some kind of test object
-     * <p/>
-     * The default implementation will use the system property
-     * <code>org.guiceyfruit.modules</code> (see {@link #MODULE_CLASS_NAMES}
-     * otherwise
-     * if that is not set it will look for the {@link .Configuration}
-     * annotation and use the module defined on that otherwise it
-     * will try look for the inner class called <code>ClassName$Configuration</code>
-     *
-     * @return
-     */
-    public static Injector createInjectorForTest(Object object) throws Exception {
-            String modules = System.getProperty(MODULE_CLASS_NAMES);
-        if (modules != null) {
-            modules = modules.trim();
-            if (modules.length() > 0) {
-                return createInjectorForTest(System.getProperties());
-            }
-        }
-        Class<? extends Object> objectType = object.getClass();
-        Class<? extends Module> moduleType = null;
-        Configuration config = objectType.getAnnotation(Configuration.class);
-        if (config != null) {
-            moduleType = config.value();
-        } else {
-            String name = objectType.getName() + "$Configuration";
-            Class<?> type;
-            try {
-                type = objectType.getClassLoader().loadClass(name);
-            } catch (ClassNotFoundException e) {
-                try {
-                    type = Thread.currentThread().getContextClassLoader().loadClass(name);
-                } catch (ClassNotFoundException e2) {
-                    throw new ClassNotFoundException("Class " + name + " not found: " + e, e);
-                }
-            }
-            try {
-                moduleType = (Class<? extends Module>) type;
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Class " + type.getName() + " is not a Guice Module!", e);
-            }
-        }
-        //System.out.println("Creating Guice Injector from module: " + moduleType.getName());
-        Module module = moduleType.newInstance();
-        return Guice.createInjector(module);
+  /**
+   * Factory method to create a Guice Injector for some kind of test object <p/> The default
+   * implementation will use the system property <code>org.guiceyfruit.modules</code> (see {@link
+   * #MODULE_CLASS_NAMES} otherwise if that is not set it will look for the {@link .Configuration}
+   * annotation and use the module defined on that otherwise it will try look for the inner class
+   * called <code>ClassName$Configuration</code>
+   */
+  public static Injector createInjectorForTest(Object object) throws Exception {
+    String modules = System.getProperty(MODULE_CLASS_NAMES);
+    if (modules != null) {
+      modules = modules.trim();
+      if (modules.length() > 0) {
+        System.out.println("Loading modules: " + modules);
+        return createInjector(System.getProperties());
+      }
     }
+    Class<? extends Object> objectType = object.getClass();
+    Class<? extends Module> moduleType = null;
+    Configuration config = objectType.getAnnotation(Configuration.class);
+    if (config != null) {
+      moduleType = config.value();
+    }
+    else {
+      String name = objectType.getName() + "$Configuration";
+      Class<?> type;
+      try {
+        type = objectType.getClassLoader().loadClass(name);
+      }
+      catch (ClassNotFoundException e) {
+        try {
+          type = Thread.currentThread().getContextClassLoader().loadClass(name);
+        }
+        catch (ClassNotFoundException e2) {
+          throw new ClassNotFoundException("Class " + name + " not found: " + e, e);
+        }
+      }
+      try {
+        moduleType = (Class<? extends Module>) type;
+      }
+      catch (Exception e) {
+        throw new IllegalArgumentException("Class " + type.getName() + " is not a Guice Module!",
+            e);
+      }
+    }
+    //System.out.println("Creating Guice Injector from module: " + moduleType.getName());
+    Module module = moduleType.newInstance();
+    return Guice.createInjector(module);
+  }
 }

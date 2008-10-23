@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.guiceyfruit.testing.junit4;
 
 import com.google.inject.AbstractModule;
@@ -25,26 +26,23 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * @version $Revision: 1.1 $
- */
+/** @version $Revision: 1.1 $ */
 @RunWith(GuiceyJUnit4.class)
 public class NamingConventionTest {
-    @Inject
-    Cheese cheese;
+  @Inject Cheese cheese;
 
-    @Test
-    public void testSomething() {
-        System.out.println("Running!");
+  @Test
+  public void testSomething() {
+    System.out.println("Running!");
 
-        Assert.assertEquals("cheese.sayHello", "Cheddar James", cheese.sayHello("James"));
+    Assert.assertEquals("cheese.sayHello", "Cheddar James", cheese.sayHello("James"));
+  }
+
+  public static class Configuration extends AbstractModule {
+
+    protected void configure() {
+      bind(Cheese.class).to(Cheddar.class);
+
     }
-
-    public static class Configuration extends AbstractModule {
-
-        protected void configure() {
-            bind(Cheese.class).to(Cheddar.class);
-
-        }
-    }
+  }
 }

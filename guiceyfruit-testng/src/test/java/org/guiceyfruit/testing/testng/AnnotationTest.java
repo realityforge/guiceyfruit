@@ -15,27 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.guiceyfruit.testing.testng;
 
 import com.google.inject.Inject;
 import org.guiceyfruit.Configuration;
-import org.guiceyfruit.testing.testng.example.EdamModule;
 import org.guiceyfruit.testing.testng.example.Cheese;
-import org.testng.annotations.Test;
+import org.guiceyfruit.testing.testng.example.EdamModule;
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
-/**
- * @version $Revision: 1.1 $
- */
+/** @version $Revision: 1.1 $ */
 @Configuration(EdamModule.class)
 public class AnnotationTest extends GuiceyTestCase {
-    @Inject
-    Cheese cheese;
+  @Inject Cheese cheese;
 
-    @Test
-    public void testSomething() {
-        System.out.println("Running!");
+  @Test
+  public void testSomething() {
+    System.out.println("Running!");
 
-        Assert.assertEquals("Edam James", cheese.sayHello("James"), "cheese.sayHello");
-    }
+    Assert.assertEquals("Edam James", cheese.sayHello("James"), "cheese.sayHello");
+  }
 }

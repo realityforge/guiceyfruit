@@ -38,7 +38,8 @@ public class MyBean {
     return name;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "MyBean[" + name + "; another=" + another + "]";
   }
 }

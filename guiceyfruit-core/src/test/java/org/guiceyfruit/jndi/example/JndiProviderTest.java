@@ -59,7 +59,8 @@ public class JndiProviderTest extends TestCase {
     assertEquals("cheese.type", "Edam", cheese.getType());
     assertEquals("Cheese instance count", 1, Cheese.instanceCount);
 
-    SomeBean someBean = assertLookup(context, "org.guiceyfruit.jndi.example.SomeBean", SomeBean.class);
+    SomeBean someBean = assertLookup(context, "org.guiceyfruit.jndi.example.SomeBean",
+        SomeBean.class);
     assertEquals("someBean.name", "James", someBean.getName());
 
     // lets test we can find the injector with the default name

@@ -37,8 +37,7 @@ import org.guiceyfruit.jndi.internal.Classes;
 public class JndiBindings {
   /**
    * Binds the given injector and its binding providers to the given JNDI context using <a
-   * href="http://code.google.com/p/camel-extra/wiki/GuiceJndi">this mapping mechanism</a>.
-   *
+   * href="http://code.google.com/p/camel-extra/wiki/GuiceJndi">this mapping mechanism</a>. <p/>
    * This will expose all of the bindings providers to JNDI along with any bindings which are
    * annotated with {@link JndiBind} or {@link @Named} to the given JNDI context.
    *

@@ -30,7 +30,8 @@ public class AnotherBean {
     return name;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "AnotherBean[" + name + "]";
   }
 }

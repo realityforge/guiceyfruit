@@ -38,9 +38,9 @@ public class InjectorsTest extends TestCase {
     assertMatches(Injectors.getInstancesOf(injector, B.class), hasSize(1));
     assertMatches(Injectors.getInstancesOf(injector, C.class), hasSize(1));
 
-    assertMatches(Injectors.getInstancesOf(injector, Matchers.subclassesOf(C.class).and(Matchers.annotatedWith(Blue.class))), hasSize(1));
+    assertMatches(Injectors.getInstancesOf(injector,
+        Matchers.subclassesOf(C.class).and(Matchers.annotatedWith(Blue.class))), hasSize(1));
   }
-
 
   public static class MyModule extends AbstractModule {
     protected void configure() {
@@ -65,7 +65,6 @@ public class InjectorsTest extends TestCase {
       name = "C";
     }
   }
-
 
   // TODO hack to get around generics issue with hamcrest
   private void assertMatches(Collection<?> set, Matcher<Collection<Object>> matcher) {
