@@ -3,10 +3,10 @@
   <parent>
     <groupId>org.guiceyfruit</groupId>
     <artifactId>guice</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0-beta-4</version>
   </parent>
   <artifactId>guice-core</artifactId>
-  <version>2.0-SNAPSHOT</version>
+  <version>2.0-beta-4</version>
   <packaging>jar</packaging>
   <name>guice-core</name>
   <dependencies>
