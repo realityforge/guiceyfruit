@@ -19,15 +19,13 @@ package org.guiceyfruit.testing.junit3;
 
 import junit.framework.TestCase;
 import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Guice;
 import org.guiceyfruit.Injectors;
 import org.guiceyfruit.Configuration;
 
 /**
  * @version $Revision: 1.1 $
  */
-public class GuiceyFruitTestCase extends TestCase {
+public class GuiceyTestCase extends TestCase {
     private Injector injector;
     public static final String TEST_MODULES = "org.guiceyfruit.test.modules";
 
@@ -36,7 +34,7 @@ public class GuiceyFruitTestCase extends TestCase {
         super.setUp();
 
         injector = createInjector();
-        assertNotNull("Should have a Guice Injector created");
+        assertNotNull("Should have a Guice Injector created", injector);
         injector.injectMembers(this);
     }
 
@@ -53,44 +51,14 @@ public class GuiceyFruitTestCase extends TestCase {
      * @return
      */
     protected Injector createInjector() throws Exception {
-        String modules = System.getProperty(Injectors.MODULE_CLASS_NAMES);
-        if (modules != null) {
-            modules = modules.trim();
-            if (modules.length() > 0) {
-                return Injectors.createInjector(System.getProperties());
-            }
-        }
-        Class<? extends Module> moduleType = null;
-        Configuration config = getClass().getAnnotation(Configuration.class);
-        if (config != null) {
-            moduleType = config.value();
-        } else {
-            String name = getClass().getName() + "$Configuration";
-            Class<?> type;
-            try {
-                type = getClass().getClassLoader().loadClass(name);
-            } catch (ClassNotFoundException e) {
-                try {
-                    type = Thread.currentThread().getContextClassLoader().loadClass(name);
-                } catch (ClassNotFoundException e2) {
-                    throw new ClassNotFoundException("Class " + name + " not found: " + e, e);
-                }
-            }
-            try {
-                moduleType = (Class<? extends Module>) type;
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Class " + type.getName() + " is not a Guice Module!", e);
-            }
-        }
-        //System.out.println("Creating Guice Injector from module: " + moduleType.getName());
-        Module module = moduleType.newInstance();
-        return Guice.createInjector(module);
+        return Injectors.createInjectorForTest(this);
     }
 
     @Override
     protected void tearDown() throws Exception {
         if (injector != null) {
             injector.close();
+            injector = null;
         }
         super.tearDown();
 

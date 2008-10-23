@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.guiceyfruit.testing.junit3.model;
+package org.guiceyfruit.testing.testng.example;
 
 /**
  * @version $Revision: 1.1 $

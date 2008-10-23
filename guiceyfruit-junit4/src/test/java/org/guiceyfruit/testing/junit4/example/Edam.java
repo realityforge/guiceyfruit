@@ -15,17 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.guiceyfruit.testing.junit3;
-
-import com.google.inject.AbstractModule;
-import org.guiceyfruit.testing.junit3.model.Cheese;
-import org.guiceyfruit.testing.junit3.model.Edam;
+package org.guiceyfruit.testing.junit4.example;
 
 /**
  * @version $Revision: 1.1 $
  */
-public class EdamModule extends AbstractModule {
-    protected void configure() {
-        bind(Cheese.class).to(Edam.class);
+public class Edam implements Cheese {
+    public String sayHello(String name) {
+        return "Edam " + name;
     }
 }

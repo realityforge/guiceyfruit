@@ -15,29 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.guiceyfruit.testing.junit3;
+package org.guiceyfruit.testing.testng;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import org.guiceyfruit.testing.junit3.example.Cheese;
-import org.guiceyfruit.testing.junit3.example.Cheddar;
+import org.guiceyfruit.testing.testng.example.Cheddar;
+import org.guiceyfruit.testing.testng.example.Cheese;
+import org.testng.annotations.Test;
+import org.testng.Assert;
 
 /**
  * @version $Revision: 1.1 $
  */
-public class SimpleTest extends GuiceyTestCase {
-
+public class NamingConventionTest extends GuiceyTestCase {
     @Inject
     Cheese cheese;
 
-    public void testInjection() throws Exception {
-        assertNotNull("has a cheese", cheese);
-        assertEquals("cheese.hello", "Cheddar James", cheese.sayHello("James"));
+    @Test
+    public void testSomething() {
+        System.out.println("Running!");
+
+        Assert.assertEquals("Cheddar James", cheese.sayHello("James"), "cheese.sayHello");
     }
 
     public static class Configuration extends AbstractModule {
+
         protected void configure() {
             bind(Cheese.class).to(Cheddar.class);
+
         }
     }
 }
