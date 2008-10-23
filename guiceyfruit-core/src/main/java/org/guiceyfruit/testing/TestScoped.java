@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
  *
  * @author Luiz-Otavio Zorzella
  * @author Danka Karwanska
- * @see org.guiceyfruit.testing.CloseableScope for an implementation of this scope
+ * @see org.guiceyfruit.util.CloseableScope for an implementation of this scope
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

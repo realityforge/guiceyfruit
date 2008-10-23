@@ -16,31 +16,24 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.testing.junit3;
+package org.guiceyfruit.testing.junit4.counter;
 
-import junit.framework.TestCase;
-import org.guiceyfruit.testing.InjectorManager;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 /** @version $Revision: 1.1 $ */
-public class GuiceyTestCase extends TestCase {
-  protected static InjectorManager injectorManager;
+public class InstanceCounter {
+  public static final AtomicInteger startCounter = new AtomicInteger(0);
+  public static final AtomicInteger stopCounter = new AtomicInteger(0);
 
-  @Override
-  protected void setUp() throws Exception {
-    synchronized (GuiceyTestCase.class) {
-      if (injectorManager == null) {
-        injectorManager = new InjectorManager();
-        injectorManager.beforeClasses();
-      }
-    }
-
-    super.setUp();
-
-    injectorManager.beforeTest(this);
+  @PostConstruct
+  public void start() {
+    startCounter.incrementAndGet();
   }
 
-  @Override
-  protected void tearDown() throws Exception {
-    injectorManager.afterTest(this);
+  @PreDestroy
+  public void stop() {
+    stopCounter.incrementAndGet();
   }
 }

@@ -18,9 +18,7 @@
 
 package org.guiceyfruit.testing.testng;
 
-import com.google.inject.Injector;
-import org.guiceyfruit.Injectors;
-import org.testng.Assert;
+import org.guiceyfruit.testing.InjectorManager;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -28,18 +26,21 @@ import org.testng.annotations.BeforeMethod;
 
 /** @version $Revision: 1.1 $ */
 public class GuiceyTestCase {
-  private Injector injector;
-  public static final String TEST_MODULES = "org.guiceyfruit.test.modules";
+  protected static InjectorManager injectorManager;
 
   @BeforeClass(alwaysRun = true)
   protected void setUp() throws Exception {
-    injector = createInjector();
-    Assert.assertNotNull(injector, "Should have a Guice Injector created");
+    synchronized (GuiceyTestCase.class) {
+      if (injectorManager == null) {
+        injectorManager = new InjectorManager();
+        injectorManager.beforeClasses();
+      }
+    }
   }
 
   @BeforeMethod(alwaysRun = true)
-  protected void startTestScope() {
-    injector.injectMembers(this);
+  protected void startTestScope() throws Exception {
+    injectorManager.beforeTest(this);
   }
 
   @AfterMethod(alwaysRun = true)
@@ -48,21 +49,8 @@ public class GuiceyTestCase {
 
   @AfterClass(alwaysRun = true)
   protected void tearDown() throws Exception {
-    if (injector != null) {
-      injector.close();
+    if (injectorManager != null) {
+      injectorManager.afterClasses();
     }
-    injector = null;
   }
-
-  /**
-   * Factory method to create the Guice Injector. <p/> The default implementation will use the
-   * system property <code>org.guiceyfruit.modules</code> (see {@link
-   * org.guiceyfruit.Injectors#MODULE_CLASS_NAMES} otherwise if that is not set it will look for the
-   * {@link org.guiceyfruit.testing.Configuration} annotation and use the module defined on that
-   * otherwise it will try look for the inner class called <code>TestClass$Configuration</code>
-   */
-  protected Injector createInjector() throws Exception {
-    return Injectors.createInjectorForTest(this);
-  }
-
 }

@@ -18,19 +18,17 @@
 
 package org.guiceyfruit.testing.junit4;
 
-import com.google.inject.Injector;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import org.guiceyfruit.Injectors;
+import org.guiceyfruit.testing.InjectorManager;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
+import org.junit.runner.notification.RunNotifier;
 
 /** @version $Revision: 1.1 $ */
 public class GuiceyJUnit4 extends BlockJUnit4ClassRunner {
 
-  private Map<Object, Injector> injectors = new ConcurrentHashMap<Object, Injector>();
+  protected static InjectorManager manager = new InjectorManager();
 
   public GuiceyJUnit4(Class<?> aClass) throws InitializationError {
     super(aClass);
@@ -38,14 +36,26 @@ public class GuiceyJUnit4 extends BlockJUnit4ClassRunner {
 
   @Override
   protected Statement withBeforeClasses(Statement statement) {
-    // TODO lets create a class level injector and use a test scope
-    return super.withBeforeClasses(statement);
+    final Statement parent = super.withBeforeClasses(statement);
+    return new Statement() {
+      public void evaluate() throws Throwable {
+        manager.beforeClasses();
+
+        parent.evaluate();
+      }
+    };
   }
 
   @Override
   protected Statement withAfterClasses(Statement statement) {
-    // TODO lets create a class level injector and use a test scope
-    return super.withAfterClasses(statement);
+    final Statement parent = super.withAfterClasses(statement);
+    return new Statement() {
+      public void evaluate() throws Throwable {
+        parent.evaluate();
+
+        manager.afterClasses();
+      }
+    };
   }
 
   @Override
@@ -54,9 +64,7 @@ public class GuiceyJUnit4 extends BlockJUnit4ClassRunner {
     final Statement parent = super.withBefores(frameworkMethod, test, statement);
     return new Statement() {
       public void evaluate() throws Throwable {
-        Injector injector = Injectors.createInjectorForTest(test);
-        injector.injectMembers(test);
-        injectors.put(test, injector);
+        manager.beforeTest(test);
 
         parent.evaluate();
       }
@@ -71,11 +79,14 @@ public class GuiceyJUnit4 extends BlockJUnit4ClassRunner {
       public void evaluate() throws Throwable {
         parent.evaluate();
 
-        Injector injector = injectors.remove(test);
-        if (injector != null) {
-          injector.close();
-        }
+        manager.afterTest(test);
       }
     };
+  }
+
+  @Override
+  public void run(RunNotifier runNotifier) {
+    super.run(runNotifier);
+    manager.completed();
   }
 }

@@ -419,7 +419,7 @@ class InjectorImpl implements Injector {
         this, keyForRawType, source, scopedFactory, scope, lateBoundConstructor, loadStrategy);
   }
 
-  static class LateBoundConstructor<T> implements InternalFactory<T> {
+  static class LateBoundConstructor<T> implements InternalFactory<T>, Closeable {
     ConstructorInjector<T> constructorInjector;
 
     @SuppressWarnings("unchecked") // the constructor T is the same as the implementation T
@@ -443,6 +443,13 @@ class InjectorImpl implements Injector {
       // client needs), but it should be OK in practice thanks to the wonders of erasure.
       return (T) constructorInjector.construct(
           errors, context, dependency.getKey().getRawType());
+    }
+
+    public void close(Closer closer, CloseErrors errors) {
+      if (constructorInjector instanceof Closeable) {
+        Closeable closeable = (Closeable) constructorInjector;
+        closeable.close(closer, errors);
+      }
     }
   }
 
@@ -1021,10 +1028,10 @@ class InjectorImpl implements Injector {
   /** Iterates through all bindings closing any {@link Closeable} providers which have pre destroy hooks */
   public void close() throws CloseFailedException {
     Set<Closer> closers = getInstancesOf(Closer.class);
-    if (closers.isEmpty()) {
+    Closer closer = CompositeCloser.newInstance(closers);
+    if (closer == null) {
       return;
     }
-    Closer closer = new CompositeCloser(closers);
     CloseErrorsImpl errors = new CloseErrorsImpl(this);
 
     Set<Entry<Key<?>,Binding<?>>> entries = getBindings().entrySet();
@@ -1036,7 +1043,6 @@ class InjectorImpl implements Injector {
         closeable.close(closer, errors);
       }
     }
-
     errors.throwIfNecessary();
   }
 

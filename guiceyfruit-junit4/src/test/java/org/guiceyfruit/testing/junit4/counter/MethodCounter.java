@@ -16,22 +16,27 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit;
+package org.guiceyfruit.testing.junit4.counter;
 
-import com.google.inject.Module;
-import java.lang.annotation.Documented;
-import static java.lang.annotation.ElementType.TYPE;
-import java.lang.annotation.Retention;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.Target;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import org.guiceyfruit.testing.TestScoped;
 
-/**
- * Specifies the default Guice Module to use when running the test case when using <a
- * href="http://code.google.com/p/guiceyfruit/wiki/Testing">Guicey Testing</a>
- *
- * @version $Revision: 1.1 $
- */
-@Target({ TYPE }) @Retention(RUNTIME) @Documented
-public @interface Configuration {
-  Class<? extends Module> value();
+/** @version $Revision: 1.1 $ */
+@TestScoped
+public class MethodCounter {
+  public static final AtomicInteger startCounter = new AtomicInteger(0);
+  public static final AtomicInteger stopCounter = new AtomicInteger(0);
+
+  @PostConstruct
+  public void start() {
+    startCounter.incrementAndGet();
+  }
+
+  @PreDestroy
+  public void stop() {
+    System.out.println("Stopping MethodCounter");
+    stopCounter.incrementAndGet();
+  }
 }

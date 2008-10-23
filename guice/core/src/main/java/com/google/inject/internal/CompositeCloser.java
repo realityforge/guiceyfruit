@@ -18,7 +18,9 @@
 
 package com.google.inject.internal;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.spi.Closer;
+import java.util.Collection;
 
 /**
  * A Composite implementation of {@link Closer}
@@ -28,6 +30,20 @@ import com.google.inject.spi.Closer;
  */
 public class CompositeCloser implements Closer {
   private final Iterable<Closer> closers;
+
+  /**
+   * Returns a {@link Closer} for the given lists of closer strategies
+   * or returning null if the collection is empty
+   */
+  public static Closer newInstance(Collection<Closer> closers) {
+    if (closers.isEmpty()) {
+      return null;
+    }
+    if (closers.size() == 1) {
+      return Iterables.get(closers, 0);
+    }
+    return new CompositeCloser(closers);
+  }
 
   public CompositeCloser(Iterable<Closer> closers) {
     this.closers = closers;

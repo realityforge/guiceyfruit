@@ -42,8 +42,7 @@ public final class Closers {
         errors.closeError(key, objectToBeClosed, e);
       }
       catch (Throwable throwable) {
-        throwable
-            .printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        throwable.printStackTrace();
       }
     }
   }
