@@ -15,29 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.guiceyfruit.testing.junit3;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import org.guiceyfruit.testing.junit3.example.Cheese;
-import org.guiceyfruit.testing.junit3.example.Cheddar;
+package org.guiceyfruit.testing;
+
+import com.google.inject.Module;
+import java.lang.annotation.Documented;
+import static java.lang.annotation.ElementType.TYPE;
+import java.lang.annotation.Retention;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.Target;
 
 /**
+ * Specifies the default Guice Module to use when running the test case when using <a
+ * href="http://code.google.com/p/guiceyfruit/wiki/Testing">Guicey Testing</a>
+ *
  * @version $Revision: 1.1 $
  */
-public class SimpleTest extends GuiceyTestCase {
-
-    @Inject
-    Cheese cheese;
-
-    public void testInjection() throws Exception {
-        assertNotNull("has a cheese", cheese);
-        assertEquals("cheese.hello", "Cheddar James", cheese.sayHello("James"));
-    }
-
-    public static class Configuration extends AbstractModule {
-        protected void configure() {
-            bind(Cheese.class).to(Cheddar.class);
-        }
-    }
+@Target({ TYPE })
+@Retention(RUNTIME)
+@Documented
+public @interface Configuration {
+  Class<? extends Module> value();
 }

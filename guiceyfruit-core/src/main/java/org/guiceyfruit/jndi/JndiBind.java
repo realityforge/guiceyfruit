@@ -31,7 +31,10 @@ import java.lang.annotation.Target;
  *
  * @version $Revision: 1.1 $
  */
-@Target({ METHOD, CONSTRUCTOR, FIELD, TYPE }) @Retention(RUNTIME) @Documented @BindingAnnotation
+@Target({ METHOD, CONSTRUCTOR, FIELD, TYPE })
+@Retention(RUNTIME)
+@Documented
+@BindingAnnotation
 public @interface JndiBind {
 
   /**

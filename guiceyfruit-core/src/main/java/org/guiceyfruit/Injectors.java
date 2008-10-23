@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import org.guiceyfruit.jndi.GuiceInitialContextFactory;
 import org.guiceyfruit.jndi.internal.Classes;
+import org.guiceyfruit.testing.Configuration;
 
 /** @version $Revision: 1.1 $ */
 public class Injectors {
@@ -45,8 +46,8 @@ public class Injectors {
 
   /**
    * Creates an injector from the given properties, loading any modules define by the {@link
-   * #MODULE_CLASS_NAMES} property value (space separated) along with any other modules passed as
-   * an argument.
+   * #MODULE_CLASS_NAMES} property value (space separated) along with any other modules passed as an
+   * argument.
    *
    * @param environment the properties used to create the injector
    * @param overridingModules any modules which override the modules referenced in the environment
@@ -155,7 +156,7 @@ public class Injectors {
     if (modules != null) {
       modules = modules.trim();
       if (modules.length() > 0) {
-        System.out.println("Loading modules: " + modules);
+        System.out.println("Overloading Guice Modules: " + modules);
         return createInjector(System.getProperties());
       }
     }

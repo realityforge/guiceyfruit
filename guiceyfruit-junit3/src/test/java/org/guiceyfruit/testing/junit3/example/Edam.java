@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.guiceyfruit.testing.junit3.example;
 
-/**
- * @version $Revision: 1.1 $
- */
+/** @version $Revision: 1.1 $ */
 public class Edam implements Cheese {
-    public String sayHello(String name) {
-        return "Edam " + name;
-    }
+  public String sayHello(String name) {
+    return "Edam " + name;
+  }
 }

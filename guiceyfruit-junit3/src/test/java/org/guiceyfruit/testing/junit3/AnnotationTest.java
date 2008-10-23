@@ -19,7 +19,7 @@
 package org.guiceyfruit.testing.junit3;
 
 import com.google.inject.Inject;
-import org.guiceyfruit.Configuration;
+import org.guiceyfruit.testing.Configuration;
 import org.guiceyfruit.testing.junit3.example.Cheese;
 import org.guiceyfruit.testing.junit3.example.EdamModule;
 
@@ -27,7 +27,8 @@ import org.guiceyfruit.testing.junit3.example.EdamModule;
 @Configuration(EdamModule.class)
 public class AnnotationTest extends GuiceyTestCase {
 
-  @Inject Cheese cheese;
+  @Inject
+  Cheese cheese;
 
   public void testInjection() throws Exception {
     assertNotNull("has a cheese", cheese);

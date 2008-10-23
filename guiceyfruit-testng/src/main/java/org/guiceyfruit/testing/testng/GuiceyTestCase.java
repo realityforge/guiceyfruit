@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.guiceyfruit.testing.testng;
 
 import com.google.inject.Injector;
@@ -25,50 +26,43 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-/**
- * @version $Revision: 1.1 $
- */
+/** @version $Revision: 1.1 $ */
 public class GuiceyTestCase {
-    private Injector injector;
-    public static final String TEST_MODULES = "org.guiceyfruit.test.modules";
+  private Injector injector;
+  public static final String TEST_MODULES = "org.guiceyfruit.test.modules";
 
-    @BeforeClass(alwaysRun = true)
-    protected void setUp() throws Exception {
-        injector = createInjector();
-        Assert.assertNotNull(injector, "Should have a Guice Injector created");
-    }
+  @BeforeClass(alwaysRun = true)
+  protected void setUp() throws Exception {
+    injector = createInjector();
+    Assert.assertNotNull(injector, "Should have a Guice Injector created");
+  }
 
-    @BeforeMethod(alwaysRun = true)
-    protected void startTestScope() {
-        injector.injectMembers(this);
-    }
+  @BeforeMethod(alwaysRun = true)
+  protected void startTestScope() {
+    injector.injectMembers(this);
+  }
 
-    @AfterMethod(alwaysRun = true)
-    protected void tearDownTestScope() {
-    }
+  @AfterMethod(alwaysRun = true)
+  protected void tearDownTestScope() {
+  }
 
-    @AfterClass(alwaysRun = true)
-    protected void tearDown() throws Exception {
-        if (injector != null) {
-            injector.close();
-        }
-        injector = null;
+  @AfterClass(alwaysRun = true)
+  protected void tearDown() throws Exception {
+    if (injector != null) {
+      injector.close();
     }
+    injector = null;
+  }
 
-    /**
-     * Factory method to create the Guice Injector.
-     * <p/>
-     * The default implementation will use the system property
-     * <code>org.guiceyfruit.modules</code> (see {@link org.guiceyfruit.Injectors#MODULE_CLASS_NAMES}
-     * otherwise
-     * if that is not set it will look for the {@link org.guiceyfruit.Configuration}
-     * annotation and use the module defined on that otherwise it
-     * will try look for the inner class called <code>TestClass$Configuration</code>
-     *
-     * @return
-     */
-    protected Injector createInjector() throws Exception {
-        return Injectors.createInjectorForTest(this);
-    }
+  /**
+   * Factory method to create the Guice Injector. <p/> The default implementation will use the
+   * system property <code>org.guiceyfruit.modules</code> (see {@link
+   * org.guiceyfruit.Injectors#MODULE_CLASS_NAMES} otherwise if that is not set it will look for the
+   * {@link org.guiceyfruit.testing.Configuration} annotation and use the module defined on that
+   * otherwise it will try look for the inner class called <code>TestClass$Configuration</code>
+   */
+  protected Injector createInjector() throws Exception {
+    return Injectors.createInjectorForTest(this);
+  }
 
 }

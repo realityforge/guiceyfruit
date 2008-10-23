@@ -29,7 +29,8 @@ import org.junit.runner.RunWith;
 /** @version $Revision: 1.1 $ */
 @RunWith(GuiceyJUnit4.class)
 public class NamingConventionTest {
-  @Inject Cheese cheese;
+  @Inject
+  Cheese cheese;
 
   @Test
   public void testSomething() {

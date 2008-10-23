@@ -27,7 +27,8 @@ import org.testng.annotations.Test;
 
 /** @version $Revision: 1.1 $ */
 public class NamingConventionTest extends GuiceyTestCase {
-  @Inject Cheese cheese;
+  @Inject
+  Cheese cheese;
 
   @Test
   public void testSomething() {

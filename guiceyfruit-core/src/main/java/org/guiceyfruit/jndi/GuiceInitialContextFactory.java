@@ -58,7 +58,8 @@ public class GuiceInitialContextFactory implements InitialContextFactory {
       Injector injector = Injectors.createInjector(environment, new AbstractModule() {
         protected void configure() {
           bind(Context.class).toProvider(new Provider<Context>() {
-            @Inject Injector injector;
+            @Inject
+            Injector injector;
 
             public Context get() {
               JndiContext context = new JndiContext(environment);

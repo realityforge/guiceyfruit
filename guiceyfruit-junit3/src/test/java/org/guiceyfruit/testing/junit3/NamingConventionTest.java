@@ -26,7 +26,8 @@ import org.guiceyfruit.testing.junit3.example.Cheese;
 /** @version $Revision: 1.1 $ */
 public class NamingConventionTest extends GuiceyTestCase {
 
-  @Inject Cheese cheese;
+  @Inject
+  Cheese cheese;
 
   public void testInjection() throws Exception {
     assertNotNull("has a cheese", cheese);
