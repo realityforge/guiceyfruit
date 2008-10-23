@@ -16,14 +16,16 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.testing.junit4.counter;
+package org.guiceyfruit.testing.junit4.scopes;
 
+import com.google.inject.Singleton;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 /** @version $Revision: 1.1 $ */
-public class InstanceCounter {
+@Singleton
+public class SingletonCounter {
   public static final AtomicInteger startCounter = new AtomicInteger(0);
   public static final AtomicInteger stopCounter = new AtomicInteger(0);
 
@@ -34,6 +36,7 @@ public class InstanceCounter {
 
   @PreDestroy
   public void stop() {
+    System.out.println("Stopping SingletonCounter");
     stopCounter.incrementAndGet();
   }
 }

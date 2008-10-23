@@ -44,7 +44,8 @@ public class GuiceyTestCase {
   }
 
   @AfterMethod(alwaysRun = true)
-  protected void tearDownTestScope() {
+  protected void tearDownTestScope() throws Exception {
+    injectorManager.afterTest(this);
   }
 
   @AfterClass(alwaysRun = true)

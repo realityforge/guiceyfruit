@@ -39,7 +39,10 @@ import java.util.Set;
 import org.guiceyfruit.Injectors;
 
 /**
- * Represents a scope which caches objects around until the scope is closed
+ * Represents a scope which caches objects around until the scope is closed.
+ *
+ * The scope can be closed as many times as required - there is no need to recreate
+ * the scope instance each time a scope goes out of scope.
  *
  * @version $Revision: 1.1 $
  */

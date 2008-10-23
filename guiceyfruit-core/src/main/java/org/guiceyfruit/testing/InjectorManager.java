@@ -45,18 +45,111 @@ public class InjectorManager {
   private Map<Object, Injector> injectors = new ConcurrentHashMap<Object, Injector>();
   private AtomicInteger initializeCounter = new AtomicInteger(0);
   private CloseableScope testScope = new CloseableScope();
+  private CloseableScope classScope = new CloseableScope();
   private static final String NESTED_MODULE_CLASS = "TestModule";
+  private boolean closeSingletonsAfterClasses = false;
+  private boolean runFinalizer = true;
+  private Injector lastClassInjector;
+  private Class<? extends Module> moduleType;
 
   public void beforeClasses() {
     int counter = initializeCounter.incrementAndGet();
     if (counter > 1) {
-      System.out.println("WARNING! Initialised more than once! Counter: " + counter);
+      //System.out.println("WARNING! Initialised more than once! Counter: " + counter);
+    }
+    else {
+      if (runFinalizer) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+          @Override
+          public void run() {
+            try {
+              closeSingletons();
+            }
+            catch (Throwable e) {
+              System.out.println("Failed to shut down Guice Singletons: " + e);
+              e.printStackTrace();
+            }
+          }
+        });
+      }
     }
 
   }
 
   /** Lets close all of the injectors we have created so far */
   public void afterClasses() throws CloseFailedException {
+    Injector injector = injectors.get(moduleType);
+    if (injector != null) {
+      classScope.close(injector);
+    }
+    else {
+      System.out.println("Could not close Class scope as there is no Injector for module type " + injector);
+    }
+
+    // NOTE that we don't have any good hooks yet to call complete()
+    // when the JVM is completed to ensure real singletons shut down correctly
+    //
+    if (isCloseSingletonsAfterClasses()) {
+      closeInjectors();
+    }
+  }
+
+  public void beforeTest(Object test) throws Exception {
+    Objects.nonNull(test, "test");
+
+    Class<? extends Object> testType = test.getClass();
+    moduleType = getModuleForTestClass(testType);
+
+    Injector classInjector;
+    synchronized (injectors) {
+      classInjector = injectors.get(moduleType);
+      if (classInjector == null) {
+        classInjector = createInjector(moduleType);
+        Objects.nonNull(classInjector, "classInjector");
+        injectors.put(moduleType, classInjector);
+      }
+    }
+    injectors.put(testType, classInjector);
+
+    classInjector.injectMembers(test);
+  }
+
+  public void afterTest(Object test) throws Exception {
+    Injector injector = injectors.get(test.getClass());
+    if (injector == null) {
+      System.out.println("Warning - no injector available for: " + test);
+    }
+    else {
+      lastClassInjector = injector;
+      testScope.close(injector);
+    }
+  }
+
+  /**
+   * Closes down any JVM level singletons used in this testing JVM
+   */
+  public void closeSingletons() throws CloseFailedException {
+    closeInjectors();
+  }
+
+  public boolean isCloseSingletonsAfterClasses() {
+    return closeSingletonsAfterClasses;
+  }
+
+  public void setCloseSingletonsAfterClasses(boolean closeSingletonsAfterClasses) {
+    this.closeSingletonsAfterClasses = closeSingletonsAfterClasses;
+  }
+
+  protected class TestModule extends AbstractModule {
+
+    protected void configure() {
+      bindScope(ClassScoped.class, classScope);
+      bindScope(TestScoped.class, testScope);
+    }
+
+  }
+
+  protected void closeInjectors() throws CloseFailedException {
     CloseErrors errors = new CloseErrorsImpl(this);
     Set<Entry<Object, Injector>> entries = injectors.entrySet();
     for (Entry<Object, Injector> entry : entries) {
@@ -69,65 +162,14 @@ public class InjectorManager {
         errors.closeError(key, injector, e);
       }
     }
+    injectors.clear();
     errors.throwIfNecessary();
   }
 
-  public void beforeTest(Object test) throws Exception {
-    Objects.nonNull(test, "test");
-
-    Class<? extends Object> testType = test.getClass();
-    Injector classInjector;
-    synchronized (injectors) {
-      classInjector = injectors.get(testType);
-      if (classInjector == null) {
-        classInjector = createInjectorForTestClass(testType);
-        Objects.nonNull(classInjector, "classInjector");
-        injectors.put(testType, classInjector);
-      }
-    }
-
-    classInjector.injectMembers(test);
-
-/*
-    TestModule testModule = new TestModule();
-    Injector testInjector = classInjector.createChildInjector(testModule);
-    injectors.put(test, testInjector);
-
-    testInjector.injectMembers(test);
-*/
-  }
-
-  public void afterTest(Object test) throws Exception {
-    Injector injector = injectors.get(test.getClass());
-    if (injector == null) {
-      System.out.println("Warning - no injector available for: " + test);
-    }
-    else {
-      testScope.close(injector);
-    }
-
-/*
-    Injector injector = injectors.remove(test);
-    if (injector != null) {
-      injector.close();
-    }
-*/
-  }
-
-  public void completed() {
-
-  }
-
-  protected class TestModule extends AbstractModule {
-
-    protected void configure() {
-      bindScope(TestScoped.class, testScope);
-    }
-
-  }
-
   /**
-   * Factory method to create a Guice Injector for some kind of test object <p/> The default
+   * Factory method to return the module type that will be used to create an injector.
+   *
+   * he default
    * implementation will use the system property <code>org.guiceyfruit.modules</code> (see {@link
    * Injectors#MODULE_CLASS_NAMES} otherwise if that is not set it will look for the {@link
    * UseModule} annotation and use the module defined on that otherwise it will try look for the
@@ -136,15 +178,14 @@ public class InjectorManager {
    * @see org.guiceyfruit.testing.UseModule
    * @see #NESTED_MODULE_CLASS
    */
-  protected Injector createInjectorForTestClass(Class<?> objectType)
+  protected Class<? extends Module> getModuleForTestClass(Class<?> objectType)
       throws IllegalAccessException, InstantiationException, ClassNotFoundException {
-    TestModule testModule = new TestModule();
     String modules = System.getProperty(Injectors.MODULE_CLASS_NAMES);
     if (modules != null) {
       modules = modules.trim();
       if (modules.length() > 0) {
         System.out.println("Overloading Guice Modules: " + modules);
-        return Injectors.createInjector(System.getProperties(), testModule);
+        return null;
       }
     }
     Class<? extends Module> moduleType;
@@ -190,8 +231,19 @@ public class InjectorManager {
       throw new IllegalArgumentException(
           "Class " + moduleType.getName() + " must have a zero argument constructor", e);
     }
+    return moduleType;
+  }
+
+  /**
+   * Creates the injector for the given key
+   */
+  protected Injector createInjector(Class<? extends Module> moduleType)
+      throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+    if (moduleType == null) {
+      return Injectors.createInjector(System.getProperties(), new TestModule());
+    }
     //System.out.println("Creating Guice Injector from module: " + moduleType.getName());
     Module module = moduleType.newInstance();
-    return Guice.createInjector(module, testModule);
+    return Guice.createInjector(module, new TestModule());
   }
 }

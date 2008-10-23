@@ -87,6 +87,5 @@ public class GuiceyJUnit4 extends BlockJUnit4ClassRunner {
   @Override
   public void run(RunNotifier runNotifier) {
     super.run(runNotifier);
-    manager.completed();
   }
 }

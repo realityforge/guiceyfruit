@@ -16,15 +16,13 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.testing.junit4;
+package org.guiceyfruit.testing.junit4.scopes;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.jsr250.Jsr250Module;
-import org.guiceyfruit.testing.UseModule;
-import org.guiceyfruit.testing.junit4.counter.InstanceCounter;
-import org.guiceyfruit.testing.junit4.counter.SingletonCounter;
-import org.guiceyfruit.testing.junit4.counter.MethodCounter;
+import org.guiceyfruit.testing.ClassScoped;
+import org.guiceyfruit.testing.junit4.GuiceyJUnit4;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,13 +30,14 @@ import org.junit.runner.RunWith;
 
 /** @version $Revision: 1.1 $ */
 @RunWith(GuiceyJUnit4.class)
-@UseModule(ScopeTest.Configuration.class)
 //@UseModule(Jsr250Module.class)
 public class ScopeTest {
   protected static final boolean verbose = false;
 
   @Inject
   protected SingletonCounter singletonCounter;
+  @Inject
+  protected ClassCounter classCounter;
   @Inject
   protected InstanceCounter instanceCounter;
   @Inject
@@ -51,26 +50,28 @@ public class ScopeTest {
   @Test
   public void testOne() {
     if (verbose) {
-      System.out.println("testOne with instance counter: " + instanceCounter);
+      System.out.println("testOne with instance singletonCounter: " + instanceCounter);
     }
 
     Assert.assertNotNull("instanceCounter", instanceCounter);
     Assert.assertNotNull("instanceCounter2", instanceCounter2);
     Assert.assertNotNull("methodCounter", methodCounter);
     Assert.assertNotNull("methodCounter2", methodCounter2);
+    Assert.assertNotNull("classCounter", classCounter);
     Assert.assertNotNull("singletonCounter", singletonCounter);
   }
 
   @Test
   public void testTwo() {
     if (verbose) {
-      System.out.println("testTwo with instance counter: " + instanceCounter);
+      System.out.println("testTwo with instance singletonCounter: " + instanceCounter);
     }
 
     Assert.assertNotNull("instanceCounter", instanceCounter);
     Assert.assertNotNull("instanceCounter2", instanceCounter2);
     Assert.assertNotNull("methodCounter", methodCounter);
     Assert.assertNotNull("methodCounter2", methodCounter2);
+    Assert.assertNotNull("classCounter", classCounter);
     Assert.assertNotNull("singletonCounter", singletonCounter);
   }
 
@@ -92,19 +93,33 @@ public class ScopeTest {
     Assert.assertEquals("MethodCounter.startCounter", 2, MethodCounter.startCounter.get());
     Assert.assertEquals("MethodCounter.stopCounter", 2, MethodCounter.stopCounter.get());
 
+    Assert.assertEquals("ClassCounter.startCounter", 1, ClassCounter.startCounter.get());
+
+    // TODO if we have ran a previous test case then this will probably be set to 1
+    // otherwise its zero
+    // its kinda hard to reliably test this as its kinda hard for us to add assertions after the tests
+    // have run
+    //Assert.assertEquals("ClassCounter.stopCounter", 1, ClassCounter.stopCounter.get());
+
     Assert.assertEquals("SingletonCounter.startCounter", 1, SingletonCounter.startCounter.get());
-    // TODO we are invoked before the injectors are shut down!
+    // TODO we are invoked before the singleton objects are closed
     //Assert.assertEquals("SingletonCounter.stopCounter", 1, SingletonCounter.stopCounter.get());
     Assert.assertEquals("SingletonCounter.stopCounter", 0, SingletonCounter.stopCounter.get());
   }
 
-  public static class Configuration extends Jsr250Module {
+  @AfterClass
+  public static void reset() {
+    ClassCounter.reset();
+  }
+
+  public static class TestModule extends Jsr250Module {
     @Override
     protected void configure() {
       super.configure();
 
       // TODO this should not be required!
       bind(SingletonCounter.class).in(Singleton.class);
+      bind(ClassCounter.class).in(ClassScoped.class);
     }
   }
 }

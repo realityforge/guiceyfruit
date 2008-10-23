@@ -16,16 +16,14 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.testing.junit4.counter;
+package org.guiceyfruit.testing.testng.scopes;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import org.guiceyfruit.testing.TestScoped;
 
 /** @version $Revision: 1.1 $ */
-@TestScoped
-public class MethodCounter {
+public class InstanceCounter {
   public static final AtomicInteger startCounter = new AtomicInteger(0);
   public static final AtomicInteger stopCounter = new AtomicInteger(0);
 
@@ -36,7 +34,6 @@ public class MethodCounter {
 
   @PreDestroy
   public void stop() {
-    System.out.println("Stopping MethodCounter");
     stopCounter.incrementAndGet();
   }
 }
