@@ -180,7 +180,7 @@ public class Matchers {
    * Returns a matcher which matches classes which have a public method annotated
    * with a given annotation.
    */
-  public static Matcher<AnnotatedElement> methodAnnotatedWith(
+  public static Matcher<Class> methodAnnotatedWith(
       final Annotation annotation) {
     return new MethodAnnotatedWith(annotation);
   }
@@ -189,13 +189,13 @@ public class Matchers {
    * Returns a matcher which matches classes which have a public method annotated
    * with a given annotation.
    */
-  public static Matcher<AnnotatedElement> methodAnnotatedWith(
+  public static Matcher<Class> methodAnnotatedWith(
       final Class<? extends Annotation> annotationType) {
     return new MethodAnnotatedWith(annotationType);
   }
 
 
-  private static class MethodAnnotatedWith extends AbstractMatcher<AnnotatedElement>
+  private static class MethodAnnotatedWith extends AbstractMatcher<Class>
       implements Serializable {
     private final Class<? extends Annotation> annotationType;
 
@@ -211,12 +211,9 @@ public class Matchers {
       checkForRuntimeRetention(annotationType);
     }
 
-    public boolean matches(AnnotatedElement element) {
-      if (element instanceof Class) {
-        Class type = (Class) element;
-        if (matchesClass(type)) {
-          return true;
-        }
+    public boolean matches(Class type) {
+      if (matchesClass(type)) {
+        return true;
       }
       return false;
     }
