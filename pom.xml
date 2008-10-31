@@ -23,6 +23,7 @@
     <module>guiceyfruit-junit4</module>
     <module>guiceyfruit-testng</module>
     <module>guiceyfruit-spring-converter</module>
+    <module>guiceyfruit</module>
   </modules>
 
   <repositories>
@@ -61,6 +62,84 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guice-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guice-servlet</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guice-spring</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guice-assistedinject</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guice-jsr250</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guice-multibindings</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guice-throwingproviders</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guice-struts2-plugin</artifactId>
+      <version>${project.version}</version>
+    </dependency>      
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guiceyfruit-core</artifactId>
+      <version>${project.version}</version>      
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guiceyfruit-junit3</artifactId>
+      <version>${project.version}</version>      
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guiceyfruit-junit4</artifactId>
+      <version>${project.version}</version>     
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guiceyfruit-testng</artifactId>
+      <version>${project.version}</version>      
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guiceyfruit-spring-converter</artifactId>
+      <version>${project.version}</version>     
+    </dependency>
+
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>

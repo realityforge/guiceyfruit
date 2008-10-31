@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<assembly>
+  <id>common-bin</id>
+  <fileSets>
+
+    <fileSet>
+      <directory>target</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>guiceyfruit-*.jar</include>
+      </includes>
+    </fileSet>    
+
+    
+  </fileSets>
+
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>/lib</outputDirectory>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <includes>
+        <include>org.guiceyfruit:guice-core</include>
+        <include>org.guiceyfruit:guice-servlet</include>
+        <include>org.guiceyfruit:guice-spring</include>
+        <include>org.guiceyfruit:guice-assistedinject</include>
+        <include>org.guiceyfruit:guice-jsr250</include>
+        <include>org.guiceyfruit:guice-multibindings</include>
+        <include>org.guiceyfruit:guice-throwingproviders</include>
+        <include>org.guiceyfruit:guice-struts2-plugin</include>
+        <include>org.guiceyfruit:guiceyfruit-core</include>
+        <include>org.guiceyfruit:guiceyfruit-junit3</include>
+        <include>org.guiceyfruit:guiceyfruit-junit4</include>
+        <include>org.guiceyfruit:guiceyfruit-testng</include>
+        <include>org.guiceyfruit:guiceyfruit-spring-converter</include>        
+        <include>commons-logging:commons-logging</include>
+        <include>com.google.code.google-collections:google-collect</include>
+        <include>cglib:cglib</include>
+        <include>asm:asm</include>
+        <include>aopalliance:aopalliance</include>
+      </includes>
+    </dependencySet>
+    
+  </dependencySets>
+
+</assembly>
