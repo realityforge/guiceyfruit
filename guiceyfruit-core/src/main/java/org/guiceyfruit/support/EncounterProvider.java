@@ -18,6 +18,7 @@
 
 package org.guiceyfruit.support;
 
+import com.google.inject.Provider;
 import com.google.inject.spi.InjectableType.Encounter;
 
 /**
@@ -25,5 +26,5 @@ import com.google.inject.spi.InjectableType.Encounter;
  *
  * @version $Revision: 1.1 $ */
 public interface EncounterProvider<T> {
-  T get(Encounter<?> encounter);
+  Provider<? extends T> get(Encounter<?> encounter);
 }

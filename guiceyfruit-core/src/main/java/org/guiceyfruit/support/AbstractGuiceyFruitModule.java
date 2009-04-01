@@ -48,9 +48,8 @@ public abstract class AbstractGuiceyFruitModule extends AbstractModule {
   protected <A extends Annotation> void bindAnnotationMemberProvider(final Class<A> annotationType,
       final Key<? extends AnnotationMemberProvider> key) {
     bindAnnotationMemberProvider(annotationType, new EncounterProvider<AnnotationMemberProvider>() {
-      public AnnotationMemberProvider get(Encounter<?> encounter) {
-        Provider<? extends AnnotationMemberProvider> provider = encounter.getProvider(key);
-        return provider.get();
+      public Provider<? extends AnnotationMemberProvider> get(Encounter<?> encounter) {
+        return encounter.getProvider(key);
       }
     });
   }
@@ -58,9 +57,8 @@ public abstract class AbstractGuiceyFruitModule extends AbstractModule {
   protected <A extends Annotation> void bindAnnotationMemberProvider(final Class<A> annotationType,
       final Class<? extends AnnotationMemberProvider> type) {
     bindAnnotationMemberProvider(annotationType, new EncounterProvider<AnnotationMemberProvider>() {
-      public AnnotationMemberProvider get(Encounter<?> encounter) {
-        Provider<? extends AnnotationMemberProvider> provider = encounter.getProvider(type);
-        return provider.get();
+      public Provider<? extends AnnotationMemberProvider> get(Encounter<?> encounter) {
+        return encounter.getProvider(type);
       }
     });
   }
@@ -68,11 +66,9 @@ public abstract class AbstractGuiceyFruitModule extends AbstractModule {
   protected <A extends Annotation> void bindAnnotationMemberProvider(final Class<A> annotationType,
       final EncounterProvider<AnnotationMemberProvider> memberProviderProvider) {
     bindListener(Matchers.any(), new Listener() {
-      AnnotationMemberProvider provider;
+      Provider<? extends AnnotationMemberProvider> providerProvider;
 
       public <I> void hear(InjectableType<I> injectableType, final Encounter<I> encounter) {
-        System.out.println("Called on type: " + injectableType);
-
         Class<? super I> type = injectableType.getType().getRawType();
         Field[] fields = type.getDeclaredFields();
 
@@ -80,13 +76,13 @@ public abstract class AbstractGuiceyFruitModule extends AbstractModule {
           // TODO lets exclude fields with @Inject?
           final A annotation = field.getAnnotation(annotationType);
           if (annotation != null) {
-            System.out.println("field: " + field);
-
-            if (provider == null) {
-              provider = memberProviderProvider.get(encounter);
+            if (providerProvider == null) {
+              providerProvider = memberProviderProvider.get(encounter);
             }
+
             encounter.register(new InjectionListener<I>() {
               public void afterInjection(I injectee) {
+                AnnotationMemberProvider provider = providerProvider.get();
                 Object value = provider.provide(annotation, field);
                 if (checkInjectedValueType(value, field.getType(), encounter)) {
                   try {
@@ -107,7 +103,6 @@ public abstract class AbstractGuiceyFruitModule extends AbstractModule {
           // TODO lets exclude methods with @Inject?
           final A annotation = method.getAnnotation(annotationType);
           if (annotation != null) {
-            System.out.println("method: " + method);
 
             Class<?>[] classes = method.getParameterTypes();
             if (classes.length != 1) {
@@ -117,12 +112,13 @@ public abstract class AbstractGuiceyFruitModule extends AbstractModule {
             }
             final Class<?> paramType = classes[0];
 
-            if (provider == null) {
-              provider = memberProviderProvider.get(encounter);
+            if (providerProvider == null) {
+              providerProvider = memberProviderProvider.get(encounter);
             }
 
             encounter.register(new InjectionListener<I>() {
               public void afterInjection(I injectee) {
+                AnnotationMemberProvider provider = providerProvider.get();
                 Object value = provider.provide(annotation, method);
                 if (checkInjectedValueType(value, paramType, encounter)) {
                   try {
@@ -139,14 +135,6 @@ public abstract class AbstractGuiceyFruitModule extends AbstractModule {
             });
           }
         }
-/*
-        Set<InjectionPoint> pointSet = injectableType.getInjectableMembers();
-        for (InjectionPoint injectionPoint : pointSet) {
-          Member member = injectionPoint.getMember();
-
-          System.out.println("member: " + member);
-        }
-*/
       }
     });
 
