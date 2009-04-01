@@ -19,6 +19,7 @@ package org.guiceyfruit.jsr250;
 import com.google.inject.CreationException;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import javax.annotation.Resource;
 import javax.naming.Context;
 import junit.framework.TestCase;
@@ -33,8 +34,8 @@ public class ResourceTest extends TestCase {
       protected void configure() {
         super.configure();
 
-        //bind(MyBean.class).in(Singleton.class);
-        bind(MyBean.class);
+        bind(MyBean.class).in(Singleton.class);
+        //bind(MyBean.class);
       }
 
 /*
