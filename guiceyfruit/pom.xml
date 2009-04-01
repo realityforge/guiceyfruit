@@ -46,46 +46,6 @@
   <dependencies>
     <dependency>
       <groupId>org.guiceyfruit</groupId>
-      <artifactId>guice-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.guiceyfruit</groupId>
-      <artifactId>guice-servlet</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.guiceyfruit</groupId>
-      <artifactId>guice-spring</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.guiceyfruit</groupId>
-      <artifactId>guice-assistedinject</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.guiceyfruit</groupId>
-      <artifactId>guice-jsr250</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.guiceyfruit</groupId>
-      <artifactId>guice-multibindings</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.guiceyfruit</groupId>
-      <artifactId>guice-throwingproviders</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.guiceyfruit</groupId>
-      <artifactId>guice-struts2-plugin</artifactId>
-    </dependency>   
-
-    <dependency>
-      <groupId>org.guiceyfruit</groupId>
       <artifactId>guiceyfruit-core</artifactId>      
     </dependency>
 
@@ -109,6 +69,7 @@
       <artifactId>guiceyfruit-spring-converter</artifactId>      
     </dependency>
     
+<!--
     <dependency>
         <groupId>com.google.code.google-collections</groupId>
         <artifactId>google-collect</artifactId>        
@@ -123,6 +84,7 @@
         <groupId>asm</groupId>
         <artifactId>asm</artifactId>        
     </dependency>
+-->
 
     <dependency>
         <groupId>aopalliance</groupId>

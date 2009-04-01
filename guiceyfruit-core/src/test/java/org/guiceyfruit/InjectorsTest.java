@@ -18,10 +18,10 @@
 
 package org.guiceyfruit;
 
-import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.internal.Lists;
 import com.google.inject.matcher.Matchers;
 import java.util.Collection;
 import junit.framework.TestCase;

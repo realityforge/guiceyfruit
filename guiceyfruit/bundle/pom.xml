@@ -41,6 +41,7 @@
 
 
   <dependencies>
+<!--
     <dependency>
       <groupId>org.guiceyfruit</groupId>
       <artifactId>guice-core</artifactId>
@@ -75,6 +76,7 @@
       <groupId>org.guiceyfruit</groupId>
       <artifactId>guice-throwingproviders</artifactId>
     </dependency>    
+-->
 
     <dependency>
       <groupId>org.guiceyfruit</groupId>

@@ -13,8 +13,12 @@
   <dependencies>
     <dependency>
       <groupId>${groupId}</groupId>
-      <artifactId>guice-core</artifactId>
+      <artifactId>guiceyfruit-core</artifactId>
       <version>${version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.google-collections</groupId>
+      <artifactId>google-collect</artifactId>
     </dependency>
 
     <dependency>

@@ -18,7 +18,9 @@
 
 package org.guiceyfruit.jsr250;
 
+import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.naming.Context;
@@ -36,20 +38,22 @@ public class Jsr250Module extends AbstractGuiceyFruitModule {
   private boolean resourceInjection = true;
 
   protected void configure() {
-    bindAnnotationMemberProvider(Resource.class, ResourceMemberProvider.class);
+    if (isResourceInjection()) {
+      try {
+        bindJndiContext();
+      }
+      catch (Exception e) {
+        throw new ProvisionException("Failed to bind JNDI Context: " + e, e);
+      }
+      bind(ResourceMemberProvider.class).in(Singleton.class);
 
-    //bind(ResourceProviderFactory.class);
+      bindAnnotationMemberProvider(Resource.class, ResourceMemberProvider.class);
+    }
 
     bindConstructorInterceptor(Matchers.methodAnnotatedWith(PostConstruct.class),
         new PostConstructInterceptor());
 
     bind(PreDestroyCloser.class);
-
-    if (isResourceInjection()) {
-      bind(ResourceProviderFactory.class);
-
-      bindJndiContext();
-    }
   }
 
   public boolean isResourceInjection() {
@@ -65,7 +69,7 @@ public class Jsr250Module extends AbstractGuiceyFruitModule {
    * A strategy method to bind a JNDI context which by default uses {@link
    * org.guiceyfruit.jsr250.ContextProvider} to use the InitialContext
    */
-  protected void bindJndiContext() {
+  protected void bindJndiContext() throws Exception {
     bind(Context.class).toProvider(ContextProvider.class).in(Scopes.SINGLETON);
   }
 }

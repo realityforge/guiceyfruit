@@ -18,8 +18,8 @@
 
 package org.guiceyfruit.support;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.inject.internal.Preconditions.checkArgument;
+import static com.google.inject.internal.Preconditions.checkNotNull;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import java.io.Serializable;

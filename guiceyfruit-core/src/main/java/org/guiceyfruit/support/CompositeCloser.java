@@ -18,7 +18,7 @@
 
 package org.guiceyfruit.support;
 
-import com.google.common.collect.Iterables;
+import com.google.inject.internal.Iterables;
 import java.util.Collection;
 
 /**
@@ -39,7 +39,7 @@ public class CompositeCloser implements Closer {
       return null;
     }
     if (closers.size() == 1) {
-      return Iterables.get(closers, 0);
+      return Iterables.getOnlyElement(closers);
     }
     return new CompositeCloser(closers);
   }

@@ -18,11 +18,11 @@
 
 package org.guiceyfruit.testing;
 
-import com.google.common.base.Objects;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.internal.Preconditions;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -95,7 +95,7 @@ public class InjectorManager {
   }
 
   public void beforeTest(Object test) throws Exception {
-    Objects.nonNull(test, "test");
+    Preconditions.checkNotNull(test, "test");
 
     Class<? extends Object> testType = test.getClass();
     moduleType = getModuleForTestClass(testType);
@@ -105,7 +105,7 @@ public class InjectorManager {
       classInjector = injectors.get(moduleType);
       if (classInjector == null) {
         classInjector = createInjector(moduleType);
-        Objects.nonNull(classInjector, "classInjector");
+        Preconditions.checkNotNull(classInjector, "classInjector");
         injectors.put(moduleType, classInjector);
       }
     }

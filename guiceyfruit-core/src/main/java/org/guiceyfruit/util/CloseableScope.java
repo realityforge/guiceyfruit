@@ -18,14 +18,14 @@
 
 package org.guiceyfruit.util;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Maps;
 import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
+import com.google.inject.internal.Maps;
+import com.google.inject.internal.Preconditions;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -41,14 +41,14 @@ import org.guiceyfruit.support.internal.CloseErrorsImpl;
 /**
  * Represents a scope which caches objects around until the scope is closed.
  *
- * The scope can be closed as many times as required - there is no need to recreate
- * the scope instance each time a scope goes out of scope.
+ * The scope can be closed as many times as required - there is no need to recreate the scope
+ * instance each time a scope goes out of scope.
  *
  * @version $Revision: 1.1 $
  */
 public class CloseableScope implements Scope, Closeable {
 
-  private final Map<Key<?>, Object> map = Maps.newConcurrentHashMap();
+  private final Map<Key<?>, Object> map = Maps.newHashMap();
 
   @Inject
   private Injector injector;
@@ -57,10 +57,13 @@ public class CloseableScope implements Scope, Closeable {
   public <T> Provider<T> scope(final Key<T> key, final Provider<T> creator) {
     return new Provider<T>() {
       public T get() {
-        Object o = map.get(key);
-        if (o == null) {
-          o = creator.get();
-          map.put(key, o);
+        Object o;
+        synchronized (map) {
+          o = map.get(key);
+          if (o == null) {
+            o = creator.get();
+            map.put(key, o);
+          }
         }
         return (T) o;
       }
@@ -68,27 +71,28 @@ public class CloseableScope implements Scope, Closeable {
   }
 
   /**
-   * Closes all of the objects within this scope - though this object must have
-   * been injected to ensure that it has access to the injector to provide
-   * the available {@link Closer} implementations to use for closing.
+   * Closes all of the objects within this scope - though this object must have been injected to
+   * ensure that it has access to the injector to provide the available {@link Closer}
+   * implementations to use for closing.
    *
-   * To use this method you should have invoked {@link  Binder#requestInjection(Object[])}
-   * passing in this instance first.
+   * To use this method you should have invoked {@link  Binder#requestInjection(Object[])} passing
+   * in this instance first.
    *
    * @see Binder#requestInjection(Object[])
    */
   public void close() throws CloseFailedException {
-    Objects.nonNull(injector, "injector has not been injected! Please Binder.requestInjection(thisScope)");
+    Preconditions.checkNotNull(injector,
+        "injector has not been injected! Please Binder.requestInjection(thisScope)");
     close(injector);
   }
 
-
   /**
-   * Closes all of the objects within this scope using the given injector
-   * to find the available {@link Closer} implementations to use
+   * Closes all of the objects within this scope using the given injector to find the available
+   * {@link Closer} implementations to use
    */
   public void close(Injector injector) throws CloseFailedException {
-    Objects.nonNull(injector, "injector");
+    Preconditions.checkNotNull(injector, "injector");
+
     Set<Closer> closers = Injectors.getInstancesOf(injector, Closer.class);
     Closer closer = CompositeCloser.newInstance(closers);
     if (closer == null) {
@@ -100,12 +104,14 @@ public class CloseableScope implements Scope, Closeable {
   }
 
   public void close(Closer closer, CloseErrors errors) {
-    Set<Entry<Key<?>,Object>> entries = map.entrySet();
+    Set<Entry<Key<?>, Object>> entries = map.entrySet();
     for (Entry<Key<?>, Object> entry : entries) {
       Key<?> key = entry.getKey();
       Object value = entry.getValue();
       Closers.close(key, value, closer, errors);
     }
-    map.clear();
+    synchronized (map) {
+      map.clear();
+    }
   }
 }

@@ -16,7 +16,6 @@
 
 package org.guiceyfruit.jsr250;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.CreationException;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -32,9 +31,9 @@ import org.guiceyfruit.support.CloseFailedException;
 public class LifecycleTest extends TestCase {
 
   public void testBeanInitialised() throws CreationException, CloseFailedException {
-    Injector injector = Guice.createInjector(new AbstractModule() {
+    Injector injector = Guice.createInjector(new Jsr250Module() {
       protected void configure() {
-        Jsr250.bind(binder());
+        super.configure();
 
         bind(MyBean.class).in(Singleton.class);
       }

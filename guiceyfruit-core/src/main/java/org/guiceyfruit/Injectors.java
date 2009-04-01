@@ -18,8 +18,6 @@
 
 package org.guiceyfruit;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
 import com.google.inject.Guice;
@@ -28,6 +26,8 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
+import com.google.inject.internal.Lists;
+import com.google.inject.internal.Sets;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
@@ -41,9 +41,9 @@ import org.guiceyfruit.jndi.GuiceInitialContextFactory;
 import org.guiceyfruit.jndi.internal.Classes;
 import org.guiceyfruit.support.CloseErrors;
 import org.guiceyfruit.support.CloseFailedException;
+import org.guiceyfruit.support.Closeable;
 import org.guiceyfruit.support.Closer;
 import org.guiceyfruit.support.CompositeCloser;
-import org.guiceyfruit.support.Closeable;
 import org.guiceyfruit.support.internal.CloseErrorsImpl;
 
 /** @version $Revision: 1.1 $ */
