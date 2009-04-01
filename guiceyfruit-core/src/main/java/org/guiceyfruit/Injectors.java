@@ -39,6 +39,12 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import org.guiceyfruit.jndi.GuiceInitialContextFactory;
 import org.guiceyfruit.jndi.internal.Classes;
+import org.guiceyfruit.support.CloseErrors;
+import org.guiceyfruit.support.CloseFailedException;
+import org.guiceyfruit.support.Closer;
+import org.guiceyfruit.support.CompositeCloser;
+import org.guiceyfruit.support.Closeable;
+import org.guiceyfruit.support.internal.CloseErrorsImpl;
 
 /** @version $Revision: 1.1 $ */
 public class Injectors {
@@ -104,6 +110,47 @@ public class Injectors {
     }
     return answer;
   }
+
+  /*
+  *//**
+   * Returns a collection of all instances of the given base type
+   * @param baseClass the base type of objects required
+   * @param <T> the base type
+   * @return a set of objects returned from this injector
+   *//*
+  public static <T> Set<T> getInstancesOf(Injector injector, Class<T> baseClass) {
+    Set<T> answer = Sets.newHashSet();
+    Set<Entry<Key<?>, Binding<?>>> entries = injector.getBindings().entrySet();
+    for (Entry<Key<?>, Binding<?>> entry : entries) {
+      Key<?> key = entry.getKey();
+      if (baseClass.isAssignableFrom(key.getTypeLiteral().getRawType())) {
+        Object value = injector.getInstance(key);
+        if (value != null) {
+          T castValue = baseClass.cast(value);
+          answer.add(castValue);
+        }
+      }
+    }
+    return answer;
+  }
+
+  *//**
+   * Returns a collection of all instances matching the given matcher
+   * @param matcher matches the types to return instances
+   * @return a set of objects returned from this injector
+   *//*
+  public static <T> Set<T> getInstancesOf(Injector injector, Matcher<Class<T>> matcher) {
+    Set<T> answer = Sets.newHashSet();
+    Set<Entry<Key<?>, Binding<?>>> entries = injector.getBindings().entrySet();
+    for (Entry<Key<?>, Binding<?>> entry : entries) {
+      Key<?> key = entry.getKey();
+      if (matcher.matches((Class<T>) key.getTypeLiteral().getRawType())) {
+        Object value = injector.getInstance(key);
+        answer.add((T) value);
+      }
+    }
+    return answer;
+  }*/
 
   /**
    * Returns a collection of all instances matching the given matcher
@@ -221,5 +268,43 @@ public class Injectors {
     Class<?> type = Classes.loadClass(moduleName, GuiceInitialContextFactory.class.getClassLoader())
         ;
     return (Module) type.newInstance();
+  }
+
+  /**
+   * Closes any singleton objects in the injector
+   */
+  public static void close(Injector injector) throws CloseFailedException {
+    close(injector, new CloseErrorsImpl(Injectors.class));
+  }
+
+  /**
+   * Closes any singleton objects in the injector
+   */
+  public static void close(Injector injector, CloseErrors errors) throws CloseFailedException {
+/*
+    // TODO if Guice supported close on an injector
+    try {
+      injector.close();
+    }
+    catch (CloseFailedException e) {
+      errors.closeError(key, injector, e);
+    }
+*/
+
+    Set<Closer> closers = getInstancesOf(injector, Closer.class);
+    Closer closer = CompositeCloser.newInstance(closers);
+    if (closer == null) {
+      return;
+    }
+    Set<Entry<Key<?>,Binding<?>>> entries = injector.getBindings().entrySet();
+    for (Entry<Key<?>, Binding<?>> entry : entries) {
+      Binding<?> binding = entry.getValue();
+      Provider<?> provider = binding.getProvider();
+      if (provider instanceof Closeable) {
+        Closeable closeable = (Closeable) provider;
+        closeable.close(closer, errors);
+      }
+    }
+    errors.throwIfNecessary();
   }
 }

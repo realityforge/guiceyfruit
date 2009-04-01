@@ -26,17 +26,17 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
-import com.google.inject.internal.CloseErrorsImpl;
-import com.google.inject.internal.CompositeCloser;
-import com.google.inject.spi.CloseErrors;
-import com.google.inject.spi.CloseFailedException;
-import com.google.inject.spi.Closeable;
-import com.google.inject.spi.Closer;
-import com.google.inject.spi.Closers;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import org.guiceyfruit.Injectors;
+import org.guiceyfruit.support.CloseErrors;
+import org.guiceyfruit.support.CloseFailedException;
+import org.guiceyfruit.support.Closeable;
+import org.guiceyfruit.support.Closer;
+import org.guiceyfruit.support.Closers;
+import org.guiceyfruit.support.CompositeCloser;
+import org.guiceyfruit.support.internal.CloseErrorsImpl;
 
 /**
  * Represents a scope which caches objects around until the scope is closed.

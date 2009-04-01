@@ -20,7 +20,7 @@ package org.guiceyfruit.testing.junit3.scopes;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.jsr250.Jsr250Module;
+import org.guiceyfruit.jsr250.Jsr250Module;
 import org.guiceyfruit.testing.ClassScoped;
 import org.guiceyfruit.testing.junit3.GuiceyTestCase;
 

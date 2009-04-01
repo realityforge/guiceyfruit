@@ -23,9 +23,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.internal.CloseErrorsImpl;
-import com.google.inject.spi.CloseErrors;
-import com.google.inject.spi.CloseFailedException;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -33,6 +30,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.guiceyfruit.Injectors;
+import org.guiceyfruit.support.CloseErrors;
+import org.guiceyfruit.support.CloseFailedException;
+import org.guiceyfruit.support.internal.CloseErrorsImpl;
 import org.guiceyfruit.util.CloseableScope;
 
 /**
@@ -153,14 +153,9 @@ public class InjectorManager {
     CloseErrors errors = new CloseErrorsImpl(this);
     Set<Entry<Object, Injector>> entries = injectors.entrySet();
     for (Entry<Object, Injector> entry : entries) {
-      Object key = entry.getKey();
+      // Object key = entry.getKey();
       Injector injector = entry.getValue();
-      try {
-        injector.close();
-      }
-      catch (CloseFailedException e) {
-        errors.closeError(key, injector, e);
-      }
+      Injectors.close(injector, errors);
     }
     injectors.clear();
     errors.throwIfNecessary();
