@@ -215,6 +215,21 @@ public class Injectors {
   }
 
   /**
+   * Returns true if a binding exists for the given matcher
+   */
+  public static boolean hasBinding(Injector injector, Matcher<Class> matcher) {
+    return !getBindingsOf(injector, matcher).isEmpty();
+  }
+
+
+  /**
+   * Returns true if a binding exists for the given base class
+   */
+  public static boolean hasBinding(Injector injector, Class<?> baseClass) {
+    return !getBindingsOf(injector, baseClass).isEmpty();
+  }
+
+  /**
    * Returns a collection of all of the bindings matching the given matcher
    *
    * @param matcher matches the types to return instances
