@@ -23,13 +23,5 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
-
-    <!-- testing -->
-    <dependency>
-      <groupId>${groupId}</groupId>
-      <artifactId>guice-jsr250</artifactId>
-      <version>${version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 </project>
