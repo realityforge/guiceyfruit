@@ -38,7 +38,7 @@ import static org.guiceyfruit.support.EncounterProvider.encounterProvider;
  *
  * @version $Revision: 1.1 $
  */
-public abstract class AbstractGuiceyFruitModule extends AbstractModule {
+public abstract class GuiceyFruitModule extends AbstractModule {
 
   protected <A extends Annotation> void bindMethodHandler(final Class<A> annotationType,
       final MethodHandler methodHandler) {

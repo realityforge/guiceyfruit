@@ -23,7 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import org.guiceyfruit.support.AbstractGuiceyFruitModule;
+import org.guiceyfruit.support.GuiceyFruitModule;
 import org.guiceyfruit.support.MethodHandler;
 
 /**
@@ -31,7 +31,7 @@ import org.guiceyfruit.support.MethodHandler;
  *
  * @version $Revision: 1.1 $
  */
-public class Jsr250Module extends AbstractGuiceyFruitModule {
+public class Jsr250Module extends GuiceyFruitModule {
 
   protected void configure() {
     bindAnnotationInjector(Resource.class, ResourceMemberProvider.class);
