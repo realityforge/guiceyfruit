@@ -18,13 +18,53 @@
 
 package org.guiceyfruit.support;
 
+import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.spi.InjectableType.Encounter;
 
 /**
  * Like a {@link com.google.inject.Provider} but which is also given an {@link Encounter}
  *
- * @version $Revision: 1.1 $ */
-public interface EncounterProvider<T> {
-  Provider<? extends T> get(Encounter<?> encounter);
+ * @version $Revision: 1.1 $
+ */
+public abstract class EncounterProvider<T> {
+  public abstract Provider<? extends T> get(Encounter<?> encounter);
+
+  /**
+   * Returns a new encounter provider for the given key
+   */
+  public static <T> EncounterProvider<T> encounterProvider(final Key<? extends T> key) {
+    return new EncounterProvider<T>() {
+      public Provider<? extends T> get(Encounter<?> encounter) {
+        return encounter.getProvider(key);
+      }
+    };
+  }
+
+  /**
+   * Returns a new encounter provider for the given type
+   */
+  public static <T> EncounterProvider<T> encounterProvider(final Class<? extends T> type) {
+    return new EncounterProvider<T>() {
+      public Provider<? extends T> get(Encounter<?> encounter) {
+        return encounter.getProvider(type);
+      }
+    };
+  }
+
+  /**
+   * Returns a new encounter provider for the given instance
+   */
+  public static <T> EncounterProvider<T> encounterProvider(final T instance) {
+    return new EncounterProvider<T>() {
+      public Provider<? extends T> get(Encounter<?> encounter) {
+        return new Provider<T>() {
+          public T get() {
+            return instance;
+          }
+        };
+      }
+    };
+  }
+
 }

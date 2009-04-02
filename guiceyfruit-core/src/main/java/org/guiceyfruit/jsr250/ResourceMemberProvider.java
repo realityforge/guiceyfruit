@@ -23,6 +23,7 @@ import com.google.inject.ProvisionException;
 import java.lang.reflect.Member;
 import javax.annotation.Resource;
 import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.guiceyfruit.support.AnnotationMemberProvider;
 
@@ -33,10 +34,14 @@ import org.guiceyfruit.support.AnnotationMemberProvider;
  */
 public class ResourceMemberProvider implements AnnotationMemberProvider<Resource> {
 
-  private final Context context;
+  private Context context;
 
-  @Inject
-  public ResourceMemberProvider(Context context) {
+  public Context getContext() {
+    return context;
+  }
+
+  @Inject(optional = true)
+  public void setContext(Context context) {
     this.context = context;
   }
 
@@ -44,6 +49,9 @@ public class ResourceMemberProvider implements AnnotationMemberProvider<Resource
     String name = getJndiName(resource, member);
 
     try {
+      if (context == null) {
+        context = new InitialContext();
+      }
       return context.lookup(name);
     }
     catch (NamingException e) {

@@ -16,35 +16,24 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.jsr250;
+package org.guiceyfruit.support;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import org.guiceyfruit.support.AbstractGuiceyFruitModule;
-import org.guiceyfruit.support.MethodHandler;
 
 /**
- * A module which installs JSR 250 lifecycle and injection using the {@link Resource} annotation.
+ * Allows a method with a given annotation {@code A} on an injectee of type {@code I} to be
+ * processed in some way on each injectee using a custom strategy.
  *
  * @version $Revision: 1.1 $
  */
-public class Jsr250Module extends AbstractGuiceyFruitModule {
+public interface MethodHandler<I, A extends Annotation> {
 
-  protected void configure() {
-    bindAnnotationInjector(Resource.class, ResourceMemberProvider.class);
-
-    bindMethodHandler(PostConstruct.class, new MethodHandler() {
-      public void afterInjection(Object injectee, Annotation annotation, Method method)
-          throws InvocationTargetException, IllegalAccessException {
-
-        method.invoke(injectee);
-      }
-    });
-
-    bind(PreDestroyCloser.class);
-  }
-
+  /**
+   * Process the given method which is annotated with the annotation
+   * on the injectee after the injectee has been injected
+   */
+  void afterInjection(I injectee, A annotation, Method method)
+      throws InvocationTargetException, IllegalAccessException;
 }
