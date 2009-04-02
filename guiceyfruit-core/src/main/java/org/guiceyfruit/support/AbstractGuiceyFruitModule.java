@@ -21,7 +21,6 @@ package org.guiceyfruit.support;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provider;
-import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.InjectableType;
 import com.google.inject.spi.InjectableType.Encounter;
 import com.google.inject.spi.InjectableType.Listener;
@@ -30,7 +29,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import org.aopalliance.intercept.ConstructorInterceptor;
 
 /**
  * Adds some new helper methods to the base Guice module
@@ -38,32 +36,48 @@ import org.aopalliance.intercept.ConstructorInterceptor;
  * @version $Revision: 1.1 $
  */
 public abstract class AbstractGuiceyFruitModule extends AbstractModule {
-  protected void bindConstructorInterceptor(Matcher<Class> classMatcher,
-      ConstructorInterceptor constructorInterceptor) {
 
-    // TODO
-
-  }
-
+  /**
+   * Binds a custom injection point for a given injection annotation to the
+   * annotation member provider so that occurrences of the annotation on fields and methods
+   * with a single parameter will be injected by Guice after the constructor and @Inject have been
+   * processed.
+   *
+   * @param annotationType the annotation class used to define the injection point
+   * @param annotationMemberProviderKey the key of the annotation member provider which can be
+   * instantiated and injected by guice
+   * @param <A> the annotation type used as the injection point
+   */
   protected <A extends Annotation> void bindAnnotationMemberProvider(final Class<A> annotationType,
-      final Key<? extends AnnotationMemberProvider> key) {
+      final Key<? extends AnnotationMemberProvider> annotationMemberProviderKey) {
     bindAnnotationMemberProvider(annotationType, new EncounterProvider<AnnotationMemberProvider>() {
       public Provider<? extends AnnotationMemberProvider> get(Encounter<?> encounter) {
-        return encounter.getProvider(key);
+        return encounter.getProvider(annotationMemberProviderKey);
       }
     });
   }
 
+  /**
+   * Binds a custom injection point for a given injection annotation to the
+   * annotation member provider so that occurrences of the annotation on fields and methods
+   * with a single parameter will be injected by Guice after the constructor and @Inject have been
+   * processed.
+   *
+   * @param annotationType the annotation class used to define the injection point
+   * @param annotationMemberProviderType the type of the annotation member provider which can be
+   * instantiated and injected by guice
+   * @param <A> the annotation type used as the injection point
+   */
   protected <A extends Annotation> void bindAnnotationMemberProvider(final Class<A> annotationType,
-      final Class<? extends AnnotationMemberProvider> type) {
+      final Class<? extends AnnotationMemberProvider> annotationMemberProviderType) {
     bindAnnotationMemberProvider(annotationType, new EncounterProvider<AnnotationMemberProvider>() {
       public Provider<? extends AnnotationMemberProvider> get(Encounter<?> encounter) {
-        return encounter.getProvider(type);
+        return encounter.getProvider(annotationMemberProviderType);
       }
     });
   }
 
-  protected <A extends Annotation> void bindAnnotationMemberProvider(final Class<A> annotationType,
+  private <A extends Annotation> void bindAnnotationMemberProvider(final Class<A> annotationType,
       final EncounterProvider<AnnotationMemberProvider> memberProviderProvider) {
     bindListener(Matchers.any(), new Listener() {
       Provider<? extends AnnotationMemberProvider> providerProvider;

@@ -22,6 +22,7 @@ import static com.google.inject.internal.Preconditions.checkArgument;
 import static com.google.inject.internal.Preconditions.checkNotNull;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
+import com.google.inject.TypeLiteral;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -36,7 +37,7 @@ public class Matchers {
    * Returns a matcher which matches classes which have a public method annotated with a given
    * annotation.
    */
-  public static Matcher<Class> methodAnnotatedWith(final Annotation annotation) {
+  public static Matcher<? super TypeLiteral<?>> methodAnnotatedWith(final Annotation annotation) {
     return new MethodAnnotatedWith(annotation);
   }
 
@@ -44,12 +45,12 @@ public class Matchers {
    * Returns a matcher which matches classes which have a public method annotated with a given
    * annotation.
    */
-  public static Matcher<Class> methodAnnotatedWith(
+  public static Matcher<? super TypeLiteral<?>> methodAnnotatedWith(
       final Class<? extends Annotation> annotationType) {
     return new MethodAnnotatedWith(annotationType);
   }
 
-  private static class MethodAnnotatedWith extends AbstractMatcher<Class> implements Serializable {
+  private static class MethodAnnotatedWith<T extends TypeLiteral<?>> extends AbstractMatcher<T> implements Serializable {
     private final Class<? extends Annotation> annotationType;
 
     public MethodAnnotatedWith(Annotation annotation) {
@@ -64,14 +65,14 @@ public class Matchers {
       checkForRuntimeRetention(annotationType);
     }
 
-    public boolean matches(Class type) {
-      if (matchesClass(type)) {
+    public boolean matches(T type) {
+      if (matchesClass(type.getRawType())) {
         return true;
       }
       return false;
     }
 
-    protected boolean matchesClass(Class type) {
+    protected boolean matchesClass(Class<?> type) {
       Method[] methods = type.getDeclaredMethods();
       for (Method method : methods) {
         Annotation fromElement = method.getAnnotation(annotationType);
