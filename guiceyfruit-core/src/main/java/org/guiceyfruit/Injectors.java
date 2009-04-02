@@ -111,47 +111,6 @@ public class Injectors {
     return answer;
   }
 
-  /*
-  *//**
-   * Returns a collection of all instances of the given base type
-   * @param baseClass the base type of objects required
-   * @param <T> the base type
-   * @return a set of objects returned from this injector
-   *//*
-  public static <T> Set<T> getInstancesOf(Injector injector, Class<T> baseClass) {
-    Set<T> answer = Sets.newHashSet();
-    Set<Entry<Key<?>, Binding<?>>> entries = injector.getBindings().entrySet();
-    for (Entry<Key<?>, Binding<?>> entry : entries) {
-      Key<?> key = entry.getKey();
-      if (baseClass.isAssignableFrom(key.getTypeLiteral().getRawType())) {
-        Object value = injector.getInstance(key);
-        if (value != null) {
-          T castValue = baseClass.cast(value);
-          answer.add(castValue);
-        }
-      }
-    }
-    return answer;
-  }
-
-  *//**
-   * Returns a collection of all instances matching the given matcher
-   * @param matcher matches the types to return instances
-   * @return a set of objects returned from this injector
-   *//*
-  public static <T> Set<T> getInstancesOf(Injector injector, Matcher<Class<T>> matcher) {
-    Set<T> answer = Sets.newHashSet();
-    Set<Entry<Key<?>, Binding<?>>> entries = injector.getBindings().entrySet();
-    for (Entry<Key<?>, Binding<?>> entry : entries) {
-      Key<?> key = entry.getKey();
-      if (matcher.matches((Class<T>) key.getTypeLiteral().getRawType())) {
-        Object value = injector.getInstance(key);
-        answer.add((T) value);
-      }
-    }
-    return answer;
-  }*/
-
   /**
    * Returns a collection of all instances matching the given matcher
    *
