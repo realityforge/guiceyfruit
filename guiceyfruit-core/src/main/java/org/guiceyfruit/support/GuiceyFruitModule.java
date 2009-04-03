@@ -30,9 +30,7 @@ import com.google.inject.spi.InjectionListener;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import static org.guiceyfruit.support.EncounterProvider.encounterProvider;
 
 /**
@@ -170,9 +168,7 @@ public abstract class GuiceyFruitModule extends AbstractModule {
                   values[i] = value;
                 }
                 try {
-                  if (notAccesible(method)) {
-                    method.setAccessible(true);
-                  }
+                  method.setAccessible(true);
                   method.invoke(injectee, values);
                 }
                 catch (IllegalAccessException e) {
@@ -206,9 +202,7 @@ public abstract class GuiceyFruitModule extends AbstractModule {
               checkInjectedValueType(value, field.getType(), encounter);
 
               try {
-                if (notAccesible(field)) {
-                  field.setAccessible(true);
-                }
+                field.setAccessible(true);
                 field.set(injectee, value);
               }
               catch (IllegalAccessException e) {
@@ -220,10 +214,6 @@ public abstract class GuiceyFruitModule extends AbstractModule {
         }
       }
     });
-  }
-
-  private boolean notAccesible(Member member) {
-    return !Modifier.isPublic(member.getModifiers());
   }
 
 /*

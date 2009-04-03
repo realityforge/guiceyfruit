@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.jsr250;
+package org.guiceyfruit.spring;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.CreationException;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import junit.framework.TestCase;
 import org.guiceyfruit.Injectors;
 import org.guiceyfruit.support.CloseFailedException;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /** @author james.strachan@gmail.com (James Strachan) */
 public class LifecycleTest extends TestCase {
@@ -35,7 +35,7 @@ public class LifecycleTest extends TestCase {
   public static final boolean preDestroySupported = false;
 
   public void testBeanInitialised() throws CreationException, CloseFailedException {
-    Injector injector = Guice.createInjector(new Jsr250Module(), new AbstractModule() {
+    Injector injector = Guice.createInjector(new SpringModule(), new AbstractModule() {
       protected void configure() {
         bind(MyBean.class).in(Singleton.class);
       }
@@ -58,29 +58,26 @@ public class LifecycleTest extends TestCase {
     }
   }
 
-  static class MyBean {
-    @Inject
+  static class MyBean implements InitializingBean, DisposableBean {
+    @Autowired
     public AnotherBean another;
 
     public boolean postConstruct;
     public boolean preDestroy;
 
-    @PostConstruct
-    public void postConstruct() throws Exception {
+    public void afterPropertiesSet() throws Exception {
       postConstruct = true;
     }
 
-    @PreDestroy
-    public void preDestroy() throws Exception {
+    public void destroy() throws Exception {
       preDestroy = true;
     }
   }
 
-  static class AnotherBean {
+  static class AnotherBean  implements InitializingBean {
     public boolean postConstruct;
 
-    @PostConstruct
-    public void postConstruct() throws Exception {
+    public void afterPropertiesSet() throws Exception {
       postConstruct = true;
     }
   }

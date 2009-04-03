@@ -18,7 +18,14 @@
 
 package org.guiceyfruit.spring;
 
+import com.google.inject.ProvisionException;
+import com.google.inject.matcher.Matchers;
+import com.google.inject.spi.InjectableType;
+import com.google.inject.spi.InjectableType.Encounter;
+import com.google.inject.spi.InjectableType.Listener;
+import com.google.inject.spi.InjectionListener;
 import org.guiceyfruit.support.GuiceyFruitModule;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -29,5 +36,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class SpringModule extends GuiceyFruitModule {
   protected void configure() {
     bindAnnotationInjector(Autowired.class, AutowiredMemberProvider.class);
+
+    // TODO cannot use the matchers to perform subclass checks!
+    bindListener(Matchers.any(), new Listener() {
+      public <I> void hear(InjectableType<I> injectableType, Encounter<I> encounter) {
+        Class<? super I> type = injectableType.getType().getRawType();
+        if (InitializingBean.class.isAssignableFrom(type)) {
+          encounter.registerPostInjectListener(new InjectionListener<I>() {
+            public void afterInjection(I injectee) {
+              if (injectee instanceof InitializingBean) {
+                InitializingBean initializingBean = (InitializingBean) injectee;
+                try {
+                  initializingBean.afterPropertiesSet();
+                }
+                catch (Exception e) {
+                  throw new ProvisionException("Failed to invoke afterPropertiesSet(): " + e, e);
+                }
+              }
+            }
+          });
+        }
+      }
+    });
   }
 }

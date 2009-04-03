@@ -85,7 +85,20 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
           return binding.getProvider().get();
         }
         else if (size == 0) {
-          return null;
+          // should we at least try and create one
+          try {
+            return injector.getInstance(type);
+          }
+          catch (Exception e) {
+            // TODO should we log the warning that we can't resolve this?
+            if (annotation.required()) {
+              if (e instanceof ProvisionException) {
+                throw (ProvisionException) e;
+              }
+              throw new ProvisionException("Could not resolve type " + type.getCanonicalName() + ": " + e, e);
+            }
+            return null;
+          }
           //throw new ProvisionException("No binding could be found for " + type.getCanonicalName());
         }
         else {
