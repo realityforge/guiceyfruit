@@ -22,7 +22,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
-import com.google.inject.matcher.Matchers;
+import static com.google.inject.matcher.Matchers.any;
 import com.google.inject.spi.InjectableType;
 import com.google.inject.spi.InjectableType.Encounter;
 import com.google.inject.spi.InjectableType.Listener;
@@ -30,7 +30,9 @@ import com.google.inject.spi.InjectionListener;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import static org.guiceyfruit.support.EncounterProvider.encounterProvider;
 
 /**
@@ -58,11 +60,10 @@ public abstract class GuiceyFruitModule extends AbstractModule {
     bindMethodHandler(annotationType, encounterProvider(methodHandlerType));
   }
 
-
   private <A extends Annotation> void bindMethodHandler(final Class<A> annotationType,
       final EncounterProvider<MethodHandler> encounterProvider) {
 
-    bindListener(Matchers.any(), new Listener() {
+    bindListener(any(), new Listener() {
       public <I> void hear(InjectableType<I> injectableType, Encounter<I> encounter) {
         Class<? super I> type = injectableType.getType().getRawType();
         Method[] methods = type.getDeclaredMethods();
@@ -127,36 +128,16 @@ public abstract class GuiceyFruitModule extends AbstractModule {
 
   private <A extends Annotation> void bindAnnotationInjector(final Class<A> annotationType,
       final EncounterProvider<AnnotationMemberProvider> memberProviderProvider) {
-    bindListener(Matchers.any(), new Listener() {
+    bindListener(any(), new Listener() {
       Provider<? extends AnnotationMemberProvider> providerProvider;
 
       public <I> void hear(InjectableType<I> injectableType, final Encounter<I> encounter) {
         Class<? super I> type = injectableType.getType().getRawType();
-        Field[] fields = type.getDeclaredFields();
 
-        for (final Field field : fields) {
-          // TODO lets exclude fields with @Inject?
-          final A annotation = field.getAnnotation(annotationType);
-          if (annotation != null) {
-            if (providerProvider == null) {
-              providerProvider = memberProviderProvider.get(encounter);
-            }
-
-            encounter.register(new InjectionListener<I>() {
-              public void afterInjection(I injectee) {
-                AnnotationMemberProvider provider = providerProvider.get();
-                Object value = provider.provide(annotation, field);
-                if (checkInjectedValueType(value, field.getType(), encounter)) {
-                  try {
-                    field.setAccessible(true);
-                    field.set(injectee, value);
-                  }
-                  catch (IllegalAccessException e) {
-                    encounter.addError(e);
-                  }
-                }
-              }
-            });
+        for (Class<? super I> t = type; t != Object.class; t = t.getSuperclass()) {
+          Field[] fields = t.getDeclaredFields();
+          for (Field field : fields) {
+            bindAnnotationInjectorToField(encounter, field);
           }
         }
 
@@ -165,15 +146,6 @@ public abstract class GuiceyFruitModule extends AbstractModule {
           // TODO lets exclude methods with @Inject?
           final A annotation = method.getAnnotation(annotationType);
           if (annotation != null) {
-
-            Class<?>[] classes = method.getParameterTypes();
-            if (classes.length != 1) {
-              encounter.addError("Method annotated with " + annotationType.getCanonicalName()
-                  + " should only have 1 parameter but has " + classes.length);
-              continue;
-            }
-            final Class<?> paramType = classes[0];
-
             if (providerProvider == null) {
               providerProvider = memberProviderProvider.get(encounter);
             }
@@ -181,34 +153,98 @@ public abstract class GuiceyFruitModule extends AbstractModule {
             encounter.register(new InjectionListener<I>() {
               public void afterInjection(I injectee) {
                 AnnotationMemberProvider provider = providerProvider.get();
-                Object value = provider.provide(annotation, method);
-                if (checkInjectedValueType(value, paramType, encounter)) {
-                  try {
-                    method.invoke(injectee, value);
+
+                Class<?>[] parameterTypes = method.getParameterTypes();
+                int size = parameterTypes.length;
+                Object[] values = new Object[size];
+                for (int i = 0; i < size; i++) {
+                  Class<?> paramType = parameterTypes[i];
+                  Object value = provider.provide(annotation, method, paramType, i);
+                  checkInjectedValueType(value, paramType, encounter);
+
+                  // if we have a null value then assume the injection point cannot be satisfied
+                  // which is the spring @Autowired way of doing things
+                  if (value == null) {
+                    return;
                   }
-                  catch (IllegalAccessException e) {
-                    encounter.addError(e);
+                  values[i] = value;
+                }
+                try {
+                  if (notAccesible(method)) {
+                    method.setAccessible(true);
                   }
-                  catch (InvocationTargetException e) {
-                    encounter.addError(e.getTargetException());
-                  }
+                  method.invoke(injectee, values);
+                }
+                catch (IllegalAccessException e) {
+                  throw new ProvisionException(
+                      "Failed to inject method " + method + ". Reason: " + e, e);
+                }
+                catch (InvocationTargetException ie) {
+                  Throwable e = ie.getTargetException();
+                  throw new ProvisionException(
+                      "Failed to inject method " + method + ". Reason: " + e, e);
                 }
               }
             });
           }
         }
       }
-    });
 
+      protected <I> void bindAnnotationInjectorToField(final Encounter<I> encounter,
+          final Field field) {
+        // TODO lets exclude fields with @Inject?
+        final A annotation = field.getAnnotation(annotationType);
+        if (annotation != null) {
+          if (providerProvider == null) {
+            providerProvider = memberProviderProvider.get(encounter);
+          }
+
+          encounter.register(new InjectionListener<I>() {
+            public void afterInjection(I injectee) {
+              AnnotationMemberProvider provider = providerProvider.get();
+              Object value = provider.provide(annotation, field);
+              checkInjectedValueType(value, field.getType(), encounter);
+
+              try {
+                if (notAccesible(field)) {
+                  field.setAccessible(true);
+                }
+                field.set(injectee, value);
+              }
+              catch (IllegalAccessException e) {
+                throw new ProvisionException("Failed to inject field " + field + ". Reason: " + e,
+                    e);
+              }
+            }
+          });
+        }
+      }
+    });
   }
+
+  private boolean notAccesible(Member member) {
+    return !Modifier.isPublic(member.getModifiers());
+  }
+
+/*
+  protected void bindCloseHook() {
+    bindListener(any(), new Listener() {
+      public <I> void hear(InjectableType<I> injectableType, Encounter<I> encounter) {
+        encounter.registerPostInjectListener(new InjectionListener<I>() {
+          public void afterInjection(I injectee) {
+
+          }
+        });
+      }
+    });
+  }
+*/
 
   /**
    * Returns true if the value to be injected is of the correct type otherwise an error is raised on
    * the encounter and false is returned
    */
-  protected <I> boolean checkInjectedValueType(Object value, Class<?> type,
-      Encounter<I> encounter) {
+  protected <I> void checkInjectedValueType(Object value, Class<?> type, Encounter<I> encounter) {
     // TODO check the type
-    return true;
   }
 }

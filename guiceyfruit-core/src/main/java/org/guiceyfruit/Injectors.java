@@ -31,6 +31,7 @@ import com.google.inject.internal.Sets;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ import org.guiceyfruit.support.CloseFailedException;
 import org.guiceyfruit.support.Closeable;
 import org.guiceyfruit.support.Closer;
 import org.guiceyfruit.support.CompositeCloser;
+import org.guiceyfruit.support.PreDestroyer;
 import org.guiceyfruit.support.internal.CloseErrorsImpl;
 
 /** @version $Revision: 1.1 $ */
@@ -173,19 +175,27 @@ public class Injectors {
     return answer;
   }
 
-  /**
-   * Returns true if a binding exists for the given matcher
-   */
+  /** Returns true if a binding exists for the given matcher */
   public static boolean hasBinding(Injector injector, Matcher<Class> matcher) {
     return !getBindingsOf(injector, matcher).isEmpty();
   }
 
-
-  /**
-   * Returns true if a binding exists for the given base class
-   */
+  /** Returns true if a binding exists for the given base class */
   public static boolean hasBinding(Injector injector, Class<?> baseClass) {
     return !getBindingsOf(injector, baseClass).isEmpty();
+  }
+
+  /** Returns true if a binding exists for the given key */
+  public static boolean hasBinding(Injector injector, Key<?> key) {
+    Binding<?> binding = getBinding(injector, key);
+    return binding != null;
+  }
+
+  /** Returns the binding for the given key or null if there is no such binding */
+  public static Binding<?> getBinding(Injector injector, Key<?> key) {
+    Map<Key<?>, Binding<?>> bindings = injector.getBindings();
+    Binding<?> binding = bindings.get(key);
+    return binding;
   }
 
   /**
@@ -239,21 +249,33 @@ public class Injectors {
 
   protected static Module loadModule(String moduleName)
       throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-    Class<?> type = Classes.loadClass(moduleName, GuiceInitialContextFactory.class.getClassLoader())
-        ;
+    Class<?> type = Classes
+        .loadClass(moduleName, GuiceInitialContextFactory.class.getClassLoader());
     return (Module) type.newInstance();
   }
 
   /**
-   * Closes any singleton objects in the injector
+   * Closes the given scope on this injector
+   *
+   * @param injector the injector on which to close objects
+   * @param scopeAnnotation the scope on which to close the objects
+   * @throws CloseFailedException the exceptions caused if closing an object fails
    */
+  public static void close(Injector injector, Annotation scopeAnnotation)
+      throws CloseFailedException {
+    Key<PreDestroyer> key = Key.get(PreDestroyer.class, scopeAnnotation);
+    if (hasBinding(injector, key)) {
+      PreDestroyer destroyer = injector.getInstance(key);
+      destroyer.close();
+    }
+  }
+
+  /** Closes any singleton objects in the injector */
   public static void close(Injector injector) throws CloseFailedException {
     close(injector, new CloseErrorsImpl(Injectors.class));
   }
 
-  /**
-   * Closes any singleton objects in the injector
-   */
+  /** Closes any singleton objects in the injector */
   public static void close(Injector injector, CloseErrors errors) throws CloseFailedException {
 /*
     // TODO if Guice supported close on an injector
@@ -270,7 +292,7 @@ public class Injectors {
     if (closer == null) {
       return;
     }
-    Set<Entry<Key<?>,Binding<?>>> entries = injector.getBindings().entrySet();
+    Set<Entry<Key<?>, Binding<?>>> entries = injector.getBindings().entrySet();
     for (Entry<Key<?>, Binding<?>> entry : entries) {
       Binding<?> binding = entry.getValue();
       Provider<?> provider = binding.getProvider();

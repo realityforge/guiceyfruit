@@ -18,14 +18,19 @@
 
 package org.guiceyfruit.spring;
 
+import com.google.inject.Binding;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.ProvisionException;
+import com.google.inject.internal.Iterables;
 import com.google.inject.internal.Preconditions;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Array;
 import java.lang.reflect.Member;
-import org.guiceyfruit.support.AnnotationMemberProvider;
-import org.guiceyfruit.support.Members;
+import java.util.Set;
+import org.guiceyfruit.Injectors;
+import org.guiceyfruit.support.AnnotationMemberProviderSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -34,7 +39,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
  *
  * @version $Revision: 1.1 $
  */
-public class AutowiredMemberProvider implements AnnotationMemberProvider<Autowired> {
+public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Autowired> {
 
   private final Injector injector;
 
@@ -44,8 +49,7 @@ public class AutowiredMemberProvider implements AnnotationMemberProvider<Autowir
     this.injector = injector;
   }
 
-  public Object provide(Autowired annotation, Member member) {
-    Class<?> type = Members.getInjectionValueType(member);
+  protected Object provide(Autowired annotation, Member member, Class<?> type) {
     Qualifier qualifier = null;
     if (member instanceof AnnotatedElement) {
       AnnotatedElement annotatedElement = (AnnotatedElement) member;
@@ -57,7 +61,39 @@ public class AutowiredMemberProvider implements AnnotationMemberProvider<Autowir
       return injector.getInstance(key);
     }
     else {
-      return injector.getInstance(type);
+      if (type.isArray()) {
+        Class<?> componentType = type.getComponentType();
+        Set<Binding<?>> set = Injectors.getBindingsOf(injector, componentType);
+        // TODO should we return an empty array when no matches?
+        // FWIW Spring seems to return null
+        if (set.isEmpty()) {
+          return null;
+        }
+        Object array = Array.newInstance(componentType, set.size());
+        int index = 0;
+        for (Binding<?> binding : set) {
+          Object value = binding.getProvider().get();
+          Array.set(array, index++, value);
+        }
+        return array;
+      }
+      else {
+        Set<Binding<?>> set = Injectors.getBindingsOf(injector, type);
+        int size = set.size();
+        if (size == 1) {
+          Binding<?> binding = Iterables.getOnlyElement(set);
+          return binding.getProvider().get();
+        }
+        else if (size == 0) {
+          return null;
+          //throw new ProvisionException("No binding could be found for " + type.getCanonicalName());
+        }
+        else {
+          throw new ProvisionException(
+              "Too many bindings " + size + " found for " + type.getCanonicalName());
+        }
+      }
     }
   }
+
 }

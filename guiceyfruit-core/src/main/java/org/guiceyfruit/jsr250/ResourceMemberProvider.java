@@ -25,14 +25,14 @@ import javax.annotation.Resource;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import org.guiceyfruit.support.AnnotationMemberProvider;
+import org.guiceyfruit.support.AnnotationMemberProviderSupport;
 
 /**
  * Injects fields or methods with the results of the {@link Resource} annotation
  *
  * @version $Revision: 1.1 $
  */
-public class ResourceMemberProvider implements AnnotationMemberProvider<Resource> {
+public class ResourceMemberProvider extends AnnotationMemberProviderSupport<Resource> {
 
   private Context context;
 
@@ -45,7 +45,7 @@ public class ResourceMemberProvider implements AnnotationMemberProvider<Resource
     this.context = context;
   }
 
-  public Object provide(Resource resource, Member member) {
+  protected Object provide(Resource resource, Member member, Class<?> requiredType) {
     String name = getJndiName(resource, member);
 
     try {

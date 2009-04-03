@@ -20,20 +20,27 @@ package org.guiceyfruit.support;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
 /**
- * A provider of an annotation based injection point which can use the value of an annotation
- * together with the member on which the annotation is placed to determine the value.
+ * A useful base class for implementors meaning they only have to implement a single method whether
+ * a Field or Method parameter is being injected
  *
  * @version $Revision: 1.1 $
  */
-public interface AnnotationMemberProvider<A extends Annotation> {
+public abstract class AnnotationMemberProviderSupport<A extends Annotation>
+    implements AnnotationMemberProvider<A> {
 
-  /** Returns the value to be injected for the given annotated field */
-  Object provide(A annotation, Field field);
+  /** Returns the value to be injected for the given field with the given annotation */
+  public Object provide(A annotation, Field field) {
+    return provide(annotation, field, field.getType());
+  }
 
-  /** Returns the value to be injected for the given annotated method parameter value */
-  Object provide(A annotation, Method method, Class<?> parameterType, int parameterIndex);
+  public Object provide(A annotation, Method method, Class<?> parameterType, int parameterIndex) {
+    return provide(annotation, method, parameterType);
+  }
 
+  /** The default method to create a value for the named member of the requested type */
+  protected abstract Object provide(A annotation, Member member, Class<?> requiredType);
 }
