@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -26,50 +28,43 @@
   <dependencies>
     <dependency>
       <groupId>org.guiceyfruit</groupId>
-      <artifactId>guiceyfruit-core</artifactId>      
+      <artifactId>guiceyfruit-core</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.guiceyfruit</groupId>
-      <artifactId>guiceyfruit-junit3</artifactId>      
+      <artifactId>guiceyfruit-jpa</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.guiceyfruit</groupId>
-      <artifactId>guiceyfruit-junit4</artifactId>      
+      <artifactId>guiceyfruit-junit3</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.guiceyfruit</groupId>
-      <artifactId>guiceyfruit-testng</artifactId>      
+      <artifactId>guiceyfruit-junit4</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.guiceyfruit</groupId>
-      <artifactId>guiceyfruit-spring-converter</artifactId>      
-    </dependency>
-    
-<!--
-    <dependency>
-        <groupId>com.google.code.google-collections</groupId>
-        <artifactId>google-collect</artifactId>        
+      <artifactId>guiceyfruit-testng</artifactId>
     </dependency>
 
     <dependency>
-        <groupId>cglib</groupId>
-        <artifactId>cglib</artifactId>        
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guiceyfruit-spring</artifactId>
     </dependency>
 
     <dependency>
-        <groupId>asm</groupId>
-        <artifactId>asm</artifactId>        
+      <groupId>org.guiceyfruit</groupId>
+      <artifactId>guiceyfruit-spring-converter</artifactId>
     </dependency>
--->
 
     <dependency>
-        <groupId>aopalliance</groupId>
-        <artifactId>aopalliance</artifactId>        
-    </dependency>     
+      <groupId>aopalliance</groupId>
+      <artifactId>aopalliance</artifactId>
+    </dependency>
 
   </dependencies>
 
@@ -104,7 +99,7 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>      
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
@@ -166,7 +161,7 @@
       </plugin>
     </plugins>
   </build>
- 
+
   <profiles>
     <profile>
       <id>assembly-src</id>

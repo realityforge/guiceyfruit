@@ -8,7 +8,7 @@
   </parent>
   <artifactId>guiceyfruit-junit3</artifactId>
 
-  <name>GuicyFruit :: JUnit3</name>
+  <name>GuiceyFruit :: JUnit3</name>
 
   <dependencies>
     <dependency>

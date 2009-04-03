@@ -8,7 +8,7 @@
   </parent>
   <artifactId>guiceyfruit-core</artifactId>
 
-  <name>GuicyFruit :: Core</name>
+  <name>GuiceyFruit :: Core</name>
 
   <repositories>
     <repository>

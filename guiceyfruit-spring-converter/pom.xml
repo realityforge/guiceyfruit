@@ -8,7 +8,7 @@
   </parent>
   <artifactId>guiceyfruit-spring-converter</artifactId>
 
-  <name>GuicyFruit :: Spring :: Converter</name>
+  <name>GuiceyFruit :: Spring :: Converter</name>
 
   <dependencies>
     <dependency>

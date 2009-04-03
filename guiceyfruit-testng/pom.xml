@@ -8,7 +8,7 @@
   </parent>
   <artifactId>guiceyfruit-testng</artifactId>
 
-  <name>GuicyFruit :: TestNG</name>
+  <name>GuiceyFruit :: TestNG</name>
 
   <dependencies>
     <dependency>
