@@ -32,7 +32,7 @@ import org.guiceyfruit.support.CloseFailedException;
 public class LifecycleTest extends TestCase {
 
   // TODO: fixme!!
-  public static final boolean preDestroySupported = false;
+  public static final boolean preDestroySupported = true;
 
   public void testBeanInitialised() throws CreationException, CloseFailedException {
     Injector injector = Guice.createInjector(new Jsr250Module(), new AbstractModule() {
@@ -58,7 +58,7 @@ public class LifecycleTest extends TestCase {
     }
   }
 
-  static class MyBean {
+  public static class MyBean {
     @Inject
     public AnotherBean another;
 

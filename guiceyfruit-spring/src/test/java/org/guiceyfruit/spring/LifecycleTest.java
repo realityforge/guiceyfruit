@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class LifecycleTest extends TestCase {
 
   // TODO: fixme!!
-  public static final boolean preDestroySupported = false;
+  public static final boolean preDestroySupported = true;
 
   public void testBeanInitialised() throws CreationException, CloseFailedException {
     Injector injector = Guice.createInjector(new SpringModule(), new AbstractModule() {

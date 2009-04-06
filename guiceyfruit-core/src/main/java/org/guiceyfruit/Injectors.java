@@ -25,11 +25,16 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provider;
+import com.google.inject.Scope;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.internal.BindingImpl;
 import com.google.inject.internal.Lists;
+import com.google.inject.internal.Scoping;
 import com.google.inject.internal.Sets;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.name.Names;
+import com.google.inject.spi.CachedValue;
 import com.google.inject.util.Modules;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -42,9 +47,10 @@ import org.guiceyfruit.jndi.GuiceInitialContextFactory;
 import org.guiceyfruit.jndi.internal.Classes;
 import org.guiceyfruit.support.CloseErrors;
 import org.guiceyfruit.support.CloseFailedException;
-import org.guiceyfruit.support.Closeable;
 import org.guiceyfruit.support.Closer;
+import org.guiceyfruit.support.Closers;
 import org.guiceyfruit.support.CompositeCloser;
+import org.guiceyfruit.support.HasScopeAnnotation;
 import org.guiceyfruit.support.PreDestroyer;
 import org.guiceyfruit.support.internal.CloseErrorsImpl;
 
@@ -270,23 +276,37 @@ public class Injectors {
     }
   }
 
-  /** Closes any singleton objects in the injector */
+  /**
+   * Closes any singleton objects in the injector using the currently registered {@link Closer}
+   * implementations
+   */
   public static void close(Injector injector) throws CloseFailedException {
     close(injector, new CloseErrorsImpl(Injectors.class));
   }
 
-  /** Closes any singleton objects in the injector */
+  /**
+   * Closes objects within the given scope using the currently registered {@link Closer}
+   * implementations
+   */
   public static void close(Injector injector, CloseErrors errors) throws CloseFailedException {
-/*
-    // TODO if Guice supported close on an injector
-    try {
-      injector.close();
-    }
-    catch (CloseFailedException e) {
-      errors.closeError(key, injector, e);
-    }
-*/
+    close(injector, Singleton.class, errors);
+  }
 
+  /**
+   * Closes objects within the given scope using the currently registered {@link Closer}
+   * implementations
+   */
+  public static void close(Injector injector, Class<? extends Annotation> scopeAnnotationToClose)
+      throws CloseFailedException {
+    close(injector, scopeAnnotationToClose, new CloseErrorsImpl(Injectors.class));
+  }
+
+  /**
+   * Closes objects within the given scope using the currently registered {@link Closer}
+   * implementations
+   */
+  public static void close(Injector injector, Class<? extends Annotation> scopeAnnotationToClose,
+      CloseErrors errors) throws CloseFailedException {
     Set<Closer> closers = getInstancesOf(injector, Closer.class);
     Closer closer = CompositeCloser.newInstance(closers);
     if (closer == null) {
@@ -296,11 +316,45 @@ public class Injectors {
     for (Entry<Key<?>, Binding<?>> entry : entries) {
       Binding<?> binding = entry.getValue();
       Provider<?> provider = binding.getProvider();
-      if (provider instanceof Closeable) {
-        Closeable closeable = (Closeable) provider;
-        closeable.close(closer, errors);
+
+      Class<? extends Annotation> scopeAnnotation = getScopeAnnotation(binding);
+      if (scopeAnnotation != null && scopeAnnotation.equals(scopeAnnotationToClose)
+          && provider instanceof CachedValue) {
+        CachedValue cachedValue = (CachedValue) provider;
+        Object value = cachedValue.getCachedValue();
+        if (value != null) {
+          Closers.close(entry.getKey(), value, closer, errors);
+        }
       }
     }
     errors.throwIfNecessary();
+  }
+
+  /** Returns the scope annotation for the given binding or null if there is no scope */
+  public static Class<? extends Annotation> getScopeAnnotation(Binding<?> binding) {
+    Class<? extends Annotation> scopeAnnotation = null;
+    if (binding instanceof BindingImpl) {
+      BindingImpl bindingImpl = (BindingImpl) binding;
+      Scoping scoping = bindingImpl.getScoping();
+      if (scoping != null) {
+        scopeAnnotation = scoping.getScopeAnnotation();
+
+        // TODO not sure why we need this hack???
+        if (scopeAnnotation == null) {
+          Scope scope = scoping.getScopeInstance();
+          if (scope instanceof HasScopeAnnotation) {
+            HasScopeAnnotation hasScopeAnnotation = (HasScopeAnnotation) scope;
+            scopeAnnotation = hasScopeAnnotation.getScopeAnnotation();
+          }
+
+          if (scopeAnnotation == null && (scoping == Scoping.EAGER_SINGLETON
+              || scoping == Scoping.SINGLETON_ANNOTATION
+              || scoping == Scoping.SINGLETON_INSTANCE)) {
+            scopeAnnotation = Singleton.class;
+          }
+        }
+      }
+    }
+    return scopeAnnotation;
   }
 }

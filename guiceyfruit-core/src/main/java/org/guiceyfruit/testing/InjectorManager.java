@@ -44,8 +44,8 @@ public class InjectorManager {
 
   private Map<Object, Injector> injectors = new ConcurrentHashMap<Object, Injector>();
   private AtomicInteger initializeCounter = new AtomicInteger(0);
-  private CloseableScope testScope = new CloseableScope();
-  private CloseableScope classScope = new CloseableScope();
+  private CloseableScope testScope = new CloseableScope(TestScoped.class);
+  private CloseableScope classScope = new CloseableScope(ClassScoped.class);
   private static final String NESTED_MODULE_CLASS = "TestModule";
   private boolean closeSingletonsAfterClasses = false;
   private boolean runFinalizer = true;
@@ -146,7 +146,6 @@ public class InjectorManager {
       bindScope(ClassScoped.class, classScope);
       bindScope(TestScoped.class, testScope);
     }
-
   }
 
   protected void closeInjectors() throws CloseFailedException {
@@ -164,7 +163,7 @@ public class InjectorManager {
   /**
    * Factory method to return the module type that will be used to create an injector.
    *
-   * he default
+   * The default
    * implementation will use the system property <code>org.guiceyfruit.modules</code> (see {@link
    * Injectors#MODULE_CLASS_NAMES} otherwise if that is not set it will look for the {@link
    * UseModule} annotation and use the module defined on that otherwise it will try look for the

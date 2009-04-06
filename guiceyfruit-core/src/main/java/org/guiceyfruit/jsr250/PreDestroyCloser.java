@@ -24,8 +24,7 @@ import org.guiceyfruit.support.Closer;
 /**
  * Supports the {@link javax.annotation.PreDestroy} annotation lifecycle from JSR250.
  * <p>
- * To install this interceptor call the {@link Jsr250#bind(com.google.inject.Binder)} method
- * from your module.
+ * To install this closer you need to register the {@link Jsr250Module} in your injector.
  *
  * @author james.strachan@gmail.com (James Strachan)
  * @version $Revision: 1.1 $

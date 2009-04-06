@@ -16,13 +16,22 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.support;
+package org.guiceyfruit.spring;
+
+import org.guiceyfruit.support.Closer;
+import org.springframework.beans.factory.DisposableBean;
 
 /**
- * Represents a scope or provider which can be closed
- * 
+ * A {@link Closer} which detects the Spring {@link DisposableBean} interface and invokes the {@link
+ * org.springframework.beans.factory.DisposableBean#destroy()} method when a scope is closed.
+ *
  * @version $Revision: 1.1 $
  */
-public interface Closeable {
-  void close(Closer closer, CloseErrors errors);
+public class DisposableBeanCloser implements Closer {
+  public void close(Object object) throws Throwable {
+    if (object instanceof DisposableBean) {
+      DisposableBean disposableBean = (DisposableBean) object;
+      disposableBean.destroy();
+    }
+  }
 }

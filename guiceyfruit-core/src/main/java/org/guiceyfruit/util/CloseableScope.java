@@ -18,7 +18,6 @@
 
 package org.guiceyfruit.util;
 
-import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -26,16 +25,12 @@ import com.google.inject.Provider;
 import com.google.inject.Scope;
 import com.google.inject.internal.Maps;
 import com.google.inject.internal.Preconditions;
+import com.google.inject.spi.CachingProvider;
+import java.lang.annotation.Annotation;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import org.guiceyfruit.Injectors;
-import org.guiceyfruit.support.CloseErrors;
 import org.guiceyfruit.support.CloseFailedException;
-import org.guiceyfruit.support.Closeable;
-import org.guiceyfruit.support.Closer;
-import org.guiceyfruit.support.Closers;
-import org.guiceyfruit.support.CompositeCloser;
+import org.guiceyfruit.support.HasScopeAnnotation;
 import org.guiceyfruit.support.internal.CloseErrorsImpl;
 
 /**
@@ -46,16 +41,21 @@ import org.guiceyfruit.support.internal.CloseErrorsImpl;
  *
  * @version $Revision: 1.1 $
  */
-public class CloseableScope implements Scope, Closeable {
+public class CloseableScope implements Scope, HasScopeAnnotation {
 
+  private Class<? extends Annotation> scopeAnnotation;
   private final Map<Key<?>, Object> map = Maps.newHashMap();
 
   @Inject
   private Injector injector;
 
+  public CloseableScope(Class<? extends Annotation> scopeAnnotation) {
+    this.scopeAnnotation = scopeAnnotation;
+  }
+
   @SuppressWarnings("unchecked")
   public <T> Provider<T> scope(final Key<T> key, final Provider<T> creator) {
-    return new Provider<T>() {
+    return new CachingProvider<T>() {
       public T get() {
         Object o;
         synchronized (map) {
@@ -67,51 +67,40 @@ public class CloseableScope implements Scope, Closeable {
         }
         return (T) o;
       }
+
+      public T getCachedValue() {
+        synchronized (map) {
+          return (T) map.get(key);
+        }
+      }
     };
   }
 
   /**
-   * Closes all of the objects within this scope - though this object must have been injected to
-   * ensure that it has access to the injector to provide the available {@link Closer}
-   * implementations to use for closing.
-   *
-   * To use this method you should have invoked {@link  Binder#requestInjection(Object[])} passing
-   * in this instance first.
-   *
-   * @see Binder#requestInjection(Object[])
+   * Closes all of the objects within this scope using the given injector and scope annotation
+   * and clears the scope
    */
   public void close() throws CloseFailedException {
-    Preconditions.checkNotNull(injector,
-        "injector has not been injected! Please Binder.requestInjection(thisScope)");
     close(injector);
   }
 
   /**
-   * Closes all of the objects within this scope using the given injector to find the available
-   * {@link Closer} implementations to use
+   * Closes all of the objects within the given injector of the specified scope
+   * and clears the scope
    */
-  public void close(Injector injector) throws CloseFailedException {
+  public void close(Injector injector) throws
+      CloseFailedException {
     Preconditions.checkNotNull(injector, "injector");
-
-    Set<Closer> closers = Injectors.getInstancesOf(injector, Closer.class);
-    Closer closer = CompositeCloser.newInstance(closers);
-    if (closer == null) {
-      return;
-    }
     CloseErrorsImpl errors = new CloseErrorsImpl(this);
-    close(closer, errors);
-    errors.throwIfNecessary();
-  }
+    Injectors.close(injector, scopeAnnotation, errors);
 
-  public void close(Closer closer, CloseErrors errors) {
-    Set<Entry<Key<?>, Object>> entries = map.entrySet();
-    for (Entry<Key<?>, Object> entry : entries) {
-      Key<?> key = entry.getKey();
-      Object value = entry.getValue();
-      Closers.close(key, value, closer, errors);
-    }
     synchronized (map) {
       map.clear();
     }
+    errors.throwIfNecessary();
+  }
+
+  public Class<? extends Annotation> getScopeAnnotation() {
+    return scopeAnnotation;
   }
 }

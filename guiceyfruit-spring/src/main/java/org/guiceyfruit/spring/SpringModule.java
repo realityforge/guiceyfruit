@@ -58,5 +58,7 @@ public class SpringModule extends GuiceyFruitModule {
         }
       }
     });
+
+    bind(DisposableBeanCloser.class);
   }
 }
