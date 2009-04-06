@@ -25,12 +25,14 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 import junit.framework.TestCase;
+import org.guiceyfruit.Configures;
 import org.guiceyfruit.spring.testbeans.IndexedTestBean;
 import org.guiceyfruit.spring.testbeans.NestedTestBean;
 import org.guiceyfruit.spring.testbeans.OptionalResourceInjectionBean;
 import org.guiceyfruit.spring.testbeans.ResourceInjectionBean;
 import org.guiceyfruit.spring.testbeans.TestBean;
 import org.guiceyfruit.spring.testbeans.TypedExtendedResourceInjectionBean;
+import org.guiceyfruit.support.GuiceyFruitModule;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 
@@ -181,70 +183,45 @@ public class AutowiredTest extends TestCase {
     assertSame(bf, bean.getBeanFactory());
   }
 
+  public void testExtendedResourceInjectionWithOverriding() {
+    final TestBean tb = new TestBean("tb1");
+    final TestBean tb2 = new TestBean("tb2");
+    final NestedTestBean ntb = new NestedTestBean();
+    final BeanFactory bf = new DefaultListableBeanFactory();
+
+    Injector injector = createInjector(new GuiceyFruitModule() {
+      protected void configure() {
+        super.configure();
+        
+        bind(TestBean.class).toInstance(tb);
+        bind(NestedTestBean.class).toInstance(ntb);
+        bind(BeanFactory.class).toInstance(bf);
+      }
+
+      @Configures
+      TypedExtendedResourceInjectionBean configure(TypedExtendedResourceInjectionBean bean) {
+        bean.setTestBean2(tb2);
+        return bean;
+      }
+    });
+
+    TypedExtendedResourceInjectionBean bean = injector
+        .getInstance(TypedExtendedResourceInjectionBean.class);
+
+    assertSame(tb, bean.getTestBean());
+    assertSame(tb2, bean.getTestBean2());
+    assertSame(tb, bean.getTestBean3());
+    assertSame(tb, bean.getTestBean4());
+    assertSame(ntb, bean.getNestedTestBean());
+    assertSame(bf, bean.getBeanFactory());
+  }
+
   // Spring tests not yet ported...
   //-------------------------------------------------------------------------
 
 /*
 
 
-
-  @Test
-  public void testExtendedResourceInjection() {
-          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
-          bf.registerResolvableDependency(BeanFactory.class, bf);
-          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
-          bpp.setBeanFactory(bf);
-          bf.addBeanPostProcessor(bpp);
-          RootBeanDefinition bd = new RootBeanDefinition(TypedExtendedResourceInjectionBean.class);
-          bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
-          bf.registerBeanDefinition("annotatedBean", bd);
-          TestBean tb = new TestBean();
-          bf.registerSingleton("testBean", tb);
-          NestedTestBean ntb = new NestedTestBean();
-          bf.registerSingleton("nestedTestBean", ntb);
-
-          TypedExtendedResourceInjectionBean bean = (TypedExtendedResourceInjectionBean) bf.getBean("annotatedBean");
-          assertSame(tb, bean.getTestBean());
-          assertSame(tb, bean.getTestBean2());
-          assertSame(tb, bean.getTestBean3());
-          assertSame(tb, bean.getTestBean4());
-          assertSame(ntb, bean.getNestedTestBean());
-          assertSame(bf, bean.getBeanFactory());
-
-          bean = (TypedExtendedResourceInjectionBean) bf.getBean("annotatedBean");
-          assertSame(tb, bean.getTestBean());
-          assertSame(tb, bean.getTestBean2());
-          assertSame(tb, bean.getTestBean3());
-          assertSame(tb, bean.getTestBean4());
-          assertSame(ntb, bean.getNestedTestBean());
-          assertSame(bf, bean.getBeanFactory());
-  }
-
-  @Test
-  public void testExtendedResourceInjectionWithOverriding() {
-          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
-          bf.registerResolvableDependency(BeanFactory.class, bf);
-          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
-          bpp.setBeanFactory(bf);
-          bf.addBeanPostProcessor(bpp);
-          RootBeanDefinition annotatedBd = new RootBeanDefinition(TypedExtendedResourceInjectionBean.class);
-          TestBean tb2 = new TestBean();
-          annotatedBd.getPropertyValues().addPropertyValue("testBean2", tb2);
-          bf.registerBeanDefinition("annotatedBean", annotatedBd);
-          TestBean tb = new TestBean();
-          bf.registerSingleton("testBean", tb);
-          NestedTestBean ntb = new NestedTestBean();
-          bf.registerSingleton("nestedTestBean", ntb);
-
-          TypedExtendedResourceInjectionBean bean = (TypedExtendedResourceInjectionBean) bf.getBean("annotatedBean");
-          assertSame(tb, bean.getTestBean());
-          assertSame(tb2, bean.getTestBean2());
-          assertSame(tb, bean.getTestBean3());
-          assertSame(tb, bean.getTestBean4());
-          assertSame(ntb, bean.getNestedTestBean());
-          assertSame(bf, bean.getBeanFactory());
-          bf.destroySingletons();
-  }
 
   @Test
   public void testExtendedResourceInjectionWithAtRequired() {

@@ -16,35 +16,21 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.spring.testbeans;
+package org.guiceyfruit;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Target;
+import java.lang.annotation.Retention;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static java.lang.annotation.ElementType.METHOD;
 
-/** @version $Revision: 1.1 $ */
-public class ResourceInjectionBean {
-
-  @Autowired(required = false)
-  private TestBean testBean;
-
-  private TestBean testBean2;
-
-  @Autowired
-  public void setTestBean2(TestBean testBean2) {
-    // TODO with Guice using @Configures methods we can override a property value
-    // so we can result in a property being overloaded
-/*
-    if (this.testBean2 != null) {
-      throw new IllegalStateException("Already called");
-    }
-*/
-    this.testBean2 = testBean2;
-  }
-
-  public TestBean getTestBean() {
-    return this.testBean;
-  }
-
-  public TestBean getTestBean2() {
-    return this.testBean2;
-  }
+/**
+ * Marks a method like @{link Provides} but where the method is used to perform
+ * additional configuration of the object
+ *  
+ * @version $Revision: 1.1 $
+ */
+@Documented
+@Target(METHOD) @Retention(RUNTIME)
+public @interface Configures {
 }

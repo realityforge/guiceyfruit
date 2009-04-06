@@ -34,6 +34,8 @@ import org.guiceyfruit.support.MethodHandler;
 public class Jsr250Module extends GuiceyFruitModule {
 
   protected void configure() {
+    super.configure();
+
     bindAnnotationInjector(Resource.class, ResourceMemberProvider.class);
 
     bindMethodHandler(PostConstruct.class, new MethodHandler() {

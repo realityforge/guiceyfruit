@@ -24,7 +24,7 @@ import com.google.inject.spi.InjectableType;
 import com.google.inject.spi.InjectableType.Encounter;
 import com.google.inject.spi.InjectableType.Listener;
 import com.google.inject.spi.InjectionListener;
-import org.guiceyfruit.support.GuiceyFruitModule;
+import org.guiceyfruit.jsr250.Jsr250Module;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,8 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @version $Revision: 1.1 $
  */
-public class SpringModule extends GuiceyFruitModule {
+public class SpringModule extends Jsr250Module {
   protected void configure() {
+    super.configure();
+
     bindAnnotationInjector(Autowired.class, AutowiredMemberProvider.class);
 
     // TODO cannot use the matchers to perform subclass checks!
