@@ -19,10 +19,7 @@
 package org.guiceyfruit.testing.junit4.scopes;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import org.guiceyfruit.jsr250.Jsr250Module;
-import org.guiceyfruit.testing.ClassScoped;
-import org.guiceyfruit.testing.TestScoped;
 import org.guiceyfruit.testing.junit4.GuiceyJUnit4;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -114,14 +111,5 @@ public class ScopeTest {
   }
 
   public static class TestModule extends Jsr250Module {
-    @Override
-    protected void configure() {
-      super.configure();
-
-      // TODO this should not be required!
-      bind(SingletonCounter.class).in(Singleton.class);
-      bind(ClassCounter.class).in(ClassScoped.class);
-      bind(MethodCounter.class).in(TestScoped.class);
-    }
   }
 }

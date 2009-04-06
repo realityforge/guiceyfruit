@@ -37,6 +37,7 @@ import com.google.inject.name.Names;
 import com.google.inject.spi.CachedValue;
 import com.google.inject.util.Modules;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -312,22 +313,59 @@ public class Injectors {
     if (closer == null) {
       return;
     }
+
+    tryCloseJitBindings(closer, injector, scopeAnnotationToClose, errors);
+
     Set<Entry<Key<?>, Binding<?>>> entries = injector.getBindings().entrySet();
     for (Entry<Key<?>, Binding<?>> entry : entries) {
+      Key<?> key = entry.getKey();
       Binding<?> binding = entry.getValue();
-      Provider<?> provider = binding.getProvider();
+      closeBinding(key, binding, scopeAnnotationToClose, closer, errors);
+    }
+    errors.throwIfNecessary();
+  }
 
-      Class<? extends Annotation> scopeAnnotation = getScopeAnnotation(binding);
-      if (scopeAnnotation != null && scopeAnnotation.equals(scopeAnnotationToClose)
-          && provider instanceof CachedValue) {
-        CachedValue cachedValue = (CachedValue) provider;
-        Object value = cachedValue.getCachedValue();
-        if (value != null) {
-          Closers.close(entry.getKey(), value, closer, errors);
+  private static void tryCloseJitBindings(Closer closer, Injector injector,
+      Class<? extends Annotation> scopeAnnotationToClose, CloseErrors errors) {
+    Class<? extends Injector> type = injector.getClass();
+    Field field;
+    try {
+      field = type.getDeclaredField("jitBindings");
+      field.setAccessible(true);
+      Object bindings = field.get(injector);
+      if (bindings != null) {
+        if (bindings instanceof Map) {
+          Map<Key<?>, BindingImpl<?>> map = (Map<Key<?>, BindingImpl<?>>) bindings;
+          Set<Entry<Key<?>, BindingImpl<?>>> entries = map.entrySet();
+          for (Entry<Key<?>, BindingImpl<?>> entry : entries) {
+            closeBinding(entry.getKey(), entry.getValue(), scopeAnnotationToClose, closer, errors);
+          }
         }
       }
     }
-    errors.throwIfNecessary();
+    catch (NoSuchFieldException e) {
+      // ignore - Guice has refactored so we can't access the jit bindings
+      // System.out.println("No such field! " + e);
+    }
+    catch (IllegalAccessException e) {
+      // ignore - Guice has refactored so we can't access the jit bindings
+      //System.out.println("Failed to access field: " + field + ". Reason: " + e);
+    }
+  }
+
+  private static void closeBinding(Key<?> key, Binding<?> binding,
+      Class<? extends Annotation> scopeAnnotationToClose, Closer closer, CloseErrors errors) {
+    Provider<?> provider = binding.getProvider();
+
+    Class<? extends Annotation> scopeAnnotation = getScopeAnnotation(binding);
+    if (scopeAnnotation != null && scopeAnnotation.equals(scopeAnnotationToClose)
+        && provider instanceof CachedValue) {
+      CachedValue cachedValue = (CachedValue) provider;
+      Object value = cachedValue.getCachedValue();
+      if (value != null) {
+        Closers.close(key, value, closer, errors);
+      }
+    }
   }
 
   /** Returns the scope annotation for the given binding or null if there is no scope */
