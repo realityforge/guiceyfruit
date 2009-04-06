@@ -101,7 +101,7 @@ public abstract class GuiceyFruitModule extends AbstractModule {
 
   private List<Method> getConfiguresMethods() {
     List<Method> answer = Lists.newArrayList();
-    List<Method> list = getAllMethods(getClass());
+    List<Method> list = Reflectors.getAllMethods(getClass());
     for (Method method : list) {
       if (method.getAnnotation(Configures.class) != null) {
         answer.add(method);
@@ -172,10 +172,26 @@ public abstract class GuiceyFruitModule extends AbstractModule {
    * instantiated and injected by guice
    * @param <A> the annotation type used as the injection point
    */
-  protected <A extends Annotation> void bindAnnotationInjector(final Class<A> annotationType,
-      final Key<? extends AnnotationMemberProvider> annotationMemberProviderKey) {
+  protected <A extends Annotation> void bindAnnotationInjector( Class<A> annotationType,
+       Key<? extends AnnotationMemberProvider> annotationMemberProviderKey) {
 
     bindAnnotationInjector(annotationType, encounterProvider(annotationMemberProviderKey));
+  }
+
+  /**
+   * Binds a custom injection point for a given injection annotation to the annotation member
+   * provider so that occurrences of the annotation on fields and methods with a single parameter
+   * will be injected by Guice after the constructor and @Inject have been processed.
+   *
+   * @param annotationType the annotation class used to define the injection point
+   * @param annotationMemberProvider the annotation member provider which can be
+   * instantiated and injected by guice
+   * @param <A> the annotation type used as the injection point
+   */
+  protected <A extends Annotation> void bindAnnotationInjector(Class<A> annotationType,
+      AnnotationMemberProvider annotationMemberProvider) {
+
+    bindAnnotationInjector(annotationType, encounterProvider(annotationMemberProvider));
   }
 
   /**
@@ -188,52 +204,15 @@ public abstract class GuiceyFruitModule extends AbstractModule {
    * instantiated and injected by guice
    * @param <A> the annotation type used as the injection point
    */
-  protected <A extends Annotation> void bindAnnotationInjector(final Class<A> annotationType,
-      final Class<? extends AnnotationMemberProvider> annotationMemberProviderType) {
+  protected <A extends Annotation> void bindAnnotationInjector(Class<A> annotationType,
+      Class<? extends AnnotationMemberProvider> annotationMemberProviderType) {
 
     bindAnnotationInjector(annotationType, encounterProvider(annotationMemberProviderType));
   }
 
-  /**
-   * Returns all the methods on the given type ignoring overloaded methods
-   */
-  public static List<Method> getAllMethods(Class<?> type) {
-    return getAllMethods(TypeLiteral.get(type));
-  }
-
-  /**
-   * Returns all the methods on the given type ignoring overloaded methods
-   */
-  public static List<Method> getAllMethods(TypeLiteral<?> startType) {
-    List<Method> answer = Lists.newArrayList();
-    Map<MethodKey, Method> boundMethods = Maps.newHashMap();
-    while (true) {
-      Class<?> type = startType.getRawType();
-      if (type == Object.class) {
-        break;
-      }
-
-      Method[] methods = type.getDeclaredMethods();
-      for (final Method method : methods) {
-        MethodKey key = new MethodKey(method);
-        if (boundMethods.get(key) == null) {
-          boundMethods.put(key, method);
-          answer.add(method);
-        }
-      }
-
-      //startType = startType.getSupertype(type);
-      Class<?> supertype = type.getSuperclass();
-      if (supertype == Object.class) {
-        break;
-      }
-      startType = startType.getSupertype(supertype);
-    }
-    return answer;
-  }
-
   private <A extends Annotation> void bindAnnotationInjector(final Class<A> annotationType,
       final EncounterProvider<AnnotationMemberProvider> memberProviderProvider) {
+
     bindListener(any(), new Listener() {
       Provider<? extends AnnotationMemberProvider> providerProvider;
 
@@ -252,7 +231,7 @@ public abstract class GuiceyFruitModule extends AbstractModule {
           Field[] fields = type.getDeclaredFields();
           for (Field field : fields) {
             if (boundFields.add(field)) {
-              bindAnnotationInjectorToField(encounter, field);
+              bindAnnotationInjectorToField(encounter, startType, field);
             }
           }
 
@@ -265,22 +244,13 @@ public abstract class GuiceyFruitModule extends AbstractModule {
             }
           }
 
-          //startType = startType.getSupertype(type);
           Class<?> supertype = type.getSuperclass();
           if (supertype == Object.class) {
             break;
           }
           startType = startType.getSupertype(supertype);
         }
-
-/*
-        Method[] methods = startType.getDeclaredMethods();
-        for (final Method method : methods) {
-          bindAnnotationInjectionToMember(encounter, method);
-        }
-*/
       }
-
 
       protected <I> void bindAnnotationInjectionToMember(final Encounter<I> encounter,
           final TypeLiteral<?> type, final Method method) {
@@ -299,26 +269,12 @@ public abstract class GuiceyFruitModule extends AbstractModule {
               Object[] values = new Object[size];
               for (int i = 0; i < size; i++) {
                 Class<?> paramType = getParameterType(type, method, i);
-
-/*
-                if (genericType instanceof Class) {
-                  paramType = (Class<?>) genericType;
-                }
-                else if (genericType instanceof TypeVariable) {
-                  TypeVariable typeVariable = (TypeVariable) genericType;
-                  Type[] bounds = typeVariable.getBounds();
-
-                }
-                else {
-                  paramType = parameterTypes[i];
-                }
-*/
-                Object value = provider.provide(annotation, method, paramType, i);
+                Object value = provider.provide(annotation, type, method, paramType, i);
                 checkInjectedValueType(value, paramType, encounter);
 
                 // if we have a null value then assume the injection point cannot be satisfied
                 // which is the spring @Autowired way of doing things
-                if (value == null) {
+                if (value == null && !provider.isNullParameterAllowed(annotation, method, paramType, i)) {
                   return;
                 }
                 values[i] = value;
@@ -342,7 +298,7 @@ public abstract class GuiceyFruitModule extends AbstractModule {
       }
 
       protected <I> void bindAnnotationInjectorToField(final Encounter<I> encounter,
-          final Field field) {
+          final TypeLiteral<?> type, final Field field) {
         // TODO lets exclude fields with @Inject?
         final A annotation = field.getAnnotation(annotationType);
         if (annotation != null) {
@@ -353,7 +309,7 @@ public abstract class GuiceyFruitModule extends AbstractModule {
           encounter.register(new InjectionListener<I>() {
             public void afterInjection(I injectee) {
               AnnotationMemberProvider provider = providerProvider.get();
-              Object value = provider.provide(annotation, field);
+              Object value = provider.provide(annotation, type, field);
               checkInjectedValueType(value, field.getType(), encounter);
 
               try {

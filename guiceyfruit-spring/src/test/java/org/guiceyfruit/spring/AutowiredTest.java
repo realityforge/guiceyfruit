@@ -28,6 +28,7 @@ import junit.framework.TestCase;
 import org.guiceyfruit.Configures;
 import org.guiceyfruit.spring.testbeans.IndexedTestBean;
 import org.guiceyfruit.spring.testbeans.NestedTestBean;
+import org.guiceyfruit.spring.testbeans.OptionalCollectionResourceInjectionBean;
 import org.guiceyfruit.spring.testbeans.OptionalResourceInjectionBean;
 import org.guiceyfruit.spring.testbeans.ResourceInjectionBean;
 import org.guiceyfruit.spring.testbeans.TestBean;
@@ -110,8 +111,13 @@ public class AutowiredTest extends TestCase {
     assertSame(tb, bean.getTestBean());
     assertSame(tb, bean.getTestBean2());
     assertSame(tb, bean.getTestBean3());
+    assertSame(tb, bean.getTestBean4());
+    assertNull(bean.getNestedTestBeans());
+/*
+    // TODO difference from Spring as we can inject these values
     assertNull(bean.getTestBean4());
     assertNull(bean.getNestedTestBeans());
+*/
   }
 
   public void testOptionalResourceInjectionWithNoDependencies() {
@@ -192,7 +198,7 @@ public class AutowiredTest extends TestCase {
     Injector injector = createInjector(new GuiceyFruitModule() {
       protected void configure() {
         super.configure();
-        
+
         bind(TestBean.class).toInstance(tb);
         bind(NestedTestBean.class).toInstance(ntb);
         bind(BeanFactory.class).toInstance(bf);
@@ -216,75 +222,74 @@ public class AutowiredTest extends TestCase {
     assertSame(bf, bean.getBeanFactory());
   }
 
+  public void testExtendedResourceInjectionWithAtRequired() {
+    final TestBean tb = new TestBean("tb1");
+    final NestedTestBean ntb = new NestedTestBean();
+    final BeanFactory bf = new DefaultListableBeanFactory();
+
+    Injector injector = createInjector(new GuiceyFruitModule() {
+      protected void configure() {
+        bind(TestBean.class).toInstance(tb);
+        bind(NestedTestBean.class).toInstance(ntb);
+        bind(BeanFactory.class).toInstance(bf);
+      }
+    });
+
+    TypedExtendedResourceInjectionBean bean = injector
+        .getInstance(TypedExtendedResourceInjectionBean.class);
+
+    assertSame(tb, bean.getTestBean());
+    assertSame(tb, bean.getTestBean2());
+    assertSame(tb, bean.getTestBean3());
+    assertSame(tb, bean.getTestBean4());
+    assertSame(ntb, bean.getNestedTestBean());
+    assertSame(bf, bean.getBeanFactory());
+  }
+
+  public void testOptionalCollectionResourceInjection() {
+    final TestBean tb = new TestBean("tb1");
+    final IndexedTestBean itb = new IndexedTestBean();
+    final NestedTestBean ntb1 = new NestedTestBean();
+    final NestedTestBean ntb2 = new NestedTestBean();
+
+    Injector injector = createInjector(new GuiceyFruitModule() {
+      protected void configure() {
+        bind(TestBean.class).toInstance(tb);
+        bind(IndexedTestBean.class).toInstance(itb);
+
+        bind(Key.get(NestedTestBean.class, Names.named("nestedTestBean1"))).toInstance(ntb1);
+        bind(Key.get(NestedTestBean.class, Names.named("nestedTestBean2"))).toInstance(ntb2);
+      }
+    });
+
+    // Two calls to verify that caching doesn't break re-creation.
+    OptionalCollectionResourceInjectionBean bean = injector
+        .getInstance(OptionalCollectionResourceInjectionBean.class);
+    assertNotNull(bean);
+    bean = injector.getInstance(OptionalCollectionResourceInjectionBean.class);
+
+    assertSame(tb, bean.getTestBean());
+    assertSame(tb, bean.getTestBean2());
+    assertSame(tb, bean.getTestBean3());
+    assertSame(tb, bean.getTestBean4());
+    assertSame(itb, bean.getIndexedTestBean());
+    assertNotNull(bean.getNestedTestBeans());
+    assertEquals(2, bean.getNestedTestBeans().size());
+    assertSame(ntb1, bean.getNestedTestBeans().get(0));
+    assertSame(ntb2, bean.getNestedTestBeans().get(1));
+    assertEquals(2, bean.nestedTestBeansSetter.size());
+    assertSame(ntb1, bean.nestedTestBeansSetter.get(0));
+    assertSame(ntb2, bean.nestedTestBeansSetter.get(1));
+    assertEquals(2, bean.nestedTestBeansField.size());
+    assertSame(ntb1, bean.nestedTestBeansField.get(0));
+    assertSame(ntb2, bean.nestedTestBeansField.get(1));
+  }
+
   // Spring tests not yet ported...
   //-------------------------------------------------------------------------
 
 /*
 
-
-
-  @Test
-  public void testExtendedResourceInjectionWithAtRequired() {
-          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
-          bf.registerResolvableDependency(BeanFactory.class, bf);
-          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
-          bpp.setBeanFactory(bf);
-          bf.addBeanPostProcessor(bpp);
-          bf.addBeanPostProcessor(new RequiredAnnotationBeanPostProcessor());
-          RootBeanDefinition bd = new RootBeanDefinition(TypedExtendedResourceInjectionBean.class);
-          bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
-          bf.registerBeanDefinition("annotatedBean", bd);
-          TestBean tb = new TestBean();
-          bf.registerSingleton("testBean", tb);
-          NestedTestBean ntb = new NestedTestBean();
-          bf.registerSingleton("nestedTestBean", ntb);
-
-          TypedExtendedResourceInjectionBean bean = (TypedExtendedResourceInjectionBean) bf.getBean("annotatedBean");
-          assertSame(tb, bean.getTestBean());
-          assertSame(tb, bean.getTestBean2());
-          assertSame(tb, bean.getTestBean3());
-          assertSame(tb, bean.getTestBean4());
-          assertSame(ntb, bean.getNestedTestBean());
-          assertSame(bf, bean.getBeanFactory());
-  }
-
-  @Test
-  public void testOptionalCollectionResourceInjection() {
-          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
-          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
-          bpp.setBeanFactory(bf);
-          bf.addBeanPostProcessor(bpp);
-          RootBeanDefinition rbd = new RootBeanDefinition(OptionalCollectionResourceInjectionBean.class);
-          rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
-          bf.registerBeanDefinition("annotatedBean", rbd);
-          TestBean tb = new TestBean();
-          bf.registerSingleton("testBean", tb);
-          IndexedTestBean itb = new IndexedTestBean();
-          bf.registerSingleton("indexedTestBean", itb);
-          NestedTestBean ntb1 = new NestedTestBean();
-          bf.registerSingleton("nestedTestBean1", ntb1);
-          NestedTestBean ntb2 = new NestedTestBean();
-          bf.registerSingleton("nestedTestBean2", ntb2);
-
-          // Two calls to verify that caching doesn't break re-creation.
-          OptionalCollectionResourceInjectionBean bean = (OptionalCollectionResourceInjectionBean) bf.getBean("annotatedBean");
-          bean = (OptionalCollectionResourceInjectionBean) bf.getBean("annotatedBean");
-          assertSame(tb, bean.getTestBean());
-          assertSame(tb, bean.getTestBean2());
-          assertSame(tb, bean.getTestBean3());
-          assertSame(tb, bean.getTestBean4());
-          assertSame(itb, bean.getIndexedTestBean());
-          assertEquals(2, bean.getNestedTestBeans().size());
-          assertSame(ntb1, bean.getNestedTestBeans().get(0));
-          assertSame(ntb2, bean.getNestedTestBeans().get(1));
-          assertEquals(2, bean.nestedTestBeansSetter.size());
-          assertSame(ntb1, bean.nestedTestBeansSetter.get(0));
-          assertSame(ntb2, bean.nestedTestBeansSetter.get(1));
-          assertEquals(2, bean.nestedTestBeansField.size());
-          assertSame(ntb1, bean.nestedTestBeansField.get(0));
-          assertSame(ntb2, bean.nestedTestBeansField.get(1));
-          bf.destroySingletons();
-  }
 
   @Test
   public void testOptionalCollectionResourceInjectionWithSingleElement() {

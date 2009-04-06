@@ -20,7 +20,9 @@ package org.guiceyfruit.jsr250;
 
 import com.google.inject.Inject;
 import com.google.inject.ProvisionException;
+import com.google.inject.TypeLiteral;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import javax.annotation.Resource;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -45,7 +47,14 @@ public class ResourceMemberProvider extends AnnotationMemberProviderSupport<Reso
     this.context = context;
   }
 
-  protected Object provide(Resource resource, Member member, Class<?> requiredType) {
+  public boolean isNullParameterAllowed(Resource annotation, Method method, Class<?> parameterType,
+      int parameterIndex) {
+    // TODO can a @Resource be optional?
+    return false;
+  }
+
+  protected Object provide(Resource resource, Member member, TypeLiteral<?> requiredType,
+      Class<?> memberType) {
     String name = getJndiName(resource, member);
 
     try {

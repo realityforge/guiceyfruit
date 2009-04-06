@@ -18,6 +18,7 @@
 
 package org.guiceyfruit.support;
 
+import com.google.inject.TypeLiteral;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -32,15 +33,19 @@ import java.lang.reflect.Method;
 public abstract class AnnotationMemberProviderSupport<A extends Annotation>
     implements AnnotationMemberProvider<A> {
 
-  /** Returns the value to be injected for the given field with the given annotation */
-  public Object provide(A annotation, Field field) {
-    return provide(annotation, field, field.getType());
+  public Object provide(A annotation, TypeLiteral<?> type, Field field) {
+    TypeLiteral<?> requiredType = type.getFieldType(field);
+    return provide(annotation, field, requiredType, field.getType());
   }
 
-  public Object provide(A annotation, Method method, Class<?> parameterType, int parameterIndex) {
-    return provide(annotation, method, parameterType);
+  public Object provide(A annotation, TypeLiteral<?> type, Method method,
+      Class<?> parameterType, int parameterIndex) {
+
+    TypeLiteral<?> requiredType = type.getParameterTypes(method).get(parameterIndex);
+    return provide(annotation, method, requiredType, method.getParameterTypes()[parameterIndex]);
   }
 
   /** The default method to create a value for the named member of the requested type */
-  protected abstract Object provide(A annotation, Member member, Class<?> requiredType);
+  protected abstract Object provide(A annotation, Member member, TypeLiteral<?> requiredType,
+      Class<?> memberType);
 }

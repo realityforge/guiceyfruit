@@ -21,6 +21,7 @@ package org.guiceyfruit.support;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import com.google.inject.TypeLiteral;
 
 /**
  * A provider of an annotation based injection point which can use the value of an annotation
@@ -31,9 +32,13 @@ import java.lang.reflect.Method;
 public interface AnnotationMemberProvider<A extends Annotation> {
 
   /** Returns the value to be injected for the given annotated field */
-  Object provide(A annotation, Field field);
+  Object provide(A annotation, TypeLiteral<?> type, Field field);
 
   /** Returns the value to be injected for the given annotated method parameter value */
-  Object provide(A annotation, Method method, Class<?> parameterType, int parameterIndex);
+  Object provide(A annotation, TypeLiteral<?> type, Method method, Class<?> parameterType,
+      int parameterIndex);
 
+  /** Returns true if the given parameter on the annotated method can be null */
+  boolean isNullParameterAllowed(A annotation, Method method, Class<?> parameterType,
+      int parameterIndex);
 }
