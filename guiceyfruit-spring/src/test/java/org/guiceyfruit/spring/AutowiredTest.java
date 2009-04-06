@@ -24,26 +24,15 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import junit.framework.TestCase;
+import org.guiceyfruit.spring.testbeans.IndexedTestBean;
+import org.guiceyfruit.spring.testbeans.NestedTestBean;
+import org.guiceyfruit.spring.testbeans.OptionalResourceInjectionBean;
+import org.guiceyfruit.spring.testbeans.ResourceInjectionBean;
+import org.guiceyfruit.spring.testbeans.TestBean;
+import org.guiceyfruit.spring.testbeans.TypedExtendedResourceInjectionBean;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.util.ObjectUtils;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 
 /**
  * This class reuses the test beans from Spring
@@ -80,8 +69,8 @@ public class AutowiredTest extends TestCase {
   public void testOptionalResourceInjection() {
     final TestBean tb = new TestBean();
     final IndexedTestBean itb = new IndexedTestBean();
-    final NestedTestBean ntb1 = new NestedTestBean();
-    final NestedTestBean ntb2 = new NestedTestBean();
+    final NestedTestBean ntb1 = new NestedTestBean("ntb1");
+    final NestedTestBean ntb2 = new NestedTestBean("ntb2");
 
     Injector injector = createInjector(new AbstractModule() {
       protected void configure() {
@@ -130,949 +119,784 @@ public class AutowiredTest extends TestCase {
     });
 
     OptionalResourceInjectionBean bean = injector.getInstance(OptionalResourceInjectionBean.class);
-    assertNull(bean.getTestBean());
-    assertNull(bean.getTestBean2());
+
+    // TODO semantics here differ from Spring as
+    // Guice is capable of knowing how to create a TestBean
+/*
     assertNull(bean.getTestBean3());
     assertNull(bean.getTestBean4());
+*/
+
+    assertNotNull(bean.getTestBean());
+    assertNotNull(bean.getTestBean2());
+    assertNotSame(bean.getTestBean(), bean.getTestBean2());
     assertNull(bean.getNestedTestBeans());
   }
 
+  public void testResourceInjection() {
+    final TestBean tb = new TestBean();
+
+    Injector injector = createInjector(new AbstractModule() {
+      protected void configure() {
+        bind(TestBean.class).toInstance(tb);
+      }
+    });
+    ResourceInjectionBean bean = injector.getInstance(ResourceInjectionBean.class);
+    assertSame(tb, bean.getTestBean());
+    assertSame(tb, bean.getTestBean2());
+
+    bean = injector.getInstance(ResourceInjectionBean.class);
+    assertSame(tb, bean.getTestBean());
+    assertSame(tb, bean.getTestBean2());
+  }
+
+  public void testExtendedResourceInjection() {
+    final TestBean tb = new TestBean();
+    final NestedTestBean ntb = new NestedTestBean();
+    final BeanFactory bf = new DefaultListableBeanFactory();
+
+    Injector injector = createInjector(new AbstractModule() {
+      protected void configure() {
+        bind(TestBean.class).toInstance(tb);
+        bind(NestedTestBean.class).toInstance(ntb);
+        bind(BeanFactory.class).toInstance(bf);
+      }
+    });
+
+    TypedExtendedResourceInjectionBean bean = injector
+        .getInstance(TypedExtendedResourceInjectionBean.class);
+    assertSame(tb, bean.getTestBean());
+    assertSame(tb, bean.getTestBean2());
+    assertSame(tb, bean.getTestBean3());
+    assertSame(tb, bean.getTestBean4());
+    assertSame(ntb, bean.getNestedTestBean());
+    assertSame(bf, bean.getBeanFactory());
+
+    bean = injector.getInstance(TypedExtendedResourceInjectionBean.class);
+    assertSame(tb, bean.getTestBean());
+    assertSame(tb, bean.getTestBean2());
+    assertSame(tb, bean.getTestBean3());
+    assertSame(tb, bean.getTestBean4());
+    assertSame(ntb, bean.getNestedTestBean());
+    assertSame(bf, bean.getBeanFactory());
+  }
+
+  // Spring tests not yet ported...
+  //-------------------------------------------------------------------------
+
+/*
+
+
+
+  @Test
+  public void testExtendedResourceInjection() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          bf.registerResolvableDependency(BeanFactory.class, bf);
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          RootBeanDefinition bd = new RootBeanDefinition(TypedExtendedResourceInjectionBean.class);
+          bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+          bf.registerBeanDefinition("annotatedBean", bd);
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+          NestedTestBean ntb = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean", ntb);
+
+          TypedExtendedResourceInjectionBean bean = (TypedExtendedResourceInjectionBean) bf.getBean("annotatedBean");
+          assertSame(tb, bean.getTestBean());
+          assertSame(tb, bean.getTestBean2());
+          assertSame(tb, bean.getTestBean3());
+          assertSame(tb, bean.getTestBean4());
+          assertSame(ntb, bean.getNestedTestBean());
+          assertSame(bf, bean.getBeanFactory());
+
+          bean = (TypedExtendedResourceInjectionBean) bf.getBean("annotatedBean");
+          assertSame(tb, bean.getTestBean());
+          assertSame(tb, bean.getTestBean2());
+          assertSame(tb, bean.getTestBean3());
+          assertSame(tb, bean.getTestBean4());
+          assertSame(ntb, bean.getNestedTestBean());
+          assertSame(bf, bean.getBeanFactory());
+  }
+
+  @Test
+  public void testExtendedResourceInjectionWithOverriding() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          bf.registerResolvableDependency(BeanFactory.class, bf);
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          RootBeanDefinition annotatedBd = new RootBeanDefinition(TypedExtendedResourceInjectionBean.class);
+          TestBean tb2 = new TestBean();
+          annotatedBd.getPropertyValues().addPropertyValue("testBean2", tb2);
+          bf.registerBeanDefinition("annotatedBean", annotatedBd);
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+          NestedTestBean ntb = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean", ntb);
+
+          TypedExtendedResourceInjectionBean bean = (TypedExtendedResourceInjectionBean) bf.getBean("annotatedBean");
+          assertSame(tb, bean.getTestBean());
+          assertSame(tb2, bean.getTestBean2());
+          assertSame(tb, bean.getTestBean3());
+          assertSame(tb, bean.getTestBean4());
+          assertSame(ntb, bean.getNestedTestBean());
+          assertSame(bf, bean.getBeanFactory());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testExtendedResourceInjectionWithAtRequired() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          bf.registerResolvableDependency(BeanFactory.class, bf);
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.addBeanPostProcessor(new RequiredAnnotationBeanPostProcessor());
+          RootBeanDefinition bd = new RootBeanDefinition(TypedExtendedResourceInjectionBean.class);
+          bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+          bf.registerBeanDefinition("annotatedBean", bd);
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+          NestedTestBean ntb = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean", ntb);
+
+          TypedExtendedResourceInjectionBean bean = (TypedExtendedResourceInjectionBean) bf.getBean("annotatedBean");
+          assertSame(tb, bean.getTestBean());
+          assertSame(tb, bean.getTestBean2());
+          assertSame(tb, bean.getTestBean3());
+          assertSame(tb, bean.getTestBean4());
+          assertSame(ntb, bean.getNestedTestBean());
+          assertSame(bf, bean.getBeanFactory());
+  }
+
+  @Test
+  public void testOptionalCollectionResourceInjection() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          RootBeanDefinition rbd = new RootBeanDefinition(OptionalCollectionResourceInjectionBean.class);
+          rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+          bf.registerBeanDefinition("annotatedBean", rbd);
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+          IndexedTestBean itb = new IndexedTestBean();
+          bf.registerSingleton("indexedTestBean", itb);
+          NestedTestBean ntb1 = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean1", ntb1);
+          NestedTestBean ntb2 = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean2", ntb2);
+
+          // Two calls to verify that caching doesn't break re-creation.
+          OptionalCollectionResourceInjectionBean bean = (OptionalCollectionResourceInjectionBean) bf.getBean("annotatedBean");
+          bean = (OptionalCollectionResourceInjectionBean) bf.getBean("annotatedBean");
+          assertSame(tb, bean.getTestBean());
+          assertSame(tb, bean.getTestBean2());
+          assertSame(tb, bean.getTestBean3());
+          assertSame(tb, bean.getTestBean4());
+          assertSame(itb, bean.getIndexedTestBean());
+          assertEquals(2, bean.getNestedTestBeans().size());
+          assertSame(ntb1, bean.getNestedTestBeans().get(0));
+          assertSame(ntb2, bean.getNestedTestBeans().get(1));
+          assertEquals(2, bean.nestedTestBeansSetter.size());
+          assertSame(ntb1, bean.nestedTestBeansSetter.get(0));
+          assertSame(ntb2, bean.nestedTestBeansSetter.get(1));
+          assertEquals(2, bean.nestedTestBeansField.size());
+          assertSame(ntb1, bean.nestedTestBeansField.get(0));
+          assertSame(ntb2, bean.nestedTestBeansField.get(1));
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testOptionalCollectionResourceInjectionWithSingleElement() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          RootBeanDefinition rbd = new RootBeanDefinition(OptionalCollectionResourceInjectionBean.class);
+          rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+          bf.registerBeanDefinition("annotatedBean", rbd);
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+          IndexedTestBean itb = new IndexedTestBean();
+          bf.registerSingleton("indexedTestBean", itb);
+          NestedTestBean ntb1 = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean1", ntb1);
+
+          // Two calls to verify that caching doesn't break re-creation.
+          OptionalCollectionResourceInjectionBean bean = (OptionalCollectionResourceInjectionBean) bf.getBean("annotatedBean");
+          bean = (OptionalCollectionResourceInjectionBean) bf.getBean("annotatedBean");
+          assertSame(tb, bean.getTestBean());
+          assertSame(tb, bean.getTestBean2());
+          assertSame(tb, bean.getTestBean3());
+          assertSame(tb, bean.getTestBean4());
+          assertSame(itb, bean.getIndexedTestBean());
+          assertEquals(1, bean.getNestedTestBeans().size());
+          assertSame(ntb1, bean.getNestedTestBeans().get(0));
+          assertEquals(1, bean.nestedTestBeansSetter.size());
+          assertSame(ntb1, bean.nestedTestBeansSetter.get(0));
+          assertEquals(1, bean.nestedTestBeansField.size());
+          assertSame(ntb1, bean.nestedTestBeansField.get(0));
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testConstructorResourceInjection() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          bf.registerResolvableDependency(BeanFactory.class, bf);
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          RootBeanDefinition bd = new RootBeanDefinition(ConstructorResourceInjectionBean.class);
+          bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+          bf.registerBeanDefinition("annotatedBean", bd);
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+          NestedTestBean ntb = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean", ntb);
+
+          ConstructorResourceInjectionBean bean = (ConstructorResourceInjectionBean) bf.getBean("annotatedBean");
+          assertSame(tb, bean.getTestBean());
+          assertSame(tb, bean.getTestBean2());
+          assertSame(tb, bean.getTestBean3());
+          assertSame(tb, bean.getTestBean4());
+          assertSame(ntb, bean.getNestedTestBean());
+          assertSame(bf, bean.getBeanFactory());
+
+          bean = (ConstructorResourceInjectionBean) bf.getBean("annotatedBean");
+          assertSame(tb, bean.getTestBean());
+          assertSame(tb, bean.getTestBean2());
+          assertSame(tb, bean.getTestBean3());
+          assertSame(tb, bean.getTestBean4());
+          assertSame(ntb, bean.getNestedTestBean());
+          assertSame(bf, bean.getBeanFactory());
+  }
+
+  @Test
+  public void testConstructorResourceInjectionWithMultipleCandidates() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("annotatedBean", new RootBeanDefinition(ConstructorsResourceInjectionBean.class));
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+          NestedTestBean ntb1 = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean1", ntb1);
+          NestedTestBean ntb2 = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean2", ntb2);
+
+          ConstructorsResourceInjectionBean bean = (ConstructorsResourceInjectionBean) bf.getBean("annotatedBean");
+          assertNull(bean.getTestBean3());
+          assertSame(tb, bean.getTestBean4());
+          assertEquals(2, bean.getNestedTestBeans().length);
+          assertSame(ntb1, bean.getNestedTestBeans()[0]);
+          assertSame(ntb2, bean.getNestedTestBeans()[1]);
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testConstructorResourceInjectionWithMultipleCandidatesAsCollection() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("annotatedBean", new RootBeanDefinition(
+                          ConstructorsCollectionResourceInjectionBean.class));
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+          NestedTestBean ntb1 = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean1", ntb1);
+          NestedTestBean ntb2 = new NestedTestBean();
+          bf.registerSingleton("nestedTestBean2", ntb2);
+
+          ConstructorsCollectionResourceInjectionBean bean = (ConstructorsCollectionResourceInjectionBean) bf.getBean("annotatedBean");
+          assertNull(bean.getTestBean3());
+          assertSame(tb, bean.getTestBean4());
+          assertEquals(2, bean.getNestedTestBeans().size());
+          assertSame(ntb1, bean.getNestedTestBeans().get(0));
+          assertSame(ntb2, bean.getNestedTestBeans().get(1));
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testConstructorResourceInjectionWithMultipleCandidatesAndFallback() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("annotatedBean", new RootBeanDefinition(ConstructorsResourceInjectionBean.class));
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+
+          ConstructorsResourceInjectionBean bean = (ConstructorsResourceInjectionBean) bf.getBean("annotatedBean");
+          assertSame(tb, bean.getTestBean3());
+          assertNull(bean.getTestBean4());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testConstructorResourceInjectionWithMultipleCandidatesAndDefaultFallback() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("annotatedBean", new RootBeanDefinition(ConstructorsResourceInjectionBean.class));
+
+          ConstructorsResourceInjectionBean bean = (ConstructorsResourceInjectionBean) bf.getBean("annotatedBean");
+          assertNull(bean.getTestBean3());
+          assertNull(bean.getTestBean4());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testConstructorInjectionWithMap() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          RootBeanDefinition bd = new RootBeanDefinition(MapConstructorInjectionBean.class);
+          bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+          bf.registerBeanDefinition("annotatedBean", bd);
+          TestBean tb1 = new TestBean();
+          TestBean tb2 = new TestBean();
+          bf.registerSingleton("testBean1", tb1);
+          bf.registerSingleton("testBean2", tb1);
+
+          MapConstructorInjectionBean bean = (MapConstructorInjectionBean) bf.getBean("annotatedBean");
+          assertEquals(2, bean.getTestBeanMap().size());
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean1"));
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean2"));
+          assertTrue(bean.getTestBeanMap().values().contains(tb1));
+          assertTrue(bean.getTestBeanMap().values().contains(tb2));
+
+          bean = (MapConstructorInjectionBean) bf.getBean("annotatedBean");
+          assertEquals(2, bean.getTestBeanMap().size());
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean1"));
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean2"));
+          assertTrue(bean.getTestBeanMap().values().contains(tb1));
+          assertTrue(bean.getTestBeanMap().values().contains(tb2));
+  }
+
+  @Test
+  public void testFieldInjectionWithMap() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          RootBeanDefinition bd = new RootBeanDefinition(MapFieldInjectionBean.class);
+          bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+          bf.registerBeanDefinition("annotatedBean", bd);
+          TestBean tb1 = new TestBean();
+          TestBean tb2 = new TestBean();
+          bf.registerSingleton("testBean1", tb1);
+          bf.registerSingleton("testBean2", tb1);
+
+          MapFieldInjectionBean bean = (MapFieldInjectionBean) bf.getBean("annotatedBean");
+          assertEquals(2, bean.getTestBeanMap().size());
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean1"));
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean2"));
+          assertTrue(bean.getTestBeanMap().values().contains(tb1));
+          assertTrue(bean.getTestBeanMap().values().contains(tb2));
+
+          bean = (MapFieldInjectionBean) bf.getBean("annotatedBean");
+          assertEquals(2, bean.getTestBeanMap().size());
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean1"));
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean2"));
+          assertTrue(bean.getTestBeanMap().values().contains(tb1));
+          assertTrue(bean.getTestBeanMap().values().contains(tb2));
+  }
+
+  @Test
+  public void testMethodInjectionWithMap() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          RootBeanDefinition bd = new RootBeanDefinition(MapMethodInjectionBean.class);
+          bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+          bf.registerBeanDefinition("annotatedBean", bd);
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+
+          MapMethodInjectionBean bean = (MapMethodInjectionBean) bf.getBean("annotatedBean");
+          assertEquals(1, bean.getTestBeanMap().size());
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean"));
+          assertTrue(bean.getTestBeanMap().values().contains(tb));
+          assertSame(tb, bean.getTestBean());
+
+          bean = (MapMethodInjectionBean) bf.getBean("annotatedBean");
+          assertEquals(1, bean.getTestBeanMap().size());
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean"));
+          assertTrue(bean.getTestBeanMap().values().contains(tb));
+          assertSame(tb, bean.getTestBean());
+  }
+
+  @Test
+  public void testMethodInjectionWithMapAndMultipleMatches() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("annotatedBean", new RootBeanDefinition(MapMethodInjectionBean.class));
+          bf.registerBeanDefinition("testBean1", new RootBeanDefinition(TestBean.class));
+          bf.registerBeanDefinition("testBean2", new RootBeanDefinition(TestBean.class));
+
+          try {
+                  bf.getBean("annotatedBean");
+                  fail("should have failed, more than one bean of type");
+          }
+          catch (BeanCreationException e) {
+                  // expected
+          }
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testMethodInjectionWithMapAndMultipleMatchesButOnlyOneAutowireCandidate() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("annotatedBean", new RootBeanDefinition(MapMethodInjectionBean.class));
+          bf.registerBeanDefinition("testBean1", new RootBeanDefinition(TestBean.class));
+          RootBeanDefinition rbd2 = new RootBeanDefinition(TestBean.class);
+          rbd2.setAutowireCandidate(false);
+          bf.registerBeanDefinition("testBean2", rbd2);
+
+          MapMethodInjectionBean bean = (MapMethodInjectionBean) bf.getBean("annotatedBean");
+          TestBean tb = (TestBean) bf.getBean("testBean1");
+          assertEquals(1, bean.getTestBeanMap().size());
+          assertTrue(bean.getTestBeanMap().keySet().contains("testBean1"));
+          assertTrue(bean.getTestBeanMap().values().contains(tb));
+          assertSame(tb, bean.getTestBean());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testMethodInjectionWithMapAndNoMatches() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("annotatedBean", new RootBeanDefinition(MapMethodInjectionBean.class));
+
+          MapMethodInjectionBean bean = (MapMethodInjectionBean) bf.getBean("annotatedBean");
+          assertNull(bean.getTestBeanMap());
+          assertNull(bean.getTestBean());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationRequiredFieldResourceInjection() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationRequiredFieldResourceInjectionBean.class));
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+
+          CustomAnnotationRequiredFieldResourceInjectionBean bean = (CustomAnnotationRequiredFieldResourceInjectionBean) bf.getBean("customBean");
+          assertSame(tb, bean.getTestBean());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationRequiredFieldResourceInjectionFailsWhenNoDependencyFound() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationRequiredFieldResourceInjectionBean.class));
+
+          try {
+                  bf.getBean("customBean");
+                  fail("expected BeanCreationException; no dependency available for required field");
+          }
+          catch (BeanCreationException e) {
+                  // expected
+          }
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationRequiredFieldResourceInjectionFailsWhenMultipleDependenciesFound() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationRequiredFieldResourceInjectionBean.class));
+          TestBean tb1 = new TestBean();
+          bf.registerSingleton("testBean1", tb1);
+          TestBean tb2 = new TestBean();
+          bf.registerSingleton("testBean2", tb2);
+
+          try {
+                  bf.getBean("customBean");
+                  fail("expected BeanCreationException; multiple beans of dependency type available");
+          }
+          catch (BeanCreationException e) {
+                  // expected
+          }
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationRequiredMethodResourceInjection() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationRequiredMethodResourceInjectionBean.class));
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+
+          CustomAnnotationRequiredMethodResourceInjectionBean bean = (CustomAnnotationRequiredMethodResourceInjectionBean) bf.getBean("customBean");
+          assertSame(tb, bean.getTestBean());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationRequiredMethodResourceInjectionFailsWhenNoDependencyFound() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationRequiredMethodResourceInjectionBean.class));
+
+          try {
+                  bf.getBean("customBean");
+                  fail("expected BeanCreationException; no dependency available for required method");
+          }
+          catch (BeanCreationException e) {
+                  // expected
+          }
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationRequiredMethodResourceInjectionFailsWhenMultipleDependenciesFound() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationRequiredMethodResourceInjectionBean.class));
+          TestBean tb1 = new TestBean();
+          bf.registerSingleton("testBean1", tb1);
+          TestBean tb2 = new TestBean();
+          bf.registerSingleton("testBean2", tb2);
+
+          try {
+                  bf.getBean("customBean");
+                  fail("expected BeanCreationException; multiple beans of dependency type available");
+          }
+          catch (BeanCreationException e) {
+                  // expected
+          }
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationOptionalFieldResourceInjection() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationOptionalFieldResourceInjectionBean.class));
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+
+          CustomAnnotationOptionalFieldResourceInjectionBean bean = (CustomAnnotationOptionalFieldResourceInjectionBean) bf.getBean("customBean");
+          assertSame(tb, bean.getTestBean3());
+          assertNull(bean.getTestBean());
+          assertNull(bean.getTestBean2());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationOptionalFieldResourceInjectionWhenNoDependencyFound() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationOptionalFieldResourceInjectionBean.class));
+
+          CustomAnnotationOptionalFieldResourceInjectionBean bean = (CustomAnnotationOptionalFieldResourceInjectionBean) bf.getBean("customBean");
+          assertNull(bean.getTestBean3());
+          assertNull(bean.getTestBean());
+          assertNull(bean.getTestBean2());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationOptionalFieldResourceInjectionWhenMultipleDependenciesFound() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationOptionalFieldResourceInjectionBean.class));
+          TestBean tb1 = new TestBean();
+          bf.registerSingleton("testBean1", tb1);
+          TestBean tb2 = new TestBean();
+          bf.registerSingleton("testBean2", tb2);
+
+          try {
+                  bf.getBean("customBean");
+                  fail("expected BeanCreationException; multiple beans of dependency type available");
+          }
+          catch (BeanCreationException e) {
+                  // expected
+          }
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationOptionalMethodResourceInjection() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationOptionalMethodResourceInjectionBean.class));
+          TestBean tb = new TestBean();
+          bf.registerSingleton("testBean", tb);
+
+          CustomAnnotationOptionalMethodResourceInjectionBean bean = (CustomAnnotationOptionalMethodResourceInjectionBean) bf.getBean("customBean");
+          assertSame(tb, bean.getTestBean3());
+          assertNull(bean.getTestBean());
+          assertNull(bean.getTestBean2());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationOptionalMethodResourceInjectionWhenNoDependencyFound() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationOptionalMethodResourceInjectionBean.class));
+
+          CustomAnnotationOptionalMethodResourceInjectionBean bean = (CustomAnnotationOptionalMethodResourceInjectionBean) bf.getBean("customBean");
+          assertNull(bean.getTestBean3());
+          assertNull(bean.getTestBean());
+          assertNull(bean.getTestBean2());
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testCustomAnnotationOptionalMethodResourceInjectionWhenMultipleDependenciesFound() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setAutowiredAnnotationType(MyAutowired.class);
+          bpp.setRequiredParameterName("optional");
+          bpp.setRequiredParameterValue(false);
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("customBean", new RootBeanDefinition(
+                          CustomAnnotationOptionalMethodResourceInjectionBean.class));
+          TestBean tb1 = new TestBean();
+          bf.registerSingleton("testBean1", tb1);
+          TestBean tb2 = new TestBean();
+          bf.registerSingleton("testBean2", tb2);
+
+          try {
+                  bf.getBean("customBean");
+                  fail("expected BeanCreationException; multiple beans of dependency type available");
+          }
+          catch (BeanCreationException e) {
+                  // expected
+          }
+          bf.destroySingletons();
+  }
+
+  @Test
+  public void testBeanAutowiredWithFactoryBean() {
+          DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+          AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
+          bpp.setBeanFactory(bf);
+          bf.addBeanPostProcessor(bpp);
+          bf.registerBeanDefinition("factoryBeanDependentBean", new RootBeanDefinition(FactoryBeanDependentBean.class));
+          bf.registerSingleton("stringFactoryBean", new StringFactoryBean());
+
+          final StringFactoryBean factoryBean = (StringFactoryBean) bf.getBean("&stringFactoryBean");
+          final FactoryBeanDependentBean bean = (FactoryBeanDependentBean) bf.getBean("factoryBeanDependentBean");
+
+          assertNotNull("The singleton StringFactoryBean should have been registered.", factoryBean);
+          assertNotNull("The factoryBeanDependentBean should have been registered.", bean);
+          assertEquals("The FactoryBeanDependentBean should have been autowired 'by type' with the StringFactoryBean.",
+                          factoryBean, bean.getFactoryBean());
+
+          bf.destroySingletons();
+  }
+*/
+
+  // Purposely excluded tests so far
+  //-------------------------------------------------------------------------
+
+/*
+  public void testIncompleteBeanDefinition() {
+    Injector injector = createInjector(new AbstractModule() {
+      protected void configure() {
+      }
+    });
+
+    TestBean bean = injector.getInstance(TestBean.class);
+
+    // this will work in Guice but fail in spring so not applicable!
+  }
+*/
+
+  // Implementation methods
+  //-------------------------------------------------------------------------
+
   protected Injector createInjector(Module module) {
     return Guice.createInjector(new SpringModule(), module);
-  }
-
-  public interface ITestBean {
-
-    int getAge();
-
-    void setAge(int age);
-
-    String getName();
-
-    void setName(String name);
-
-    ITestBean getSpouse();
-
-    void setSpouse(ITestBean spouse);
-
-    ITestBean[] getSpouses();
-
-    String[] getStringArray();
-
-    void setStringArray(String[] stringArray);
-
-    /** Throws a given (non-null) exception. */
-    void exceptional(Throwable t) throws Throwable;
-
-    Object returnsThis();
-
-    INestedTestBean getDoctor();
-
-    INestedTestBean getLawyer();
-
-    IndexedTestBean getNestedIndexedBean();
-
-    /**
-     * Increment the age by one.
-     *
-     * @return the previous age
-     */
-    int haveBirthday();
-
-    void unreliableFileOperation() throws IOException;
-
-  }
-
-  public class TestBean implements ITestBean, Comparable {
-
-    private String beanName;
-
-    private String country;
-
-    private BeanFactory beanFactory;
-
-    private boolean postProcessed;
-
-    private String name;
-
-    private String sex;
-
-    private int age;
-
-    private boolean jedi;
-
-    private ITestBean[] spouses;
-
-    private String touchy;
-
-    private String[] stringArray;
-
-    private Integer[] someIntegerArray;
-
-    private Date date = new Date();
-
-    private Float myFloat = new Float(0.0);
-
-    private Collection friends = new LinkedList();
-
-    private Set someSet = new HashSet();
-
-    private Map someMap = new HashMap();
-
-    private List someList = new ArrayList();
-
-    private Properties someProperties = new Properties();
-
-    private INestedTestBean doctor = new NestedTestBean();
-
-    private INestedTestBean lawyer = new NestedTestBean();
-
-    private IndexedTestBean nestedIndexedBean;
-
-    private boolean destroyed;
-
-    private Number someNumber;
-
-    private Boolean someBoolean;
-
-    private List otherColours;
-
-    private List pets;
-
-    public TestBean() {
-    }
-
-    public TestBean(String name) {
-      this.name = name;
-    }
-
-    public TestBean(ITestBean spouse) {
-      this.spouses = new ITestBean[] { spouse };
-    }
-
-    public TestBean(String name, int age) {
-      this.name = name;
-      this.age = age;
-    }
-
-    public TestBean(ITestBean spouse, Properties someProperties) {
-      this.spouses = new ITestBean[] { spouse };
-      this.someProperties = someProperties;
-    }
-
-    public TestBean(List someList) {
-      this.someList = someList;
-    }
-
-    public TestBean(Set someSet) {
-      this.someSet = someSet;
-    }
-
-    public TestBean(Map someMap) {
-      this.someMap = someMap;
-    }
-
-    public TestBean(Properties someProperties) {
-      this.someProperties = someProperties;
-    }
-
-    public void setBeanName(String beanName) {
-      this.beanName = beanName;
-    }
-
-    public String getBeanName() {
-      return beanName;
-    }
-
-    public void setBeanFactory(BeanFactory beanFactory) {
-      this.beanFactory = beanFactory;
-    }
-
-    public BeanFactory getBeanFactory() {
-      return beanFactory;
-    }
-
-    public void setPostProcessed(boolean postProcessed) {
-      this.postProcessed = postProcessed;
-    }
-
-    public boolean isPostProcessed() {
-      return postProcessed;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    public String getSex() {
-      return sex;
-    }
-
-    public void setSex(String sex) {
-      this.sex = sex;
-      if (this.name == null) {
-        this.name = sex;
-      }
-    }
-
-    public int getAge() {
-      return age;
-    }
-
-    public void setAge(int age) {
-      this.age = age;
-    }
-
-    public boolean isJedi() {
-      return jedi;
-    }
-
-    public void setJedi(boolean jedi) {
-      this.jedi = jedi;
-    }
-
-    public ITestBean getSpouse() {
-      return (spouses != null ? spouses[0] : null);
-    }
-
-    public void setSpouse(ITestBean spouse) {
-      this.spouses = new ITestBean[] { spouse };
-    }
-
-    public ITestBean[] getSpouses() {
-      return spouses;
-    }
-
-    public String getTouchy() {
-      return touchy;
-    }
-
-    public void setTouchy(String touchy) throws Exception {
-      if (touchy.indexOf('.') != -1) {
-        throw new Exception("Can't contain a .");
-      }
-      if (touchy.indexOf(',') != -1) {
-        throw new NumberFormatException("Number format exception: contains a ,");
-      }
-      this.touchy = touchy;
-    }
-
-    public String getCountry() {
-      return country;
-    }
-
-    public void setCountry(String country) {
-      this.country = country;
-    }
-
-    public String[] getStringArray() {
-      return stringArray;
-    }
-
-    public void setStringArray(String[] stringArray) {
-      this.stringArray = stringArray;
-    }
-
-    public Integer[] getSomeIntegerArray() {
-      return someIntegerArray;
-    }
-
-    public void setSomeIntegerArray(Integer[] someIntegerArray) {
-      this.someIntegerArray = someIntegerArray;
-    }
-
-    public Date getDate() {
-      return date;
-    }
-
-    public void setDate(Date date) {
-      this.date = date;
-    }
-
-    public Float getMyFloat() {
-      return myFloat;
-    }
-
-    public void setMyFloat(Float myFloat) {
-      this.myFloat = myFloat;
-    }
-
-    public Collection getFriends() {
-      return friends;
-    }
-
-    public void setFriends(Collection friends) {
-      this.friends = friends;
-    }
-
-    public Set getSomeSet() {
-      return someSet;
-    }
-
-    public void setSomeSet(Set someSet) {
-      this.someSet = someSet;
-    }
-
-    public Map getSomeMap() {
-      return someMap;
-    }
-
-    public void setSomeMap(Map someMap) {
-      this.someMap = someMap;
-    }
-
-    public List getSomeList() {
-      return someList;
-    }
-
-    public void setSomeList(List someList) {
-      this.someList = someList;
-    }
-
-    public Properties getSomeProperties() {
-      return someProperties;
-    }
-
-    public void setSomeProperties(Properties someProperties) {
-      this.someProperties = someProperties;
-    }
-
-    public INestedTestBean getDoctor() {
-      return doctor;
-    }
-
-    public void setDoctor(INestedTestBean doctor) {
-      this.doctor = doctor;
-    }
-
-    public INestedTestBean getLawyer() {
-      return lawyer;
-    }
-
-    public void setLawyer(INestedTestBean lawyer) {
-      this.lawyer = lawyer;
-    }
-
-    public Number getSomeNumber() {
-      return someNumber;
-    }
-
-    public void setSomeNumber(Number someNumber) {
-      this.someNumber = someNumber;
-    }
-
-    public Boolean getSomeBoolean() {
-      return someBoolean;
-    }
-
-    public void setSomeBoolean(Boolean someBoolean) {
-      this.someBoolean = someBoolean;
-    }
-
-    public IndexedTestBean getNestedIndexedBean() {
-      return nestedIndexedBean;
-    }
-
-    public void setNestedIndexedBean(IndexedTestBean nestedIndexedBean) {
-      this.nestedIndexedBean = nestedIndexedBean;
-    }
-
-    public List getOtherColours() {
-      return otherColours;
-    }
-
-    public void setOtherColours(List otherColours) {
-      this.otherColours = otherColours;
-    }
-
-    public List getPets() {
-      return pets;
-    }
-
-    public void setPets(List pets) {
-      this.pets = pets;
-    }
-
-    /** @see ITestBean#exceptional(Throwable) */
-    public void exceptional(Throwable t) throws Throwable {
-      if (t != null) {
-        throw t;
-      }
-    }
-
-    public void unreliableFileOperation() throws IOException {
-      throw new IOException();
-    }
-
-    /** @see ITestBean#returnsThis() */
-    public Object returnsThis() {
-      return this;
-    }
-
-    public int haveBirthday() {
-      return age++;
-    }
-
-    public void destroy() {
-      this.destroyed = true;
-    }
-
-    public boolean wasDestroyed() {
-      return destroyed;
-    }
-
-    public boolean equals(Object other) {
-      if (this == other) {
-        return true;
-      }
-      if (other == null || !(other instanceof TestBean)) {
-        return false;
-      }
-      TestBean tb2 = (TestBean) other;
-      return (ObjectUtils.nullSafeEquals(this.name, tb2.name) && this.age == tb2.age);
-    }
-
-    public int hashCode() {
-      return this.age;
-    }
-
-    public int compareTo(Object other) {
-      if (this.name != null && other instanceof TestBean) {
-        return this.name.compareTo(((TestBean) other).getName());
-      }
-      else {
-        return 1;
-      }
-    }
-
-    public String toString() {
-      return this.name;
-    }
-
-  }
-
-  public interface INestedTestBean {
-
-    public String getCompany();
-
-  }
-
-  public class NestedTestBean implements INestedTestBean {
-
-    private String company = "";
-
-    public NestedTestBean() {
-    }
-
-    public NestedTestBean(String company) {
-      setCompany(company);
-    }
-
-    public void setCompany(String company) {
-      this.company = (company != null ? company : "");
-    }
-
-    public String getCompany() {
-      return company;
-    }
-
-    public boolean equals(Object obj) {
-      if (!(obj instanceof NestedTestBean)) {
-        return false;
-      }
-      NestedTestBean ntb = (NestedTestBean) obj;
-      return this.company.equals(ntb.company);
-    }
-
-    public int hashCode() {
-      return this.company.hashCode();
-    }
-
-    public String toString() {
-      return "NestedTestBean: " + this.company;
-    }
-
-  }
-
-  public class IndexedTestBean {
-
-    private TestBean[] array;
-
-    private Collection<?> collection;
-
-    private List list;
-
-    private Set<? super Object> set;
-
-    private SortedSet<? super Object> sortedSet;
-
-    private Map map;
-
-    private SortedMap sortedMap;
-
-    public IndexedTestBean() {
-      this(true);
-    }
-
-    public IndexedTestBean(boolean populate) {
-      if (populate) {
-        populate();
-      }
-    }
-
-    public void populate() {
-      TestBean tb0 = new TestBean("name0", 0);
-      TestBean tb1 = new TestBean("name1", 0);
-      TestBean tb2 = new TestBean("name2", 0);
-      TestBean tb3 = new TestBean("name3", 0);
-      TestBean tb4 = new TestBean("name4", 0);
-      TestBean tb5 = new TestBean("name5", 0);
-      TestBean tb6 = new TestBean("name6", 0);
-      TestBean tb7 = new TestBean("name7", 0);
-      TestBean tbX = new TestBean("nameX", 0);
-      TestBean tbY = new TestBean("nameY", 0);
-      this.array = new TestBean[] { tb0, tb1 };
-      this.list = new ArrayList<Object>();
-      this.list.add(tb2);
-      this.list.add(tb3);
-      this.set = new TreeSet<Object>();
-      this.set.add(tb6);
-      this.set.add(tb7);
-      this.map = new HashMap<Object, Object>();
-      this.map.put("key1", tb4);
-      this.map.put("key2", tb5);
-      this.map.put("key.3", tb5);
-      List list = new ArrayList();
-      list.add(tbX);
-      list.add(tbY);
-      this.map.put("key4", list);
-    }
-
-    public TestBean[] getArray() {
-      return array;
-    }
-
-    public void setArray(TestBean[] array) {
-      this.array = array;
-    }
-
-    public Collection<?> getCollection() {
-      return collection;
-    }
-
-    public void setCollection(Collection<?> collection) {
-      this.collection = collection;
-    }
-
-    public List getList() {
-      return list;
-    }
-
-    public void setList(List list) {
-      this.list = list;
-    }
-
-    public Set<?> getSet() {
-      return set;
-    }
-
-    public void setSet(Set<? super Object> set) {
-      this.set = set;
-    }
-
-    public SortedSet<? super Object> getSortedSet() {
-      return sortedSet;
-    }
-
-    public void setSortedSet(SortedSet<? super Object> sortedSet) {
-      this.sortedSet = sortedSet;
-    }
-
-    public Map getMap() {
-      return map;
-    }
-
-    public void setMap(Map map) {
-      this.map = map;
-    }
-
-    public SortedMap getSortedMap() {
-      return sortedMap;
-    }
-
-    public void setSortedMap(SortedMap sortedMap) {
-      this.sortedMap = sortedMap;
-    }
-
-  }
-
-  public static class ResourceInjectionBean {
-
-    @Autowired(required = false)
-    private TestBean testBean;
-
-    private TestBean testBean2;
-
-    @Autowired
-    public void setTestBean2(TestBean testBean2) {
-      if (this.testBean2 != null) {
-        throw new IllegalStateException("Already called");
-      }
-      this.testBean2 = testBean2;
-    }
-
-    public TestBean getTestBean() {
-      return this.testBean;
-    }
-
-    public TestBean getTestBean2() {
-      return this.testBean2;
-    }
-  }
-
-  public static class ExtendedResourceInjectionBean<T> extends ResourceInjectionBean {
-
-    @Autowired
-    protected ITestBean testBean3;
-
-    private T nestedTestBean;
-
-    private ITestBean testBean4;
-
-    private BeanFactory beanFactory;
-
-    public ExtendedResourceInjectionBean() {
-    }
-
-    @Autowired
-    @Required
-    public void setTestBean2(TestBean testBean2) {
-      super.setTestBean2(testBean2);
-    }
-
-    @Autowired
-    private void inject(ITestBean testBean4, T nestedTestBean) {
-      this.testBean4 = testBean4;
-      this.nestedTestBean = nestedTestBean;
-    }
-
-    @Autowired
-    protected void initBeanFactory(BeanFactory beanFactory) {
-      this.beanFactory = beanFactory;
-    }
-
-    public ITestBean getTestBean3() {
-      return this.testBean3;
-    }
-
-    public ITestBean getTestBean4() {
-      return this.testBean4;
-    }
-
-    public T getNestedTestBean() {
-      return this.nestedTestBean;
-    }
-
-    public BeanFactory getBeanFactory() {
-      return this.beanFactory;
-    }
-  }
-
-  public static class TypedExtendedResourceInjectionBean
-      extends ExtendedResourceInjectionBean<NestedTestBean> {
-
-  }
-
-  public static class OptionalResourceInjectionBean extends ResourceInjectionBean {
-
-    @Autowired(required = false)
-    protected ITestBean testBean3;
-
-    private IndexedTestBean indexedTestBean;
-
-    private NestedTestBean[] nestedTestBeans;
-
-    @Autowired(required = false)
-    public NestedTestBean[] nestedTestBeansField;
-
-    private ITestBean testBean4;
-
-    @Autowired(required = false)
-    public void setTestBean2(TestBean testBean2) {
-      super.setTestBean2(testBean2);
-    }
-
-    @Autowired(required = false)
-    private void inject(ITestBean testBean4, NestedTestBean[] nestedTestBeans,
-        IndexedTestBean indexedTestBean) {
-      this.testBean4 = testBean4;
-      this.indexedTestBean = indexedTestBean;
-      this.nestedTestBeans = nestedTestBeans;
-    }
-
-    public ITestBean getTestBean3() {
-      return this.testBean3;
-    }
-
-    public ITestBean getTestBean4() {
-      return this.testBean4;
-    }
-
-    public IndexedTestBean getIndexedTestBean() {
-      return this.indexedTestBean;
-    }
-
-    public NestedTestBean[] getNestedTestBeans() {
-      return this.nestedTestBeans;
-    }
-  }
-
-  public static class OptionalCollectionResourceInjectionBean extends ResourceInjectionBean {
-
-    @Autowired(required = false)
-    protected ITestBean testBean3;
-
-    private IndexedTestBean indexedTestBean;
-
-    private List<NestedTestBean> nestedTestBeans;
-
-    public List<NestedTestBean> nestedTestBeansSetter;
-
-    @Autowired(required = false)
-    public List<NestedTestBean> nestedTestBeansField;
-
-    private ITestBean testBean4;
-
-    @Autowired(required = false)
-    public void setTestBean2(TestBean testBean2) {
-      super.setTestBean2(testBean2);
-    }
-
-    @Autowired(required = false)
-    private void inject(ITestBean testBean4, List<NestedTestBean> nestedTestBeans,
-        IndexedTestBean indexedTestBean) {
-      this.testBean4 = testBean4;
-      this.indexedTestBean = indexedTestBean;
-      this.nestedTestBeans = nestedTestBeans;
-    }
-
-    @Autowired(required = false)
-    public void setNestedTestBeans(List<NestedTestBean> nestedTestBeans) {
-      this.nestedTestBeansSetter = nestedTestBeans;
-    }
-
-    public ITestBean getTestBean3() {
-      return this.testBean3;
-    }
-
-    public ITestBean getTestBean4() {
-      return this.testBean4;
-    }
-
-    public IndexedTestBean getIndexedTestBean() {
-      return this.indexedTestBean;
-    }
-
-    public List<NestedTestBean> getNestedTestBeans() {
-      return this.nestedTestBeans;
-    }
-  }
-
-  public static class ConstructorResourceInjectionBean extends ResourceInjectionBean {
-
-    @Autowired
-    protected ITestBean testBean3;
-
-    private ITestBean testBean4;
-
-    private NestedTestBean nestedTestBean;
-
-    private ConfigurableListableBeanFactory beanFactory;
-
-    public ConstructorResourceInjectionBean() {
-      throw new UnsupportedOperationException();
-    }
-
-    public ConstructorResourceInjectionBean(ITestBean testBean3) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Autowired
-    public ConstructorResourceInjectionBean(ITestBean testBean4, NestedTestBean nestedTestBean,
-        ConfigurableListableBeanFactory beanFactory) {
-      this.testBean4 = testBean4;
-      this.nestedTestBean = nestedTestBean;
-      this.beanFactory = beanFactory;
-    }
-
-    public ConstructorResourceInjectionBean(NestedTestBean nestedTestBean) {
-      throw new UnsupportedOperationException();
-    }
-
-    public ConstructorResourceInjectionBean(ITestBean testBean3, ITestBean testBean4,
-        NestedTestBean nestedTestBean) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Autowired
-    public void setTestBean2(TestBean testBean2) {
-      super.setTestBean2(testBean2);
-    }
-
-    public ITestBean getTestBean3() {
-      return this.testBean3;
-    }
-
-    public ITestBean getTestBean4() {
-      return this.testBean4;
-    }
-
-    public NestedTestBean getNestedTestBean() {
-      return this.nestedTestBean;
-    }
-
-    public ConfigurableListableBeanFactory getBeanFactory() {
-      return this.beanFactory;
-    }
-  }
-
-  public static class ConstructorsResourceInjectionBean {
-
-    protected ITestBean testBean3;
-
-    private ITestBean testBean4;
-
-    private NestedTestBean[] nestedTestBeans;
-
-    public ConstructorsResourceInjectionBean() {
-    }
-
-    @Autowired(required = false)
-    public ConstructorsResourceInjectionBean(ITestBean testBean3) {
-      this.testBean3 = testBean3;
-    }
-
-    @Autowired(required = false)
-    public ConstructorsResourceInjectionBean(ITestBean testBean4,
-        NestedTestBean[] nestedTestBeans) {
-      this.testBean4 = testBean4;
-      this.nestedTestBeans = nestedTestBeans;
-    }
-
-    public ConstructorsResourceInjectionBean(NestedTestBean nestedTestBean) {
-      throw new UnsupportedOperationException();
-    }
-
-    public ConstructorsResourceInjectionBean(ITestBean testBean3, ITestBean testBean4,
-        NestedTestBean nestedTestBean) {
-      throw new UnsupportedOperationException();
-    }
-
-    public ITestBean getTestBean3() {
-      return this.testBean3;
-    }
-
-    public ITestBean getTestBean4() {
-      return this.testBean4;
-    }
-
-    public NestedTestBean[] getNestedTestBeans() {
-      return this.nestedTestBeans;
-    }
-  }
-
-  public static class ConstructorsCollectionResourceInjectionBean {
-
-    protected ITestBean testBean3;
-
-    private ITestBean testBean4;
-
-    private List<NestedTestBean> nestedTestBeans;
-
-    public ConstructorsCollectionResourceInjectionBean() {
-    }
-
-    @Autowired(required = false)
-    public ConstructorsCollectionResourceInjectionBean(ITestBean testBean3) {
-      this.testBean3 = testBean3;
-    }
-
-    @Autowired(required = false)
-    public ConstructorsCollectionResourceInjectionBean(ITestBean testBean4,
-        List<NestedTestBean> nestedTestBeans) {
-      this.testBean4 = testBean4;
-      this.nestedTestBeans = nestedTestBeans;
-    }
-
-    public ConstructorsCollectionResourceInjectionBean(NestedTestBean nestedTestBean) {
-      throw new UnsupportedOperationException();
-    }
-
-    public ConstructorsCollectionResourceInjectionBean(ITestBean testBean3, ITestBean testBean4,
-        NestedTestBean nestedTestBean) {
-      throw new UnsupportedOperationException();
-    }
-
-    public ITestBean getTestBean3() {
-      return this.testBean3;
-    }
-
-    public ITestBean getTestBean4() {
-      return this.testBean4;
-    }
-
-    public List<NestedTestBean> getNestedTestBeans() {
-      return this.nestedTestBeans;
-    }
-  }
-
-  public static class MapConstructorInjectionBean {
-
-    private Map<String, TestBean> testBeanMap;
-
-    @Autowired
-    public MapConstructorInjectionBean(Map<String, TestBean> testBeanMap) {
-      this.testBeanMap = testBeanMap;
-    }
-
-    public Map<String, TestBean> getTestBeanMap() {
-      return this.testBeanMap;
-    }
-  }
-
-  public static class MapFieldInjectionBean {
-
-    @Autowired
-    private Map<String, TestBean> testBeanMap;
-
-    public Map<String, TestBean> getTestBeanMap() {
-      return this.testBeanMap;
-    }
-  }
-
-  public static class MapMethodInjectionBean {
-
-    private TestBean testBean;
-
-    private Map<String, TestBean> testBeanMap;
-
-    @Autowired(required = false)
-    public void setTestBeanMap(TestBean testBean, Map<String, TestBean> testBeanMap) {
-      this.testBean = testBean;
-      this.testBeanMap = testBeanMap;
-    }
-
-    public TestBean getTestBean() {
-      return this.testBean;
-    }
-
-    public Map<String, TestBean> getTestBeanMap() {
-      return this.testBeanMap;
-    }
   }
 
 }

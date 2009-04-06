@@ -22,6 +22,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
+import com.google.inject.TypeLiteral;
+import com.google.inject.internal.Maps;
+import com.google.inject.internal.Sets;
 import static com.google.inject.matcher.Matchers.any;
 import com.google.inject.spi.InjectableType;
 import com.google.inject.spi.InjectableType.Encounter;
@@ -31,7 +34,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import static org.guiceyfruit.support.EncounterProvider.encounterProvider;
+import org.guiceyfruit.support.internal.MethodKey;
 
 /**
  * Adds some new helper methods to the base Guice module
@@ -130,59 +137,118 @@ public abstract class GuiceyFruitModule extends AbstractModule {
       Provider<? extends AnnotationMemberProvider> providerProvider;
 
       public <I> void hear(InjectableType<I> injectableType, final Encounter<I> encounter) {
-        Class<? super I> type = injectableType.getType().getRawType();
 
-        for (Class<? super I> t = type; t != Object.class; t = t.getSuperclass()) {
-          Field[] fields = t.getDeclaredFields();
-          for (Field field : fields) {
-            bindAnnotationInjectorToField(encounter, field);
+        Set<Field> boundFields = Sets.newHashSet();
+        Map<MethodKey, Method> boundMethods = Maps.newHashMap();
+
+
+        TypeLiteral<?> startType = injectableType.getType();
+        while (true) {
+          Class<?> type = startType.getRawType();
+          if (type == Object.class) {
+            break;
           }
+
+          Field[] fields = type.getDeclaredFields();
+          for (Field field : fields) {
+            if (boundFields.add(field)) {
+              bindAnnotationInjectorToField(encounter, field);
+            }
+          }
+
+          Method[] methods = type.getDeclaredMethods();
+          for (final Method method : methods) {
+            MethodKey key = new MethodKey(method);
+            if (boundMethods.get(key) == null) {
+              boundMethods.put(key, method);
+              bindAnnotationInjectionToMember(encounter, startType, method);
+            }
+          }
+
+          //startType = startType.getSupertype(type);
+          Class<?> supertype = type.getSuperclass();
+          if (supertype == Object.class) {
+            break;
+          }
+          startType = startType.getSupertype(supertype);
         }
 
-        Method[] methods = type.getDeclaredMethods();
+/*
+        Method[] methods = startType.getDeclaredMethods();
         for (final Method method : methods) {
-          // TODO lets exclude methods with @Inject?
-          final A annotation = method.getAnnotation(annotationType);
-          if (annotation != null) {
-            if (providerProvider == null) {
-              providerProvider = memberProviderProvider.get(encounter);
-            }
+          bindAnnotationInjectionToMember(encounter, method);
+        }
+*/
 
-            encounter.register(new InjectionListener<I>() {
-              public void afterInjection(I injectee) {
-                AnnotationMemberProvider provider = providerProvider.get();
+      }
 
-                Class<?>[] parameterTypes = method.getParameterTypes();
-                int size = parameterTypes.length;
-                Object[] values = new Object[size];
-                for (int i = 0; i < size; i++) {
-                  Class<?> paramType = parameterTypes[i];
-                  Object value = provider.provide(annotation, method, paramType, i);
-                  checkInjectedValueType(value, paramType, encounter);
-
-                  // if we have a null value then assume the injection point cannot be satisfied
-                  // which is the spring @Autowired way of doing things
-                  if (value == null) {
-                    return;
-                  }
-                  values[i] = value;
-                }
-                try {
-                  method.setAccessible(true);
-                  method.invoke(injectee, values);
-                }
-                catch (IllegalAccessException e) {
-                  throw new ProvisionException(
-                      "Failed to inject method " + method + ". Reason: " + e, e);
-                }
-                catch (InvocationTargetException ie) {
-                  Throwable e = ie.getTargetException();
-                  throw new ProvisionException(
-                      "Failed to inject method " + method + ". Reason: " + e, e);
-                }
-              }
-            });
+      protected <I> void bindAnnotationInjectionToMember(final Encounter<I> encounter,
+          final TypeLiteral<?> type, final Method method) {
+        // TODO lets exclude methods with @Inject?
+        final A annotation = method.getAnnotation(annotationType);
+        if (annotation != null) {
+          if (providerProvider == null) {
+            providerProvider = memberProviderProvider.get(encounter);
           }
+
+          encounter.register(new InjectionListener<I>() {
+            public void afterInjection(I injectee) {
+              AnnotationMemberProvider provider = providerProvider.get();
+
+              Class<?>[] parameterTypes = method.getParameterTypes();
+              int size = parameterTypes.length;
+              //List<TypeLiteral<?>> list = TypeLiteral.get(method.getDeclaringClass()).getParameterTypes(method);
+              List<TypeLiteral<?>> list = type.getParameterTypes(method);
+              //Type[] genericParameterTypes = method.getGenericParameterTypes();
+              Object[] values = new Object[size];
+              for (int i = 0; i < size; i++) {
+                //Type genericType = genericParameterTypes[i];
+                TypeLiteral<?> typeLiteral = list.get(i);
+
+                Class<?> paramType = typeLiteral.getRawType();
+                if (paramType == Object.class || paramType.isArray() && paramType.getComponentType() == Object.class) {
+                  // if the TypeLiteral ninja doesn't work, lets fall back to the actual type
+                  paramType = parameterTypes[i];
+                }
+
+/*
+                if (genericType instanceof Class) {
+                  paramType = (Class<?>) genericType;
+                }
+                else if (genericType instanceof TypeVariable) {
+                  TypeVariable typeVariable = (TypeVariable) genericType;
+                  Type[] bounds = typeVariable.getBounds();
+
+                }
+                else {
+                  paramType = parameterTypes[i];
+                }
+*/
+                Object value = provider.provide(annotation, method, paramType, i);
+                checkInjectedValueType(value, paramType, encounter);
+
+                // if we have a null value then assume the injection point cannot be satisfied
+                // which is the spring @Autowired way of doing things
+                if (value == null) {
+                  return;
+                }
+                values[i] = value;
+              }
+              try {
+                method.setAccessible(true);
+                method.invoke(injectee, values);
+              }
+              catch (IllegalAccessException e) {
+                throw new ProvisionException("Failed to inject method " + method + ". Reason: " + e,
+                    e);
+              }
+              catch (InvocationTargetException ie) {
+                Throwable e = ie.getTargetException();
+                throw new ProvisionException("Failed to inject method " + method + ". Reason: " + e,
+                    e);
+              }
+            }
+          });
         }
       }
 
