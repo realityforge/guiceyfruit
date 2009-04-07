@@ -82,8 +82,8 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
   }
 
   protected Object provide(Autowired annotation, Member member, TypeLiteral<?> typeLiteral,
-      Class<?> memberType) {
-    Predicate<Binding> filter = createQualifierFilter(member);
+      Class<?> memberType, Annotation[] annotations) {
+    Predicate<Binding> filter = createQualifierFilter(member, annotations);
 
     Class<?> type = typeLiteral.getRawType();
     if (type.isArray()) {
@@ -106,8 +106,9 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
    * Returns a new filter on the given member to respect the use of {@link Qualifier} annotations or
    * annotations annotated with {@link Qualifier}
    */
-  protected Predicate<Binding> createQualifierFilter(Member member) {
-    Predicate<Binding> filter = null;
+  protected Predicate<Binding> createQualifierFilter(Member member,
+      Annotation[] parameterAnnotations) {
+
     if (member instanceof AnnotatedElement) {
       AnnotatedElement annotatedElement = (AnnotatedElement) member;
       final Qualifier qualifier = annotatedElement.getAnnotation(Qualifier.class);
@@ -140,12 +141,13 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
       Set<Annotation> qualifiedAnnotations = Sets.newHashSet();
       Annotation[] annotations = annotatedElement.getAnnotations();
       for (Annotation annotation : annotations) {
-        Class<? extends Annotation> annotationType = annotation.annotationType();
-        Qualifier qualified = annotationType.getAnnotation(Qualifier.class);
-        if (qualified != null) {
-          // we can only support qualified annotations which are also annotated with Guice's
-          // @BindingAnnotation
-          if (annotationType.getAnnotation(BindingAnnotation.class) != null) {
+        if (isQualified(annotation)) {
+          qualifiedAnnotations.add(annotation);
+        }
+      }
+      if (parameterAnnotations != null) {
+        for (Annotation annotation : parameterAnnotations) {
+          if (isQualified(annotation)) {
             qualifiedAnnotations.add(annotation);
           }
         }
@@ -165,6 +167,9 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
           }
         };
       }
+      else if (size > 0) {
+        throw new ProvisionException("Too many qualified annotations " + qualifiedAnnotations + " when trying to inject " + member);
+      }
     }
     return new Predicate<Binding>() {
       public boolean matches(Binding binding) {
@@ -176,6 +181,20 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
         return "@Autowired";
       }
     };
+  }
+
+  /** Returns true if the annotation is a qualified annotation and a valid Guice binding annotation */
+  protected boolean isQualified(Annotation annotation) {
+    Class<? extends Annotation> annotationType = annotation.annotationType();
+    Qualifier qualified = annotationType.getAnnotation(Qualifier.class);
+    if (qualified != null) {
+      // we can only support qualified annotations which are also annotated with Guice's
+      // @BindingAnnotation
+      if (annotationType.getAnnotation(BindingAnnotation.class) != null) {
+        return true;
+      }
+    }
+    return false;
   }
 
   protected Object provideSingleValue(Member member, Class<?> type, Autowired annotation,
@@ -195,7 +214,8 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
         }
         else {
           if (annotation.required()) {
-            throw new ProvisionException("Could not find required binding for " + filter + " when injecting " + member);
+            throw new ProvisionException(
+                "Could not find required binding for " + filter + " when injecting " + member);
           }
           return null;
         }

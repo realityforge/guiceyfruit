@@ -35,17 +35,18 @@ public abstract class AnnotationMemberProviderSupport<A extends Annotation>
 
   public Object provide(A annotation, TypeLiteral<?> type, Field field) {
     TypeLiteral<?> requiredType = type.getFieldType(field);
-    return provide(annotation, field, requiredType, field.getType());
+    return provide(annotation, field, requiredType, field.getType(), null);
   }
 
   public Object provide(A annotation, TypeLiteral<?> type, Method method,
       Class<?> parameterType, int parameterIndex) {
 
     TypeLiteral<?> requiredType = type.getParameterTypes(method).get(parameterIndex);
-    return provide(annotation, method, requiredType, method.getParameterTypes()[parameterIndex]);
+    Annotation[] annotations = method.getParameterAnnotations()[parameterIndex];
+    return provide(annotation, method, requiredType, method.getParameterTypes()[parameterIndex], annotations);
   }
 
   /** The default method to create a value for the named member of the requested type */
   protected abstract Object provide(A annotation, Member member, TypeLiteral<?> requiredType,
-      Class<?> memberType);
+      Class<?> memberType, Annotation[] annotations);
 }

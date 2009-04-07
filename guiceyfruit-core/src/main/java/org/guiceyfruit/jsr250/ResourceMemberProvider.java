@@ -23,6 +23,7 @@ import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.annotation.Annotation;
 import javax.annotation.Resource;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -54,7 +55,7 @@ public class ResourceMemberProvider extends AnnotationMemberProviderSupport<Reso
   }
 
   protected Object provide(Resource resource, Member member, TypeLiteral<?> requiredType,
-      Class<?> memberType) {
+      Class<?> memberType, Annotation[] annotations) {
     String name = getJndiName(resource, member);
 
     try {
