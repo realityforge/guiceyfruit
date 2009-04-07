@@ -53,6 +53,9 @@ import java.util.TreeSet;
 import org.guiceyfruit.Injectors;
 import org.guiceyfruit.spring.NoAutowire;
 import org.guiceyfruit.support.AnnotationMemberProviderSupport;
+import org.guiceyfruit.support.Comparators;
+import org.guiceyfruit.support.Predicate;
+import org.guiceyfruit.support.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -78,36 +81,68 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
 
   protected Object provide(Autowired annotation, Member member, TypeLiteral<?> typeLiteral,
       Class<?> memberType) {
-    Qualifier qualifier = null;
+    Predicate<Binding> filter = null;
     if (member instanceof AnnotatedElement) {
       AnnotatedElement annotatedElement = (AnnotatedElement) member;
-      qualifier = annotatedElement.getAnnotation(Qualifier.class);
+      final Qualifier qualifier = annotatedElement.getAnnotation(Qualifier.class);
+      if (qualifier != null) {
+        final String expectedValue = qualifier.value();
+        final boolean notEmptyValue = Strings.isNotEmpty(expectedValue);
+        filter = new Predicate<Binding>() {
+          public boolean matches(Binding binding) {
+            String value = annotationName(binding);
+
+            // we cannot use @Qualified as a binding annotation
+            // so we can't test for just a @Qualified binding with no text
+            // so lets just test for a non-empty string
+            if (notEmptyValue) {
+              return Comparators.equal(expectedValue, value);
+            }
+            else {
+              return Strings.isNotEmpty(value);
+            }
+          }
+
+          @Override
+          public String toString() {
+            return "@Autowired @Qualifier(" + expectedValue + ")";
+          }
+        };
+      }
     }
-    if (qualifier != null) {
-      Key<?> key = Key.get(typeLiteral, qualifier);
-      return injector.getInstance(key);
+    if (filter == null) {
+      filter = new Predicate<Binding>() {
+        public boolean matches(Binding binding) {
+          return true;
+        }
+
+        @Override
+        public String toString() {
+          return "@Autowired";
+        }
+      };
+    }
+
+    Class<?> type = typeLiteral.getRawType();
+    if (type.isArray()) {
+      return provideArrayValue(member, typeLiteral, memberType, filter);
+    }
+    else if (Collection.class.isAssignableFrom(type)) {
+      Collection collection = createCollection(type);
+      return provideCollectionValues(collection, member, typeLiteral, filter);
+    }
+    else if (Map.class.isAssignableFrom(type)) {
+      Map map = createMap(type);
+      return provideMapValues(map, member, typeLiteral, filter);
     }
     else {
-      Class<?> type = typeLiteral.getRawType();
-      if (type.isArray()) {
-        return provideArrayValue(member, typeLiteral, memberType);
-      }
-      else if (Collection.class.isAssignableFrom(type)) {
-        Collection collection = createCollection(type);
-        return provideCollectionValues(collection, member, typeLiteral);
-      }
-      else if (Map.class.isAssignableFrom(type)) {
-        Map map = createMap(type);
-        return provideMapValues(map, member, typeLiteral);
-      }
-      else {
-        return provideSingleValue(member, type, annotation);
-      }
+      return provideSingleValue(member, type, annotation, filter);
     }
   }
 
-  protected Object provideSingleValue(Member member, Class<?> type, Autowired annotation) {
-    Set<Binding<?>> set = getSortedBindings(type);
+  protected Object provideSingleValue(Member member, Class<?> type, Autowired annotation,
+      Predicate<Binding> filter) {
+    Set<Binding<?>> set = getSortedBindings(type, filter);
     int size = set.size();
     if (size == 1) {
       Binding<?> binding = Iterables.getOnlyElement(set);
@@ -125,8 +160,8 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
             throw (ProvisionException) e;
           }
           throw new ProvisionException(
-              "Could not resolve type " + type.getCanonicalName() + " when injecting " + member
-                  + ": " + e, e);
+              "Could not resolve type " + type.getCanonicalName() + " with filter " + filter
+                  + " when injecting " + member + ": " + e, e);
         }
         return null;
       }
@@ -148,9 +183,10 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
     return answer;
   }
 
-  protected Object provideArrayValue(Member member, TypeLiteral<?> type, Class<?> memberType) {
+  protected Object provideArrayValue(Member member, TypeLiteral<?> type, Class<?> memberType,
+      Predicate<Binding> filter) {
     Class<?> componentType = memberType.getComponentType();
-    Set<Binding<?>> set = getSortedBindings(componentType);
+    Set<Binding<?>> set = getSortedBindings(componentType, filter);
     // TODO should we return an empty array when no matches?
     // FWIW Spring seems to return null
     if (set.isEmpty()) {
@@ -166,7 +202,7 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
   }
 
   private Collection provideCollectionValues(Collection collection, Member member,
-      TypeLiteral<?> type) {
+      TypeLiteral<?> type, Predicate<Binding> filter) {
     Type typeInstance = type.getType();
     if (typeInstance instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) typeInstance;
@@ -176,7 +212,7 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
         if (argument instanceof Class) {
           Class<?> componentType = (Class<?>) argument;
           if (componentType != Object.class) {
-            Set<Binding<?>> set = getSortedBindings(componentType);
+            Set<Binding<?>> set = getSortedBindings(componentType, filter);
             if (set.isEmpty()) {
               // TODO return null or empty collection if nothing to inject?
               return null;
@@ -194,7 +230,8 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
     return null;
   }
 
-  protected Map provideMapValues(Map map, Member member, TypeLiteral<?> type) {
+  protected Map provideMapValues(Map map, Member member, TypeLiteral<?> type,
+      Predicate<Binding> filter) {
     Type typeInstance = type.getType();
     if (typeInstance instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) typeInstance;
@@ -212,7 +249,7 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
           if (valueType instanceof Class) {
             Class<?> componentType = (Class<?>) valueType;
             if (componentType != Object.class) {
-              Set<Binding<?>> set = getSortedBindings(componentType);
+              Set<Binding<?>> set = getSortedBindings(componentType, filter);
               if (set.isEmpty()) {
                 // TODO return null or empty collection if nothing to inject?
                 return null;
@@ -294,7 +331,7 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
     return answer;
   }
 
-  protected Set<Binding<?>> getSortedBindings(Class<?> type) {
+  protected Set<Binding<?>> getSortedBindings(Class<?> type, Predicate<Binding> filter) {
     SortedSet<Binding<?>> answer = new TreeSet<Binding<?>>(new Comparator<Binding<?>>() {
       public int compare(Binding<?> b1, Binding<?> b2) {
 
@@ -318,7 +355,7 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
     });
     Set<Binding<?>> bindings = Injectors.getBindingsOf(injector, type);
     for (Binding<?> binding : bindings) {
-      if (isValidAutowireBinding(binding)) {
+      if (isValidAutowireBinding(binding) && filter.matches(binding)) {
         answer.add(binding);
       }
     }

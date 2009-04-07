@@ -19,10 +19,8 @@
 package org.guiceyfruit.spring;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
-import com.google.inject.Module;
 import com.google.inject.ProvisionException;
 import com.google.inject.name.Names;
 import junit.framework.TestCase;
@@ -42,7 +40,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 
 /**
- * This class reuses the test beans from Spring
+ * This class reuses the test beans and test code from Spring
  *
  * @author Juergen Hoeller
  * @author Mark Fisher
@@ -55,7 +53,7 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 public class AutowiredTest extends TestCase {
 
   public void testIncompleteBeanDefinition() {
-    Injector injector = createInjector(new AbstractModule() {
+    Injector injector = SpringModule.createInjector(new AbstractModule() {
       protected void configure() {
       }
     });
@@ -68,7 +66,7 @@ public class AutowiredTest extends TestCase {
   public void testAutowiredInjection() throws Exception {
     final TestBean tb = new TestBean();
 
-    Injector injector = createInjector(new AbstractModule() {
+    Injector injector = SpringModule.createInjector(new AbstractModule() {
       protected void configure() {
         bind(TestBean.class).toInstance(tb);
       }
@@ -90,7 +88,7 @@ public class AutowiredTest extends TestCase {
     final NestedTestBean ntb1 = new NestedTestBean("ntb1");
     final NestedTestBean ntb2 = new NestedTestBean("ntb2");
 
-    Injector injector = createInjector(new GuiceyFruitModule() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
       protected void configure() {
         bind(TestBean.class).toInstance(tb);
         bind(IndexedTestBean.class).toInstance(itb);
@@ -117,7 +115,7 @@ public class AutowiredTest extends TestCase {
   public void testOptionalResourceInjectionWithIncompleteDependencies() {
     final TestBean tb = new TestBean();
 
-    Injector injector = createInjector(new AbstractModule() {
+    Injector injector = SpringModule.createInjector(new AbstractModule() {
       protected void configure() {
         bind(TestBean.class).toInstance(tb);
       }
@@ -137,7 +135,7 @@ public class AutowiredTest extends TestCase {
   }
 
   public void testOptionalResourceInjectionWithNoDependencies() {
-    Injector injector = createInjector(new AbstractModule() {
+    Injector injector = SpringModule.createInjector(new AbstractModule() {
       protected void configure() {
       }
     });
@@ -160,7 +158,7 @@ public class AutowiredTest extends TestCase {
   public void testResourceInjection() {
     final TestBean tb = new TestBean();
 
-    Injector injector = createInjector(new AbstractModule() {
+    Injector injector = SpringModule.createInjector(new AbstractModule() {
       protected void configure() {
         bind(TestBean.class).toInstance(tb);
       }
@@ -179,7 +177,7 @@ public class AutowiredTest extends TestCase {
     final NestedTestBean ntb = new NestedTestBean();
     final BeanFactory bf = new DefaultListableBeanFactory();
 
-    Injector injector = createInjector(new AbstractModule() {
+    Injector injector = SpringModule.createInjector(new AbstractModule() {
       protected void configure() {
         bind(TestBean.class).toInstance(tb);
         bind(NestedTestBean.class).toInstance(ntb);
@@ -211,7 +209,7 @@ public class AutowiredTest extends TestCase {
     final NestedTestBean ntb = new NestedTestBean();
     final BeanFactory bf = new DefaultListableBeanFactory();
 
-    Injector injector = createInjector(new GuiceyFruitModule() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
       protected void configure() {
         super.configure();
 
@@ -243,7 +241,7 @@ public class AutowiredTest extends TestCase {
     final NestedTestBean ntb = new NestedTestBean();
     final BeanFactory bf = new DefaultListableBeanFactory();
 
-    Injector injector = createInjector(new GuiceyFruitModule() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
       protected void configure() {
         bind(TestBean.class).toInstance(tb);
         bind(NestedTestBean.class).toInstance(ntb);
@@ -268,7 +266,7 @@ public class AutowiredTest extends TestCase {
     final NestedTestBean ntb1 = new NestedTestBean();
     final NestedTestBean ntb2 = new NestedTestBean();
 
-    Injector injector = createInjector(new GuiceyFruitModule() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
       protected void configure() {
         bind(TestBean.class).toInstance(tb);
         bind(IndexedTestBean.class).toInstance(itb);
@@ -306,7 +304,7 @@ public class AutowiredTest extends TestCase {
     final IndexedTestBean itb = new IndexedTestBean();
     final NestedTestBean ntb1 = new NestedTestBean();
 
-    Injector injector = createInjector(new GuiceyFruitModule() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
       protected void configure() {
         bind(TestBean.class).toInstance(tb);
         bind(IndexedTestBean.class).toInstance(itb);
@@ -338,7 +336,7 @@ public class AutowiredTest extends TestCase {
     final TestBean tb1 = new TestBean("tb1");
     final TestBean tb2 = new TestBean("tb2");
 
-    Injector injector = createInjector(new GuiceyFruitModule() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
       protected void configure() {
         super.configure();
 
@@ -371,7 +369,7 @@ public class AutowiredTest extends TestCase {
   public void testMethodInjectionWithMap() {
     final TestBean tb = new TestBean("tb1");
 
-    Injector injector = createInjector(new GuiceyFruitModule() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
       protected void configure() {
         super.configure();
 
@@ -398,7 +396,7 @@ public class AutowiredTest extends TestCase {
     final TestBean tb1 = new TestBean("tb1");
     final TestBean tb2 = new TestBean("tb2");
 
-    Injector injector = createInjector(new GuiceyFruitModule() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
       protected void configure() {
         super.configure();
 
@@ -419,7 +417,7 @@ public class AutowiredTest extends TestCase {
   public void testMethodInjectionWithMapAndMultipleMatchesButOnlyOneAutowireCandidate() {
     final TestBean tb1 = new TestBean("tb1");
 
-    Injector injector = createInjector(new GuiceyFruitModule() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
       protected void configure() {
         super.configure();
 
@@ -438,7 +436,7 @@ public class AutowiredTest extends TestCase {
   }
 
   public void testMethodInjectionWithMapAndNoMatches() {
-    Injector injector = createInjector(new GuiceyFruitModule() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
     });
 
     MapMethodInjectionBean bean = injector.getInstance(MapMethodInjectionBean.class);
@@ -903,10 +901,6 @@ public class AutowiredTest extends TestCase {
 
   // Implementation methods
   //-------------------------------------------------------------------------
-
-  protected Injector createInjector(Module module) {
-    return Guice.createInjector(new SpringModule(), module);
-  }
 
   /** Returns the Map key as a string for the given type and name */
   protected String mapKey(Class<?> type, String name) {

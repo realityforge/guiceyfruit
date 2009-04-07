@@ -18,15 +18,21 @@
 
 package org.guiceyfruit.spring;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.google.inject.ProvisionException;
+import com.google.inject.internal.Iterables;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.InjectableType;
 import com.google.inject.spi.InjectableType.Encounter;
 import com.google.inject.spi.InjectableType.Listener;
 import com.google.inject.spi.InjectionListener;
+import java.util.Arrays;
+import java.util.Collections;
 import org.guiceyfruit.jsr250.Jsr250Module;
-import org.guiceyfruit.spring.support.DisposableBeanCloser;
 import org.guiceyfruit.spring.support.AutowiredMemberProvider;
+import org.guiceyfruit.spring.support.DisposableBeanCloser;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -36,6 +42,19 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Revision: 1.1 $
  */
 public class SpringModule extends Jsr250Module {
+
+  /**
+   * Returns a new Injector with support for
+   * <a href="http://code.google.com/p/guiceyfruit/wiki/Annotations">Spring annotations and
+   * lifecycle support</a> along with JSR 250 support included.
+   */
+  public static Injector createInjector(Module... modules) {
+    Iterable<? extends Module> iterable = Iterables.concat(
+        Collections.singletonList(new SpringModule()), Arrays.asList(modules));
+
+    return Guice.createInjector(iterable);
+  }
+
   protected void configure() {
     super.configure();
 
@@ -65,4 +84,5 @@ public class SpringModule extends Jsr250Module {
 
     bind(DisposableBeanCloser.class);
   }
+
 }
