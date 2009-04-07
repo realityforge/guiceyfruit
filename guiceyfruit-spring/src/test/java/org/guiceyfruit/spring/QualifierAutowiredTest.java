@@ -18,9 +18,11 @@
 
 package org.guiceyfruit.spring;
 
+import com.google.inject.BindingAnnotation;
 import com.google.inject.CreationException;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.ProvisionException;
 import com.google.inject.name.Named;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -29,8 +31,6 @@ import java.lang.annotation.Target;
 import junit.framework.TestCase;
 import org.guiceyfruit.Injectors;
 import org.guiceyfruit.support.GuiceyFruitModule;
-import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -139,7 +139,7 @@ public class QualifierAutowiredTest extends TestCase {
     }
   }
 
-  public void TODO_testAutowiredFieldWithSingleNonQualifiedCandidate() {
+  public void testAutowiredFieldWithSingleNonQualifiedCandidate() {
     Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
       @Provides
       public Person createPerson() {
@@ -150,33 +150,39 @@ public class QualifierAutowiredTest extends TestCase {
       QualifiedFieldTestBean bean = injector.getInstance(QualifiedFieldTestBean.class);
       fail("expected failure creating " + bean);
     }
-    catch (BeanCreationException e) {
-      assertTrue(e.getRootCause() instanceof NoSuchBeanDefinitionException);
-      assertEquals("autowired", e.getBeanName());
+    catch (ProvisionException e) {
+      // expected
+    }
+  }
+
+  public void testAutowiredMethodParameterWithSingleNonQualifiedCandidate() {
+    try {
+      Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
+        @Provides
+        public Person createPerson() {
+          return new Person(JUERGEN);
+        }
+
+        // We cannot support constructor injection using Spring annotations due to
+        // current restrictions in Guice, so we must create a provider
+        @Provides
+        public QualifiedMethodParameterTestBean newBean(@TestQualifier Person person) {
+          QualifiedMethodParameterTestBean answer = new QualifiedMethodParameterTestBean();
+          answer.setPerson(person);
+          return answer;
+        }
+      });
+
+      QualifiedMethodParameterTestBean bean = injector
+          .getInstance(QualifiedMethodParameterTestBean.class);
+      fail("expected exception creating " + bean);
+    }
+    catch (CreationException e) {
+      // expected
     }
   }
 
 /*
-
-  @Test
-  public void testAutowiredMethodParameterWithSingleNonQualifiedCandidate() {
-    GenericApplicationContext context = new GenericApplicationContext();
-    ConstructorArgumentValues cavs = new ConstructorArgumentValues();
-    cavs.addGenericArgumentValue(JUERGEN);
-    RootBeanDefinition person = new RootBeanDefinition(Person.class, cavs, null);
-    context.registerBeanDefinition(JUERGEN, person);
-    context.registerBeanDefinition("autowired",
-        new RootBeanDefinition(QualifiedMethodParameterTestBean.class));
-    AnnotationConfigUtils.registerAnnotationConfigProcessors(context);
-    try {
-      context.refresh();
-      fail("expected BeanCreationException");
-    }
-    catch (BeanCreationException e) {
-      assertTrue(e.getRootCause() instanceof NoSuchBeanDefinitionException);
-      assertEquals("autowired", e.getBeanName());
-    }
-  }
 
   @Test
   public void testAutowiredConstructorArgumentWithSingleNonQualifiedCandidate() {
@@ -704,15 +710,20 @@ public class QualifierAutowiredTest extends TestCase {
     }
   }
 
+  // Note you must annotate qualifier annotations with @BindingAnnotation
+  //-------------------------------------------------------------------------
+
   @Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE })
   @Retention(RetentionPolicy.RUNTIME)
   @Qualifier
+  @BindingAnnotation
   public static @interface TestQualifier {
   }
 
   @Target(ElementType.FIELD)
   @Retention(RetentionPolicy.RUNTIME)
   @Qualifier
+  @BindingAnnotation
   public static @interface TestQualifierWithDefaultValue {
 
     String value() default "default";
@@ -722,6 +733,7 @@ public class QualifierAutowiredTest extends TestCase {
   @Target(ElementType.FIELD)
   @Retention(RetentionPolicy.RUNTIME)
   @Qualifier
+  @BindingAnnotation
   public static @interface TestQualifierWithMultipleAttributes {
 
     String value() default "default";

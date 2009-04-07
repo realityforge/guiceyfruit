@@ -19,6 +19,7 @@
 package org.guiceyfruit.spring.support;
 
 import com.google.inject.Binding;
+import com.google.inject.BindingAnnotation;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -27,6 +28,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.internal.Iterables;
 import com.google.inject.internal.Lists;
 import com.google.inject.internal.Preconditions;
+import com.google.inject.internal.Sets;
 import com.google.inject.name.Named;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -81,6 +83,30 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
 
   protected Object provide(Autowired annotation, Member member, TypeLiteral<?> typeLiteral,
       Class<?> memberType) {
+    Predicate<Binding> filter = createQualifierFilter(member);
+
+    Class<?> type = typeLiteral.getRawType();
+    if (type.isArray()) {
+      return provideArrayValue(member, typeLiteral, memberType, filter);
+    }
+    else if (Collection.class.isAssignableFrom(type)) {
+      Collection collection = createCollection(type);
+      return provideCollectionValues(collection, member, typeLiteral, filter);
+    }
+    else if (Map.class.isAssignableFrom(type)) {
+      Map map = createMap(type);
+      return provideMapValues(map, member, typeLiteral, filter);
+    }
+    else {
+      return provideSingleValue(member, type, annotation, filter);
+    }
+  }
+
+  /**
+   * Returns a new filter on the given member to respect the use of {@link Qualifier} annotations or
+   * annotations annotated with {@link Qualifier}
+   */
+  protected Predicate<Binding> createQualifierFilter(Member member) {
     Predicate<Binding> filter = null;
     if (member instanceof AnnotatedElement) {
       AnnotatedElement annotatedElement = (AnnotatedElement) member;
@@ -88,7 +114,7 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
       if (qualifier != null) {
         final String expectedValue = qualifier.value();
         final boolean notEmptyValue = Strings.isNotEmpty(expectedValue);
-        filter = new Predicate<Binding>() {
+        return new Predicate<Binding>() {
           public boolean matches(Binding binding) {
             String value = annotationName(binding);
 
@@ -109,35 +135,47 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
           }
         };
       }
-    }
-    if (filter == null) {
-      filter = new Predicate<Binding>() {
-        public boolean matches(Binding binding) {
-          return true;
-        }
 
-        @Override
-        public String toString() {
-          return "@Autowired";
+      // lets iterate through all of the annotations looking for a qualifier
+      Set<Annotation> qualifiedAnnotations = Sets.newHashSet();
+      Annotation[] annotations = annotatedElement.getAnnotations();
+      for (Annotation annotation : annotations) {
+        Class<? extends Annotation> annotationType = annotation.annotationType();
+        Qualifier qualified = annotationType.getAnnotation(Qualifier.class);
+        if (qualified != null) {
+          // we can only support qualified annotations which are also annotated with Guice's
+          // @BindingAnnotation
+          if (annotationType.getAnnotation(BindingAnnotation.class) != null) {
+            qualifiedAnnotations.add(annotation);
+          }
         }
-      };
-    }
+      }
+      int size = qualifiedAnnotations.size();
+      if (size == 1) {
+        final Annotation annotation = Iterables.getOnlyElement(qualifiedAnnotations);
+        return new Predicate<Binding>() {
+          public boolean matches(Binding binding) {
+            Annotation actualAnnotation = binding.getKey().getAnnotation();
+            return actualAnnotation != null && actualAnnotation.equals(annotation);
+          }
 
-    Class<?> type = typeLiteral.getRawType();
-    if (type.isArray()) {
-      return provideArrayValue(member, typeLiteral, memberType, filter);
+          @Override
+          public String toString() {
+            return "@Autowired " + annotation;
+          }
+        };
+      }
     }
-    else if (Collection.class.isAssignableFrom(type)) {
-      Collection collection = createCollection(type);
-      return provideCollectionValues(collection, member, typeLiteral, filter);
-    }
-    else if (Map.class.isAssignableFrom(type)) {
-      Map map = createMap(type);
-      return provideMapValues(map, member, typeLiteral, filter);
-    }
-    else {
-      return provideSingleValue(member, type, annotation, filter);
-    }
+    return new Predicate<Binding>() {
+      public boolean matches(Binding binding) {
+        return true;
+      }
+
+      @Override
+      public String toString() {
+        return "@Autowired";
+      }
+    };
   }
 
   protected Object provideSingleValue(Member member, Class<?> type, Autowired annotation,
@@ -151,7 +189,16 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
     else if (size == 0) {
       // should we at least try and create one
       try {
-        return injector.getInstance(type);
+        Binding<?> binding = injector.getBinding(type);
+        if (filter.matches(binding)) {
+          return binding.getProvider().get();
+        }
+        else {
+          if (annotation.required()) {
+            throw new ProvisionException("Could not find required binding for " + filter + " when injecting " + member);
+          }
+          return null;
+        }
       }
       catch (Exception e) {
         // TODO should we log the warning that we can't resolve this?
