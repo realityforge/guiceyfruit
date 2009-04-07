@@ -57,4 +57,21 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <!--
+              I think this is by design see the issue
+              http://code.google.com/p/guiceyfruit/issues/detail?id=4
+            -->
+            <exclude>**/ResourceWithParentInjectorTest.*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
 </project>
