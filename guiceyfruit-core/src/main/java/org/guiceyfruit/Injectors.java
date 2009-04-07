@@ -52,7 +52,6 @@ import org.guiceyfruit.support.Closer;
 import org.guiceyfruit.support.Closers;
 import org.guiceyfruit.support.CompositeCloser;
 import org.guiceyfruit.support.HasScopeAnnotation;
-import org.guiceyfruit.support.PreDestroyer;
 import org.guiceyfruit.support.internal.CloseErrorsImpl;
 
 /** @version $Revision: 1.1 $ */
@@ -261,13 +260,16 @@ public class Injectors {
     return (Module) type.newInstance();
   }
 
-  /**
+/*
+  */
+/**
    * Closes the given scope on this injector
    *
    * @param injector the injector on which to close objects
    * @param scopeAnnotation the scope on which to close the objects
    * @throws CloseFailedException the exceptions caused if closing an object fails
    */
+/*
   public static void close(Injector injector, Annotation scopeAnnotation)
       throws CloseFailedException {
     Key<PreDestroyer> key = Key.get(PreDestroyer.class, scopeAnnotation);
@@ -276,6 +278,7 @@ public class Injectors {
       destroyer.close();
     }
   }
+*/
 
   /**
    * Closes any singleton objects in the injector using the currently registered {@link Closer}
