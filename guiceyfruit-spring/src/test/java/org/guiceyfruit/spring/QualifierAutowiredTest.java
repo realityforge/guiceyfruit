@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
  * @author Mark Fisher
  * @author Juergen Hoeller
  * @author Chris Beams
+ * 
  * @version $Revision: 1.1 $
  */
 public class QualifierAutowiredTest extends TestCase {
@@ -415,203 +416,154 @@ public class QualifierAutowiredTest extends TestCase {
     assertEquals(JUERGEN, bean.getPerson().getName());
   }
 
-  /*
-@Test
-public void testAutowiredFieldResolvesQualifiedCandidateWithDefaultValueAndNoValueOnBeanDefinition() {
-  GenericApplicationContext context = new GenericApplicationContext();
-  ConstructorArgumentValues cavs1 = new ConstructorArgumentValues();
-  cavs1.addGenericArgumentValue(JUERGEN);
-  RootBeanDefinition person1 = new RootBeanDefinition(Person.class, cavs1, null);
-  // qualifier added, but includes no value
-  person1.addQualifier(new AutowireCandidateQualifier(TestQualifierWithDefaultValue.class));
-  ConstructorArgumentValues cavs2 = new ConstructorArgumentValues();
-  cavs2.addGenericArgumentValue(MARK);
-  RootBeanDefinition person2 = new RootBeanDefinition(Person.class, cavs2, null);
-  context.registerBeanDefinition(JUERGEN, person1);
-  context.registerBeanDefinition(MARK, person2);
-  context.registerBeanDefinition("autowired",
-      new RootBeanDefinition(QualifiedFieldWithDefaultValueTestBean.class));
-  AnnotationConfigUtils.registerAnnotationConfigProcessors(context);
-  context.refresh();
-  QualifiedFieldWithDefaultValueTestBean bean = (QualifiedFieldWithDefaultValueTestBean) context
-      .getBean("autowired");
-  assertEquals(JUERGEN, bean.getPerson().getName());
-}
+  public void testAutowiredFieldResolvesQualifiedCandidateWithDefaultValueAndNoValueOnBeanDefinition() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
+      @Provides
+      @TestQualifierWithDefaultValue
+      public Person createJuergen() {
+        return new Person(JUERGEN);
+      }
 
-@Test
-public void testAutowiredFieldDoesNotResolveCandidateWithDefaultValueAndConflictingValueOnBeanDefinition() {
-  GenericApplicationContext context = new GenericApplicationContext();
-  ConstructorArgumentValues cavs1 = new ConstructorArgumentValues();
-  cavs1.addGenericArgumentValue(JUERGEN);
-  RootBeanDefinition person1 = new RootBeanDefinition(Person.class, cavs1, null);
-  // qualifier added, and non-default value specified
-  person1.addQualifier(
-      new AutowireCandidateQualifier(TestQualifierWithDefaultValue.class, "not the default"));
-  ConstructorArgumentValues cavs2 = new ConstructorArgumentValues();
-  cavs2.addGenericArgumentValue(MARK);
-  RootBeanDefinition person2 = new RootBeanDefinition(Person.class, cavs2, null);
-  context.registerBeanDefinition(JUERGEN, person1);
-  context.registerBeanDefinition(MARK, person2);
-  context.registerBeanDefinition("autowired",
-      new RootBeanDefinition(QualifiedFieldWithDefaultValueTestBean.class));
-  AnnotationConfigUtils.registerAnnotationConfigProcessors(context);
-  try {
-    context.refresh();
-    fail("expected BeanCreationException");
+      @Provides
+      @Named(MARK)
+      public Person createMark() {
+        return new Person(MARK);
+      }
+    });
+    QualifiedFieldWithDefaultValueTestBean bean = injector
+        .getInstance(QualifiedFieldWithDefaultValueTestBean.class);
+    assertEquals(JUERGEN, bean.getPerson().getName());
   }
-  catch (BeanCreationException e) {
-    assertTrue(e.getRootCause() instanceof NoSuchBeanDefinitionException);
-    assertEquals("autowired", e.getBeanName());
+
+  public void testAutowiredFieldDoesNotResolveCandidateWithDefaultValueAndConflictingValueOnBeanDefinition() {
+    try {
+      Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
+        @Provides
+        @TestQualifierWithDefaultValue("not the default")
+        public Person createJuergen() {
+          return new Person(JUERGEN);
+        }
+
+        @Provides
+        @Named(MARK)
+        public Person createMark() {
+          return new Person(MARK);
+        }
+      });
+      QualifiedFieldWithDefaultValueTestBean bean = injector
+          .getInstance(QualifiedFieldWithDefaultValueTestBean.class);
+      fail("expected failure creating " + bean);
+    }
+    catch (ProvisionException e) {
+      // expected
+    }
   }
-}
+  public void testAutowiredFieldResolvesWithDefaultValueAndExplicitDefaultValueOnBeanDefinition() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
+      @Provides
+      @TestQualifierWithDefaultValue("default")
+      public Person createJuergen() {
+        return new Person(JUERGEN);
+      }
 
-@Test
-public void testAutowiredFieldResolvesWithDefaultValueAndExplicitDefaultValueOnBeanDefinition() {
-  GenericApplicationContext context = new GenericApplicationContext();
-  ConstructorArgumentValues cavs1 = new ConstructorArgumentValues();
-  cavs1.addGenericArgumentValue(JUERGEN);
-  RootBeanDefinition person1 = new RootBeanDefinition(Person.class, cavs1, null);
-  // qualifier added, and value matches the default
-  person1.addQualifier(
-      new AutowireCandidateQualifier(TestQualifierWithDefaultValue.class, "default"));
-  ConstructorArgumentValues cavs2 = new ConstructorArgumentValues();
-  cavs2.addGenericArgumentValue(MARK);
-  RootBeanDefinition person2 = new RootBeanDefinition(Person.class, cavs2, null);
-  context.registerBeanDefinition(JUERGEN, person1);
-  context.registerBeanDefinition(MARK, person2);
-  context.registerBeanDefinition("autowired",
-      new RootBeanDefinition(QualifiedFieldWithDefaultValueTestBean.class));
-  AnnotationConfigUtils.registerAnnotationConfigProcessors(context);
-  context.refresh();
-  QualifiedFieldWithDefaultValueTestBean bean = (QualifiedFieldWithDefaultValueTestBean) context
-      .getBean("autowired");
-  assertEquals(JUERGEN, bean.getPerson().getName());
-}
-
-@Test
-public void testAutowiredFieldResolvesWithMultipleQualifierValues() {
-  GenericApplicationContext context = new GenericApplicationContext();
-  ConstructorArgumentValues cavs1 = new ConstructorArgumentValues();
-  cavs1.addGenericArgumentValue(JUERGEN);
-  RootBeanDefinition person1 = new RootBeanDefinition(Person.class, cavs1, null);
-  AutowireCandidateQualifier qualifier = new AutowireCandidateQualifier(
-      TestQualifierWithMultipleAttributes.class);
-  qualifier.setAttribute("number", 456);
-  person1.addQualifier(qualifier);
-  ConstructorArgumentValues cavs2 = new ConstructorArgumentValues();
-  cavs2.addGenericArgumentValue(MARK);
-  RootBeanDefinition person2 = new RootBeanDefinition(Person.class, cavs2, null);
-  AutowireCandidateQualifier qualifier2 = new AutowireCandidateQualifier(
-      TestQualifierWithMultipleAttributes.class);
-  qualifier2.setAttribute("number", 123);
-  person2.addQualifier(qualifier2);
-  context.registerBeanDefinition(JUERGEN, person1);
-  context.registerBeanDefinition(MARK, person2);
-  context.registerBeanDefinition("autowired",
-      new RootBeanDefinition(QualifiedFieldWithMultipleAttributesTestBean.class));
-  AnnotationConfigUtils.registerAnnotationConfigProcessors(context);
-  context.refresh();
-  QualifiedFieldWithMultipleAttributesTestBean bean
-      = (QualifiedFieldWithMultipleAttributesTestBean) context.getBean("autowired");
-  assertEquals(MARK, bean.getPerson().getName());
-}
-
-@Test
-public void testAutowiredFieldDoesNotResolveWithMultipleQualifierValuesAndConflictingDefaultValue() {
-  GenericApplicationContext context = new GenericApplicationContext();
-  ConstructorArgumentValues cavs1 = new ConstructorArgumentValues();
-  cavs1.addGenericArgumentValue(JUERGEN);
-  RootBeanDefinition person1 = new RootBeanDefinition(Person.class, cavs1, null);
-  AutowireCandidateQualifier qualifier = new AutowireCandidateQualifier(
-      TestQualifierWithMultipleAttributes.class);
-  qualifier.setAttribute("number", 456);
-  person1.addQualifier(qualifier);
-  ConstructorArgumentValues cavs2 = new ConstructorArgumentValues();
-  cavs2.addGenericArgumentValue(MARK);
-  RootBeanDefinition person2 = new RootBeanDefinition(Person.class, cavs2, null);
-  AutowireCandidateQualifier qualifier2 = new AutowireCandidateQualifier(
-      TestQualifierWithMultipleAttributes.class);
-  qualifier2.setAttribute("number", 123);
-  qualifier2.setAttribute("value", "not the default");
-  person2.addQualifier(qualifier2);
-  context.registerBeanDefinition(JUERGEN, person1);
-  context.registerBeanDefinition(MARK, person2);
-  context.registerBeanDefinition("autowired",
-      new RootBeanDefinition(QualifiedFieldWithMultipleAttributesTestBean.class));
-  AnnotationConfigUtils.registerAnnotationConfigProcessors(context);
-  try {
-    context.refresh();
-    fail("expected BeanCreationException");
+      @Provides
+      @Named(MARK)
+      public Person createMark() {
+        return new Person(MARK);
+      }
+    });
+    QualifiedFieldWithDefaultValueTestBean bean = injector
+        .getInstance(QualifiedFieldWithDefaultValueTestBean.class);
+    assertEquals(JUERGEN, bean.getPerson().getName());
   }
-  catch (BeanCreationException e) {
-    assertTrue(e.getRootCause() instanceof NoSuchBeanDefinitionException);
-    assertEquals("autowired", e.getBeanName());
-  }
-}
 
-@Test
-public void testAutowiredFieldResolvesWithMultipleQualifierValuesAndExplicitDefaultValue() {
-  GenericApplicationContext context = new GenericApplicationContext();
-  ConstructorArgumentValues cavs1 = new ConstructorArgumentValues();
-  cavs1.addGenericArgumentValue(JUERGEN);
-  RootBeanDefinition person1 = new RootBeanDefinition(Person.class, cavs1, null);
-  AutowireCandidateQualifier qualifier = new AutowireCandidateQualifier(
-      TestQualifierWithMultipleAttributes.class);
-  qualifier.setAttribute("number", 456);
-  person1.addQualifier(qualifier);
-  ConstructorArgumentValues cavs2 = new ConstructorArgumentValues();
-  cavs2.addGenericArgumentValue(MARK);
-  RootBeanDefinition person2 = new RootBeanDefinition(Person.class, cavs2, null);
-  AutowireCandidateQualifier qualifier2 = new AutowireCandidateQualifier(
-      TestQualifierWithMultipleAttributes.class);
-  qualifier2.setAttribute("number", 123);
-  qualifier2.setAttribute("value", "default");
-  person2.addQualifier(qualifier2);
-  context.registerBeanDefinition(JUERGEN, person1);
-  context.registerBeanDefinition(MARK, person2);
-  context.registerBeanDefinition("autowired",
-      new RootBeanDefinition(QualifiedFieldWithMultipleAttributesTestBean.class));
-  AnnotationConfigUtils.registerAnnotationConfigProcessors(context);
-  context.refresh();
-  QualifiedFieldWithMultipleAttributesTestBean bean
-      = (QualifiedFieldWithMultipleAttributesTestBean) context.getBean("autowired");
-  assertEquals(MARK, bean.getPerson().getName());
-}
+  public void testAutowiredFieldResolvesWithMultipleQualifierValues() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
+      @Provides
+      @TestQualifierWithMultipleAttributes(number = 456)
+      public Person createJuergen() {
+        return new Person(JUERGEN);
+      }
 
-@Test
-public void testAutowiredFieldDoesNotResolveWithMultipleQualifierValuesAndMultipleMatchingCandidates() {
-  GenericApplicationContext context = new GenericApplicationContext();
-  ConstructorArgumentValues cavs1 = new ConstructorArgumentValues();
-  cavs1.addGenericArgumentValue(JUERGEN);
-  RootBeanDefinition person1 = new RootBeanDefinition(Person.class, cavs1, null);
-  AutowireCandidateQualifier qualifier = new AutowireCandidateQualifier(
-      TestQualifierWithMultipleAttributes.class);
-  qualifier.setAttribute("number", 123);
-  person1.addQualifier(qualifier);
-  ConstructorArgumentValues cavs2 = new ConstructorArgumentValues();
-  cavs2.addGenericArgumentValue(MARK);
-  RootBeanDefinition person2 = new RootBeanDefinition(Person.class, cavs2, null);
-  AutowireCandidateQualifier qualifier2 = new AutowireCandidateQualifier(
-      TestQualifierWithMultipleAttributes.class);
-  qualifier2.setAttribute("number", 123);
-  qualifier2.setAttribute("value", "default");
-  person2.addQualifier(qualifier2);
-  context.registerBeanDefinition(JUERGEN, person1);
-  context.registerBeanDefinition(MARK, person2);
-  context.registerBeanDefinition("autowired",
-      new RootBeanDefinition(QualifiedFieldWithMultipleAttributesTestBean.class));
-  AnnotationConfigUtils.registerAnnotationConfigProcessors(context);
-  try {
-    context.refresh();
-    fail("expected BeanCreationException");
+      @Provides
+      @TestQualifierWithMultipleAttributes(number = 123)
+      public Person createMark() {
+        return new Person(MARK);
+      }
+    });
+    QualifiedFieldWithMultipleAttributesTestBean bean = injector
+        .getInstance(QualifiedFieldWithMultipleAttributesTestBean.class);
+    assertEquals(MARK, bean.getPerson().getName());
   }
-  catch (BeanCreationException e) {
-    assertTrue(e.getRootCause() instanceof NoSuchBeanDefinitionException);
-    assertEquals("autowired", e.getBeanName());
-  }
-}
 
-*/
+  public void testAutowiredFieldDoesNotResolveWithMultipleQualifierValuesAndConflictingDefaultValue() {
+    try {
+      Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
+        @Provides
+        @TestQualifierWithMultipleAttributes(number = 456)
+        public Person createJuergen() {
+          return new Person(JUERGEN);
+        }
+
+        @Provides
+        @TestQualifierWithMultipleAttributes(number = 123, value = "not the default")
+        public Person createMark() {
+          return new Person(MARK);
+        }
+      });
+      QualifiedFieldWithMultipleAttributesTestBean bean = injector
+          .getInstance(QualifiedFieldWithMultipleAttributesTestBean.class);
+      fail("expected failure creating " + bean);
+    }
+    catch (ProvisionException e) {
+      // expected
+    }
+  }
+
+  public void testAutowiredFieldResolvesWithMultipleQualifierValuesAndExplicitDefaultValue() {
+    Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
+      @Provides
+      @TestQualifierWithMultipleAttributes(number = 456)
+      public Person createJuergen() {
+        return new Person(JUERGEN);
+      }
+
+      @Provides
+      @TestQualifierWithMultipleAttributes(number = 123, value = "default")
+      public Person createMark() {
+        return new Person(MARK);
+      }
+    });
+    QualifiedFieldWithMultipleAttributesTestBean bean = injector
+        .getInstance(QualifiedFieldWithMultipleAttributesTestBean.class);
+    assertEquals(MARK, bean.getPerson().getName());
+  }
+
+
+  public void testAutowiredFieldDoesNotResolveWithMultipleQualifierValuesAndMultipleMatchingCandidates() {
+    try {
+      Injector injector = SpringModule.createInjector(new GuiceyFruitModule() {
+        @Provides
+        @TestQualifierWithMultipleAttributes(number = 123)
+        public Person createJuergen() {
+          return new Person(JUERGEN);
+        }
+
+        @Provides
+        @TestQualifierWithMultipleAttributes(number = 123, value = "default")
+        public Person createMark() {
+          return new Person(MARK);
+        }
+      });
+      QualifiedFieldWithMultipleAttributesTestBean bean = injector
+          .getInstance(QualifiedFieldWithMultipleAttributesTestBean.class);
+      fail("expected failure creating " + bean);
+    }
+    catch (CreationException e) {
+      // expected
+    }
+  }
+
 
   private static class QualifiedFieldTestBean {
 
@@ -732,7 +684,7 @@ public void testAutowiredFieldDoesNotResolveWithMultipleQualifierValuesAndMultip
   public static @interface TestQualifier {
   }
 
-  @Target(ElementType.FIELD)
+  @Target({ ElementType.FIELD, ElementType.METHOD })
   @Retention(RetentionPolicy.RUNTIME)
   @Qualifier
   @BindingAnnotation
@@ -742,7 +694,7 @@ public void testAutowiredFieldDoesNotResolveWithMultipleQualifierValuesAndMultip
 
   }
 
-  @Target(ElementType.FIELD)
+  @Target({ ElementType.FIELD, ElementType.METHOD })
   @Retention(RetentionPolicy.RUNTIME)
   @Qualifier
   @BindingAnnotation
