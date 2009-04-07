@@ -36,19 +36,12 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-        <include>org.guiceyfruit:guice-core</include>
-        <include>org.guiceyfruit:guice-servlet</include>
-        <include>org.guiceyfruit:guice-spring</include>
-        <include>org.guiceyfruit:guice-assistedinject</include>
-        <include>org.guiceyfruit:guice-jsr250</include>
-        <include>org.guiceyfruit:guice-multibindings</include>
-        <include>org.guiceyfruit:guice-throwingproviders</include>
-        <include>org.guiceyfruit:guice-struts2-plugin</include>
         <include>org.guiceyfruit:guiceyfruit-core</include>
         <include>org.guiceyfruit:guiceyfruit-junit3</include>
         <include>org.guiceyfruit:guiceyfruit-junit4</include>
         <include>org.guiceyfruit:guiceyfruit-testng</include>
-        <include>org.guiceyfruit:guiceyfruit-spring-converter</include>        
+        <include>org.guiceyfruit:guiceyfruit-spring</include>
+        <include>org.guiceyfruit:guiceyfruit-spring-converter</include>
         <include>commons-logging:commons-logging</include>
         <include>com.google.code.google-collections:google-collect</include>
         <include>cglib:cglib</include>
