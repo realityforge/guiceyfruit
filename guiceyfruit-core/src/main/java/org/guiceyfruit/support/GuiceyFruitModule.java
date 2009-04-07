@@ -23,13 +23,13 @@ import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.internal.Lists;
 import com.google.inject.internal.Maps;
 import com.google.inject.internal.Sets;
 import com.google.inject.matcher.AbstractMatcher;
 import static com.google.inject.matcher.Matchers.any;
+import com.google.inject.name.Names;
 import com.google.inject.spi.InjectableType;
 import com.google.inject.spi.InjectableType.Encounter;
 import com.google.inject.spi.InjectableType.Listener;
@@ -174,8 +174,8 @@ public abstract class GuiceyFruitModule extends AbstractModule {
    * instantiated and injected by guice
    * @param <A> the annotation type used as the injection point
    */
-  protected <A extends Annotation> void bindAnnotationInjector( Class<A> annotationType,
-       Key<? extends AnnotationMemberProvider> annotationMemberProviderKey) {
+  protected <A extends Annotation> void bindAnnotationInjector(Class<A> annotationType,
+      Key<? extends AnnotationMemberProvider> annotationMemberProviderKey) {
 
     bindAnnotationInjector(annotationType, encounterProvider(annotationMemberProviderKey));
   }
@@ -186,8 +186,8 @@ public abstract class GuiceyFruitModule extends AbstractModule {
    * will be injected by Guice after the constructor and @Inject have been processed.
    *
    * @param annotationType the annotation class used to define the injection point
-   * @param annotationMemberProvider the annotation member provider which can be
-   * instantiated and injected by guice
+   * @param annotationMemberProvider the annotation member provider which can be instantiated and
+   * injected by guice
    * @param <A> the annotation type used as the injection point
    */
   protected <A extends Annotation> void bindAnnotationInjector(Class<A> annotationType,
@@ -276,7 +276,8 @@ public abstract class GuiceyFruitModule extends AbstractModule {
 
                 // if we have a null value then assume the injection point cannot be satisfied
                 // which is the spring @Autowired way of doing things
-                if (value == null && !provider.isNullParameterAllowed(annotation, method, paramType, i)) {
+                if (value == null && !provider
+                    .isNullParameterAllowed(annotation, method, paramType, i)) {
                   return;
                 }
                 values[i] = value;
@@ -366,35 +367,37 @@ public abstract class GuiceyFruitModule extends AbstractModule {
   }
 
   /**
-       * A helper method to bind the given type with the binding annotation.
+   * A helper method to bind the given type with the binding annotation.
    *
-   * This allows you to replace this code
-   * <code>
-   * bind(Key.get(MyType.class, SomeAnnotation))
+   * This allows you to replace this code <code> bind(Key.get(MyType.class, SomeAnnotation.class))
    * </code>
    *
-   * with this
-   * <code>
-   * bind(KMyType.class, SomeAnnotation)
+   * with this <code> bind(KMyType.class, SomeAnnotation.class) </code>
+   */
+  protected <T> LinkedBindingBuilder<T> bind(Class<T> type, Class<? extends Annotation> annotationType) {
+    return bind(Key.get(type, annotationType));
+  }
+
+  /**
+   * A helper method to bind the given type with the binding annotation.
+   *
+   * This allows you to replace this code <code> bind(Key.get(MyType.class, someAnnotation))
    * </code>
+   *
+   * with this <code> bind(KMyType.class, someAnnotation) </code>
    */
   protected <T> LinkedBindingBuilder<T> bind(Class<T> type, Annotation annotation) {
     return bind(Key.get(type, annotation));
   }
 
   /**
-   * A helper method to bind the given type with the {@link com.google.inject.name.Named} annotation of the given
-   * text value.
+   * A helper method to bind the given type with the {@link com.google.inject.name.Named} annotation
+   * of the given text value.
    *
-   * This allows you to replace this code
-   * <code>
-   * bind(Key.get(MyType.class, Names.named("myName")))
+   * This allows you to replace this code <code> bind(Key.get(MyType.class, Names.named("myName")))
    * </code>
    *
-   * with this
-   * <code>
-   * bind(KMyType.class, "myName")
-   * </code>
+   * with this <code> bind(KMyType.class, "myName") </code>
    */
   protected <T> LinkedBindingBuilder<T> bind(Class<T> type, String namedText) {
     return bind(type, Names.named(namedText));

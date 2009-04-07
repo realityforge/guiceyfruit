@@ -25,6 +25,7 @@ import com.google.inject.Key;
 import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.Iterables;
+import com.google.inject.internal.Lists;
 import com.google.inject.internal.Preconditions;
 import com.google.inject.name.Named;
 import java.lang.annotation.Annotation;
@@ -40,9 +41,14 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import org.guiceyfruit.Injectors;
 import org.guiceyfruit.support.AnnotationMemberProviderSupport;
@@ -89,45 +95,14 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
         Collection collection = createCollection(type);
         return provideCollectionValues(collection, member, typeLiteral);
       }
+      else if (Map.class.isAssignableFrom(type)) {
+        Map map = createMap(type);
+        return provideMapValues(map, member, typeLiteral);
+      }
       else {
         return provideSingleValue(member, type, annotation);
       }
     }
-  }
-
-  protected Collection createCollection(Class<?> type) {
-    if (!Modifier.isAbstract(type.getModifiers()) && !type.isInterface()) {
-      // if its a concrete class with no args make one
-      Constructor<?> constructor = null;
-      try {
-        constructor = type.getConstructor();
-      }
-      catch (NoSuchMethodException e) {
-        // ignore
-      }
-      if (constructor != null) {
-        try {
-          return (Collection) constructor.newInstance();
-        }
-        catch (InstantiationException e) {
-          throw new ProvisionException("Failed to instantiate " + constructor, e);
-        }
-        catch (IllegalAccessException e) {
-          throw new ProvisionException("Failed to instantiate " + constructor, e);
-        }
-        catch (InvocationTargetException ie) {
-          Throwable e = ie.getTargetException();
-          throw new ProvisionException("Failed to instantiate " + constructor, e);
-        }
-      }
-    }
-    if (type.isAssignableFrom(SortedSet.class)) {
-      return new TreeSet();
-    }
-    else if (type.isAssignableFrom(Set.class)) {
-      return new HashSet();
-    }
-    return new ArrayList();
   }
 
   protected Object provideSingleValue(Member member, Class<?> type, Autowired annotation) {
@@ -158,9 +133,18 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
     }
     else {
       throw new ProvisionException(
-          "Too many bindings " + size + " found for " + type.getCanonicalName() + " when injecting "
-              + member);
+          "Too many bindings " + size + " found for " + type.getCanonicalName() + " with keys "
+              + keys(set) + " when injecting " + member);
     }
+  }
+
+  /** Returns the keys used in the given bindings */
+  public static List<Key<?>> keys(Iterable<Binding<?>> bindings) {
+    List<Key<?>> answer = Lists.newArrayList();
+    for (Binding<?> binding : bindings) {
+      answer.add(binding.getKey());
+    }
+    return answer;
   }
 
   protected Object provideArrayValue(Member member, TypeLiteral<?> type, Class<?> memberType) {
@@ -180,7 +164,8 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
     return array;
   }
 
-  private Collection provideCollectionValues(Collection collection, Member member, TypeLiteral<?> type) {
+  private Collection provideCollectionValues(Collection collection, Member member,
+      TypeLiteral<?> type) {
     Type typeInstance = type.getType();
     if (typeInstance instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) typeInstance;
@@ -191,6 +176,10 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
           Class<?> componentType = (Class<?>) argument;
           if (componentType != Object.class) {
             Set<Binding<?>> set = getSortedBindings(componentType);
+            if (set.isEmpty()) {
+              // TODO return null or empty collection if nothing to inject?
+              return null;
+            }
             for (Binding<?> binding : set) {
               Object value = binding.getProvider().get();
               collection.add(value);
@@ -200,22 +189,108 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
         }
       }
     }
-/*
-    TypeVariable<? extends Class<?>>[] typeVariables = type.getRawType().getTypeParameters();
-    if (typeVariables != null && typeVariables.length == 1) {
-      TypeVariable<? extends Class<?>> typeVariable = typeVariables[0];
-      Class<?> componentType = typeVariable.getGenericDeclaration();
-      if (componentType != Object.class) {
-        Set<Binding<?>> set = getSortedBindings(componentType);
-        for (Binding<?> binding : set) {
-          Object value = binding.getProvider().get();
-          collection.add(value);
+    // TODO return null or empty collection if nothing to inject?
+    return null;
+  }
+
+  protected Map provideMapValues(Map map, Member member, TypeLiteral<?> type) {
+    Type typeInstance = type.getType();
+    if (typeInstance instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) typeInstance;
+      Type[] arguments = parameterizedType.getActualTypeArguments();
+      if (arguments.length == 2) {
+        Type key = arguments[0];
+        if (key instanceof Class) {
+          Class<?> keyType = (Class<?>) key;
+          if (keyType != Object.class && keyType != String.class) {
+            throw new ProvisionException(
+                "Cannot inject Map instances with a key type of " + keyType.getName() + " for "
+                    + member);
+          }
+          Type valueType = arguments[1];
+          if (valueType instanceof Class) {
+            Class<?> componentType = (Class<?>) valueType;
+            if (componentType != Object.class) {
+              Set<Binding<?>> set = getSortedBindings(componentType);
+              if (set.isEmpty()) {
+                // TODO return null or empty collection if nothing to inject?
+                return null;
+              }
+              for (Binding<?> binding : set) {
+                Object keyValue = binding.getKey().toString();
+                Object value = binding.getProvider().get();
+                map.put(keyValue, value);
+              }
+              return map;
+            }
+          }
         }
-        return collection;
       }
     }
-*/
+    // TODO return null or empty collection if nothing to inject?
     return null;
+  }
+
+  protected Map createMap(Class<?> type) {
+    Object answer = tryCreateInstance(type);
+    if (answer instanceof Map) {
+      return (Map) answer;
+    }
+    else if (SortedMap.class.isAssignableFrom(type)) {
+      return new TreeMap();
+    }
+    return new HashMap();
+  }
+
+  protected Collection createCollection(Class<?> type) {
+    Object answer = tryCreateInstance(type);
+    if (answer instanceof Collection) {
+      return (Collection) answer;
+    }
+    else if (SortedSet.class.isAssignableFrom(type)) {
+      return new TreeSet();
+    }
+    else if (Set.class.isAssignableFrom(type)) {
+      return new HashSet();
+    }
+    return new ArrayList();
+  }
+
+  /**
+   * Returns a new instance of the given class if its a public non abstract class which has a public
+   * zero argument constructor otherwise returns null
+   */
+  protected Object tryCreateInstance(Class<?> type) {
+    Object answer = null;
+    int modifiers = type.getModifiers();
+    if (!Modifier.isAbstract(modifiers) && Modifier.isPublic(modifiers) && !type.isInterface()) {
+      // if its a concrete class with no args make one
+      Constructor<?> constructor = null;
+      try {
+        constructor = type.getConstructor();
+      }
+      catch (NoSuchMethodException e) {
+        // ignore
+      }
+      if (constructor != null) {
+        if (Modifier.isPublic(constructor.getModifiers())) {
+          try {
+            answer = constructor.newInstance();
+          }
+          catch (InstantiationException e) {
+            throw new ProvisionException("Failed to instantiate " + constructor, e);
+          }
+          catch (IllegalAccessException e) {
+            throw new ProvisionException("Failed to instantiate " + constructor, e);
+          }
+          catch (InvocationTargetException ie) {
+            Throwable e = ie.getTargetException();
+            throw new ProvisionException("Failed to instantiate " + constructor, e);
+          }
+        }
+      }
+    }
+    return answer;
   }
 
   protected Set<Binding<?>> getSortedBindings(Class<?> type) {
@@ -240,8 +315,26 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
         return answer;
       }
     });
-    answer.addAll(Injectors.getBindingsOf(injector, type));
+    Set<Binding<?>> bindings = Injectors.getBindingsOf(injector, type);
+    for (Binding<?> binding : bindings) {
+      if (isValidAutowireBinding(binding)) {
+        answer.add(binding);
+      }
+    }
     return answer;
+  }
+
+  protected boolean isValidAutowireBinding(Binding<?> binding) {
+    Key<?> key = binding.getKey();
+    Annotation annotation = key.getAnnotation();
+    if (annotation instanceof NoAutowire) {
+      return false;
+    }
+    Class<? extends Annotation> annotationType = key.getAnnotationType();
+    if (annotationType != null && NoAutowire.class.isAssignableFrom(annotationType)) {
+      return false;
+    }
+    return true;
   }
 
   private String annotationName(Binding<?> binding) {

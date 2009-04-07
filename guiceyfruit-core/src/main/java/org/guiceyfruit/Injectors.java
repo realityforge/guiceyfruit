@@ -95,6 +95,20 @@ public class Injectors {
   }
 
   /**
+   * Returns an instance of the given type with the {@link com.google.inject.name.Named}
+   * annotation value.
+   *
+   * This method allows you to switch this code
+   * <code>injector.getInstance(Key.get(type, Names.named(name)));</code>
+   *
+   * to the more concise
+   * <code>Injectors.getInstance(injector, type, name);</code>
+   */
+  public static <T> T getInstance(Injector injector, java.lang.Class<T> type, String name) {
+    return injector.getInstance(Key.get(type, Names.named(name)));
+  }
+
+  /**
    * Returns a collection of all instances of the given base type
    *
    * @param baseClass the base type of objects required
