@@ -426,6 +426,12 @@ public class AutowiredMemberProvider extends AnnotationMemberProviderSupport<Aut
         answer.add(binding);
       }
     }
+/*
+    if (answer.isEmpty() && bindings.size() == 1) {
+      // if we have no matches on the filter, but we have a single static value, lets return it
+      return bindings;
+    }
+*/
     return answer;
   }
 
