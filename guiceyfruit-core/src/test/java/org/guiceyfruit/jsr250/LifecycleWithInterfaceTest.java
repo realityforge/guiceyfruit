@@ -29,16 +29,16 @@ import org.guiceyfruit.Injectors;
 import org.guiceyfruit.support.CloseFailedException;
 
 /** @author james.strachan@gmail.com (James Strachan) */
-public class LifecycleTest extends TestCase {
+public class LifecycleWithInterfaceTest extends TestCase {
 
-  public void testBeanInitialised() throws CreationException, CloseFailedException {
+  public void testBeanLifecyclesWhenUsingInterfaceAsKey() throws CreationException, CloseFailedException {
     Injector injector = Guice.createInjector(new Jsr250Module(), new AbstractModule() {
       protected void configure() {
-        bind(MyBean.class).in(Singleton.class);
+        bind(MyInterface.class).to(MyBean.class).in(Singleton.class);
       }
     });
 
-    MyBean bean = injector.getInstance(MyBean.class);
+    MyBean bean = (MyBean) injector.getInstance(MyInterface.class);
     assertNotNull("Should have instantiated the bean", bean);
     assertTrue("The post construct lifecycle should have been invoked on bean", bean.postConstruct);
 
@@ -50,10 +50,43 @@ public class LifecycleTest extends TestCase {
     assertFalse("The pre destroy lifecycle not should have been invoked on bean", bean.preDestroy);
     Injectors.close(injector);
 
-      assertTrue("The pre destroy lifecycle should have been invoked on bean", bean.preDestroy);
+    assertTrue("The pre destroy lifecycle should have been invoked on bean", bean.preDestroy);
+
+    // if we look up a bean using the implementation type as the key then we're not a singleton any more
+    bean = injector.getInstance(MyBean.class);
+    assertFalse("The pre destroy lifecycle not should have been invoked on bean", bean.preDestroy);
   }
 
-  public static class MyBean {
+  public void testBeanLifecyclesWhenBindingImplementationAsSingleton() throws CreationException, CloseFailedException {
+    Injector injector = Guice.createInjector(new Jsr250Module(), new AbstractModule() {
+      protected void configure() {
+        bind(MyInterface.class).to(MyBean.class);
+        bind(MyBean.class).in(Singleton.class);
+      }
+    });
+
+    MyBean bean = (MyBean) injector.getInstance(MyInterface.class);
+    assertNotNull("Should have instantiated the bean", bean);
+    assertTrue("The post construct lifecycle should have been invoked on bean", bean.postConstruct);
+
+    AnotherBean another = bean.another;
+    assertNotNull("Should have instantiated the another", another);
+    assertTrue("The post construct lifecycle should have been invoked on another",
+        another.postConstruct);
+
+    assertFalse("The pre destroy lifecycle not should have been invoked on bean", bean.preDestroy);
+    Injectors.close(injector);
+
+    assertTrue("The pre destroy lifecycle should have been invoked on bean", bean.preDestroy);
+
+    bean = injector.getInstance(MyBean.class);
+    assertTrue("The pre destroy lifecycle not should have been invoked on bean", bean.preDestroy);
+  }
+
+  static interface MyInterface {
+  }
+
+  public static class MyBean implements MyInterface {
     @Inject
     public AnotherBean another;
 

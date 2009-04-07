@@ -314,14 +314,14 @@ public class Injectors {
       return;
     }
 
-    tryCloseJitBindings(closer, injector, scopeAnnotationToClose, errors);
-
     Set<Entry<Key<?>, Binding<?>>> entries = injector.getBindings().entrySet();
     for (Entry<Key<?>, Binding<?>> entry : entries) {
       Key<?> key = entry.getKey();
       Binding<?> binding = entry.getValue();
       closeBinding(key, binding, scopeAnnotationToClose, closer, errors);
     }
+    
+    tryCloseJitBindings(closer, injector, scopeAnnotationToClose, errors);
     errors.throwIfNecessary();
   }
 
