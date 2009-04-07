@@ -21,9 +21,7 @@ package org.guiceyfruit.spring;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.name.Names;
 import junit.framework.TestCase;
 import org.guiceyfruit.Configures;
 import org.guiceyfruit.spring.testbeans.IndexedTestBean;
@@ -75,14 +73,15 @@ public class AutowiredTest extends TestCase {
     final NestedTestBean ntb1 = new NestedTestBean("ntb1");
     final NestedTestBean ntb2 = new NestedTestBean("ntb2");
 
-    Injector injector = createInjector(new AbstractModule() {
+    Injector injector = createInjector(new GuiceyFruitModule() {
       protected void configure() {
         bind(TestBean.class).toInstance(tb);
         bind(IndexedTestBean.class).toInstance(itb);
 
-        bind(Key.get(NestedTestBean.class, Names.named("nestedTestBean1"))).toInstance(ntb1);
-        bind(Key.get(NestedTestBean.class, Names.named("nestedTestBean2"))).toInstance(ntb2);
+        bind(NestedTestBean.class, "nestedTestBean1").toInstance(ntb1);
+        bind(NestedTestBean.class, "nestedTestBean2").toInstance(ntb2);
       }
+
     });
     OptionalResourceInjectionBean bean = injector.getInstance(OptionalResourceInjectionBean.class);
     assertSame(tb, bean.getTestBean());
@@ -257,8 +256,8 @@ public class AutowiredTest extends TestCase {
         bind(TestBean.class).toInstance(tb);
         bind(IndexedTestBean.class).toInstance(itb);
 
-        bind(Key.get(NestedTestBean.class, Names.named("nestedTestBean1"))).toInstance(ntb1);
-        bind(Key.get(NestedTestBean.class, Names.named("nestedTestBean2"))).toInstance(ntb2);
+        bind(NestedTestBean.class, "nestedTestBean1").toInstance(ntb1);
+        bind(NestedTestBean.class, "nestedTestBean2").toInstance(ntb2);
       }
     });
 
@@ -295,7 +294,7 @@ public class AutowiredTest extends TestCase {
         bind(TestBean.class).toInstance(tb);
         bind(IndexedTestBean.class).toInstance(itb);
 
-        bind(Key.get(NestedTestBean.class, Names.named("nestedTestBean1"))).toInstance(ntb1);
+        bind(NestedTestBean.class, "nestedTestBean1").toInstance(ntb1);
       }
     });
 
@@ -718,9 +717,6 @@ public class AutowiredTest extends TestCase {
           bf.destroySingletons();
   }
 */
-
-
-
 
   // Purposely excluded tests so far
   //-------------------------------------------------------------------------

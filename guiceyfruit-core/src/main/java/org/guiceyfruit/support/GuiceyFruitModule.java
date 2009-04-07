@@ -23,6 +23,8 @@ import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.internal.Lists;
 import com.google.inject.internal.Maps;
 import com.google.inject.internal.Sets;
@@ -361,5 +363,40 @@ public abstract class GuiceyFruitModule extends AbstractModule {
    */
   protected <I> void checkInjectedValueType(Object value, Class<?> type, Encounter<I> encounter) {
     // TODO check the type
+  }
+
+  /**
+       * A helper method to bind the given type with the binding annotation.
+   *
+   * This allows you to replace this code
+   * <code>
+   * bind(Key.get(MyType.class, SomeAnnotation))
+   * </code>
+   *
+   * with this
+   * <code>
+   * bind(KMyType.class, SomeAnnotation)
+   * </code>
+   */
+  protected <T> LinkedBindingBuilder<T> bind(Class<T> type, Annotation annotation) {
+    return bind(Key.get(type, annotation));
+  }
+
+  /**
+   * A helper method to bind the given type with the {@link com.google.inject.name.Named} annotation of the given
+   * text value.
+   *
+   * This allows you to replace this code
+   * <code>
+   * bind(Key.get(MyType.class, Names.named("myName")))
+   * </code>
+   *
+   * with this
+   * <code>
+   * bind(KMyType.class, "myName")
+   * </code>
+   */
+  protected <T> LinkedBindingBuilder<T> bind(Class<T> type, String namedText) {
+    return bind(type, Names.named(namedText));
   }
 }
