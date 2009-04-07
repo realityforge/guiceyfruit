@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.spring;
+package org.guiceyfruit.spring.support;
 
 import com.google.inject.Binding;
 import com.google.inject.Inject;
@@ -51,6 +51,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.guiceyfruit.Injectors;
+import org.guiceyfruit.spring.NoAutowire;
 import org.guiceyfruit.support.AnnotationMemberProviderSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

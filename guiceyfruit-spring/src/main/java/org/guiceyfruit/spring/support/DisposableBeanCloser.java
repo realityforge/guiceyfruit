@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.guiceyfruit.spring;
+package org.guiceyfruit.spring.support;
 
 import org.guiceyfruit.support.Closer;
 import org.springframework.beans.factory.DisposableBean;
