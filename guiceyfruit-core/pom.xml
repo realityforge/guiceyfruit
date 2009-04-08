@@ -68,6 +68,11 @@
               http://code.google.com/p/guiceyfruit/issues/detail?id=4
             -->
             <exclude>**/ResourceWithParentInjectorTest.*</exclude>
+
+            <!--
+              This is not yet supported but would be an interesting approach
+              -->
+            <exclude>**/InjectionPointInjectTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>
