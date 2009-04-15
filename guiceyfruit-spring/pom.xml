@@ -7,9 +7,15 @@
     <version>2.0-SNAPSHOT</version>
   </parent>
   <artifactId>guiceyfruit-spring</artifactId>
-
+  <packaging>bundle</packaging>
   <name>GuiceyFruit :: Spring</name>
 
+  <properties>
+    <guiceyfruit.osgi.export.pkg>
+      org.guiceyfruit.spring.*
+    </guiceyfruit.osgi.export.pkg>
+  </properties>
+  
   <dependencies>
     <dependency>
       <groupId>${groupId}</groupId>

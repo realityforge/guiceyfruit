@@ -22,7 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.ops4j.pax.exam.CoreOptions.equinox;
+import static org.ops4j.pax.exam.CoreOptions.*;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import org.ops4j.pax.exam.Inject;
@@ -64,7 +64,9 @@ public class GuiceyFruitOSGiTest {
 
         // a maven dependency. This must be a bundle already.
         // TODO
-        // mavenBundle().groupId("org.guiceyfruit").artifactId("guiceyfruit-core").version("2.0-SNAPSHOT")
+        mavenBundle().groupId("org.guiceyfruit").artifactId("guiceyfruit-core").version("2.0-SNAPSHOT"),
+
+        //mavenBundle().groupId("org.guiceyfruit").artifactId("guiceyfruit-core"),
 
         equinox());
   }

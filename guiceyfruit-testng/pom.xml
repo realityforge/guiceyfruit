@@ -7,8 +7,14 @@
     <version>2.0-SNAPSHOT</version>
   </parent>
   <artifactId>guiceyfruit-testng</artifactId>
-
+  <packaging>bundle</packaging>
   <name>GuiceyFruit :: TestNG</name>
+
+  <properties>
+    <guiceyfruit.osgi.export.pkg>
+      org.guiceyfruit.testing.testng.*
+    </guiceyfruit.osgi.export.pkg>
+  </properties>
 
   <dependencies>
     <dependency>

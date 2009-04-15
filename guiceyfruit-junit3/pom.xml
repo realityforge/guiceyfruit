@@ -7,8 +7,14 @@
     <version>2.0-SNAPSHOT</version>
   </parent>
   <artifactId>guiceyfruit-junit3</artifactId>
-
+  <packaging>bundle</packaging>
   <name>GuiceyFruit :: JUnit3</name>
+
+  <properties>
+    <guiceyfruit.osgi.export.pkg>
+      org.guiceyfruit.testing.junit3.*
+    </guiceyfruit.osgi.export.pkg>
+  </properties>
 
   <dependencies>
     <dependency>
