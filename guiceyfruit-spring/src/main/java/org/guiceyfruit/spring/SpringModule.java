@@ -22,12 +22,12 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.ProvisionException;
+import com.google.inject.TypeLiteral;
 import com.google.inject.internal.Iterables;
 import com.google.inject.matcher.Matchers;
-import com.google.inject.spi.InjectableType;
-import com.google.inject.spi.InjectableType.Encounter;
-import com.google.inject.spi.InjectableType.Listener;
 import com.google.inject.spi.InjectionListener;
+import com.google.inject.spi.TypeListener;
+import com.google.inject.spi.TypeEncounter;
 import java.util.Arrays;
 import java.util.Collections;
 import org.guiceyfruit.jsr250.Jsr250Module;
@@ -61,11 +61,11 @@ public class SpringModule extends Jsr250Module {
     bindAnnotationInjector(Autowired.class, AutowiredMemberProvider.class);
 
     // TODO cannot use the matchers to perform subclass checks!
-    bindListener(Matchers.any(), new Listener() {
-      public <I> void hear(InjectableType<I> injectableType, Encounter<I> encounter) {
-        Class<? super I> type = injectableType.getType().getRawType();
+    bindListener(Matchers.any(), new TypeListener() {
+      public <I> void hear(TypeLiteral<I> injectableType, TypeEncounter<I> encounter) {
+        Class<? super I> type = injectableType.getRawType();
         if (InitializingBean.class.isAssignableFrom(type)) {
-          encounter.registerPostInjectListener(new InjectionListener<I>() {
+          encounter.register(new InjectionListener<I>() {
             public void afterInjection(I injectee) {
               if (injectee instanceof InitializingBean) {
                 InitializingBean initializingBean = (InitializingBean) injectee;

@@ -23,6 +23,7 @@ import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
+import com.google.inject.MembersInjector;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.internal.Lists;
 import com.google.inject.internal.Maps;
@@ -30,10 +31,9 @@ import com.google.inject.internal.Sets;
 import com.google.inject.matcher.AbstractMatcher;
 import static com.google.inject.matcher.Matchers.any;
 import com.google.inject.name.Names;
-import com.google.inject.spi.InjectableType;
-import com.google.inject.spi.InjectableType.Encounter;
-import com.google.inject.spi.InjectableType.Listener;
 import com.google.inject.spi.InjectionListener;
+import com.google.inject.spi.TypeListener;
+import com.google.inject.spi.TypeEncounter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -75,10 +75,10 @@ public abstract class GuiceyFruitModule extends AbstractModule {
           public boolean matches(TypeLiteral<?> typeLiteral) {
             return typeLiteral.getRawType().equals(paramType);
           }
-        }, new Listener() {
-          public <I> void hear(InjectableType<I> injectableType, Encounter<I> encounter) {
-            encounter.register(new InjectionListener<I>() {
-              public void afterInjection(I injectee) {
+        }, new TypeListener() {
+          public <I> void hear(TypeLiteral<I> injectableType, TypeEncounter<I> encounter) {
+            encounter.register(new MembersInjector<I>() {
+              public void injectMembers(I injectee) {
                 // lets invoke the configures method
                 try {
                   method.setAccessible(true);
@@ -133,16 +133,16 @@ public abstract class GuiceyFruitModule extends AbstractModule {
   private <A extends Annotation> void bindMethodHandler(final Class<A> annotationType,
       final EncounterProvider<MethodHandler> encounterProvider) {
 
-    bindListener(any(), new Listener() {
-      public <I> void hear(InjectableType<I> injectableType, Encounter<I> encounter) {
-        Class<? super I> type = injectableType.getType().getRawType();
+    bindListener(any(), new TypeListener() {
+      public <I> void hear(TypeLiteral<I> injectableType, TypeEncounter<I> encounter) {
+        Class<? super I> type = injectableType.getRawType();
         Method[] methods = type.getDeclaredMethods();
         for (final Method method : methods) {
           final A annotation = method.getAnnotation(annotationType);
           if (annotation != null) {
             final Provider<? extends MethodHandler> provider = encounterProvider.get(encounter);
 
-            encounter.registerPostInjectListener(new InjectionListener<I>() {
+            encounter.register(new InjectionListener<I>() {
               public void afterInjection(I injectee) {
 
                 MethodHandler methodHandler = provider.get();
@@ -215,15 +215,15 @@ public abstract class GuiceyFruitModule extends AbstractModule {
   private <A extends Annotation> void bindAnnotationInjector(final Class<A> annotationType,
       final EncounterProvider<AnnotationMemberProvider> memberProviderProvider) {
 
-    bindListener(any(), new Listener() {
+    bindListener(any(), new TypeListener() {
       Provider<? extends AnnotationMemberProvider> providerProvider;
 
-      public <I> void hear(InjectableType<I> injectableType, final Encounter<I> encounter) {
+      public <I> void hear(TypeLiteral<I> injectableType, TypeEncounter<I> encounter) {
 
         Set<Field> boundFields = Sets.newHashSet();
         Map<MethodKey, Method> boundMethods = Maps.newHashMap();
 
-        TypeLiteral<?> startType = injectableType.getType();
+        TypeLiteral<?> startType = injectableType;
         while (true) {
           Class<?> type = startType.getRawType();
           if (type == Object.class) {
@@ -254,7 +254,7 @@ public abstract class GuiceyFruitModule extends AbstractModule {
         }
       }
 
-      protected <I> void bindAnnotationInjectionToMember(final Encounter<I> encounter,
+      protected <I> void bindAnnotationInjectionToMember(final TypeEncounter<I> encounter,
           final TypeLiteral<?> type, final Method method) {
         // TODO lets exclude methods with @Inject?
         final A annotation = method.getAnnotation(annotationType);
@@ -263,8 +263,8 @@ public abstract class GuiceyFruitModule extends AbstractModule {
             providerProvider = memberProviderProvider.get(encounter);
           }
 
-          encounter.register(new InjectionListener<I>() {
-            public void afterInjection(I injectee) {
+          encounter.register(new MembersInjector<I>() {
+            public void injectMembers(I injectee) {
               AnnotationMemberProvider provider = providerProvider.get();
 
               int size = method.getParameterTypes().length;
@@ -300,7 +300,7 @@ public abstract class GuiceyFruitModule extends AbstractModule {
         }
       }
 
-      protected <I> void bindAnnotationInjectorToField(final Encounter<I> encounter,
+      protected <I> void bindAnnotationInjectorToField(final TypeEncounter<I> encounter,
           final TypeLiteral<?> type, final Field field) {
         // TODO lets exclude fields with @Inject?
         final A annotation = field.getAnnotation(annotationType);
@@ -362,7 +362,7 @@ public abstract class GuiceyFruitModule extends AbstractModule {
    * Returns true if the value to be injected is of the correct type otherwise an error is raised on
    * the encounter and false is returned
    */
-  protected <I> void checkInjectedValueType(Object value, Class<?> type, Encounter<I> encounter) {
+  protected <I> void checkInjectedValueType(Object value, Class<?> type, TypeEncounter<I> encounter) {
     // TODO check the type
   }
 
