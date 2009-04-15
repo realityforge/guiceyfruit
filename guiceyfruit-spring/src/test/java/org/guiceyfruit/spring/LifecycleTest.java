@@ -31,9 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 /** @author james.strachan@gmail.com (James Strachan) */
 public class LifecycleTest extends TestCase {
 
-  // TODO: fixme!!
-  public static final boolean preDestroySupported = true;
-
   public void testBeanInitialised() throws CreationException, CloseFailedException {
     Injector injector = Guice.createInjector(new SpringModule(), new AbstractModule() {
       protected void configure() {
@@ -53,9 +50,7 @@ public class LifecycleTest extends TestCase {
     assertFalse("The pre destroy lifecycle not should have been invoked on bean", bean.preDestroy);
     Injectors.close(injector);
 
-    if (preDestroySupported) {
-      assertTrue("The pre destroy lifecycle should have been invoked on bean", bean.preDestroy);
-    }
+    assertTrue("The pre destroy lifecycle should have been invoked on bean", bean.preDestroy);
   }
 
   static class MyBean implements InitializingBean, DisposableBean {
@@ -74,7 +69,7 @@ public class LifecycleTest extends TestCase {
     }
   }
 
-  static class AnotherBean  implements InitializingBean {
+  static class AnotherBean implements InitializingBean {
     public boolean postConstruct;
 
     public void afterPropertiesSet() throws Exception {
