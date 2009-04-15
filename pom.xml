@@ -12,6 +12,12 @@
     <!-- allow it to be overloaded to specify a test module to override -->
     <!-- see: http://code.google.com/p/guiceyfruit/wiki/Testing -->
     <org.guiceyfruit.modules />
+
+    <!--<guice-version>2.0-beta-6</guice-version>-->
+    <guice-version>2.0-SNAPSHOT</guice-version>
+    <!--
+    <version>2.0-beta-6</version>
+    -->
   </properties>
 
   <modules>

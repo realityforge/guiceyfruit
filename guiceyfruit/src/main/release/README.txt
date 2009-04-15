@@ -13,6 +13,9 @@ To help you get started, try the following links:-
 Getting Started
   http://code.google.com/p/guiceyfruit/
 
+Annotations Supported
+  http://code.google.com/p/guiceyfruit/wiki/Annotations
+
 Using Maven
   http://code.google.com/p/guiceyfruit/wiki/Maven
 

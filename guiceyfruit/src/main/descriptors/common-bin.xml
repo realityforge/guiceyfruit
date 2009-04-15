@@ -37,15 +37,22 @@
       <scope>runtime</scope>
       <includes>
         <include>org.guiceyfruit:guiceyfruit-core</include>
+        <include>org.guiceyfruit:guiceyfruit-jpa</include>
         <include>org.guiceyfruit:guiceyfruit-junit3</include>
         <include>org.guiceyfruit:guiceyfruit-junit4</include>
         <include>org.guiceyfruit:guiceyfruit-testng</include>
         <include>org.guiceyfruit:guiceyfruit-spring</include>
         <include>org.guiceyfruit:guiceyfruit-spring-converter</include>
         <include>commons-logging:commons-logging</include>
+        <include>org.guiceyfruit:guice-all</include>
+        <include>org.guiceyfruit:guice-servlet</include>
+        <include>javax.annotation:jsr250-api</include>
+        
+<!--
         <include>com.google.code.google-collections:google-collect</include>
         <include>cglib:cglib</include>
         <include>asm:asm</include>
+-->
         <include>aopalliance:aopalliance</include>
       </includes>
     </dependencySet>

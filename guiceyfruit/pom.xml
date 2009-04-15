@@ -28,6 +28,11 @@
       <groupId>org.guiceyfruit</groupId>
       <artifactId>guiceyfruit-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>${groupId}</groupId>
+      <artifactId>guice-servlet</artifactId>
+      <version>${guice-version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.guiceyfruit</groupId>
