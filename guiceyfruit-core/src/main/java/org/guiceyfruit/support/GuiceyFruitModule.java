@@ -20,10 +20,10 @@ package org.guiceyfruit.support;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
+import com.google.inject.MembersInjector;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
-import com.google.inject.MembersInjector;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.internal.Lists;
 import com.google.inject.internal.Maps;
@@ -32,8 +32,8 @@ import com.google.inject.matcher.AbstractMatcher;
 import static com.google.inject.matcher.Matchers.any;
 import com.google.inject.name.Names;
 import com.google.inject.spi.InjectionListener;
-import com.google.inject.spi.TypeListener;
 import com.google.inject.spi.TypeEncounter;
+import com.google.inject.spi.TypeListener;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -112,18 +112,30 @@ public abstract class GuiceyFruitModule extends AbstractModule {
     return answer;
   }
 
+  /**
+   * Binds a post injection hook method annotated with the given annotation to the given method
+   * handler.
+   */
   protected <A extends Annotation> void bindMethodHandler(final Class<A> annotationType,
       final MethodHandler methodHandler) {
 
     bindMethodHandler(annotationType, encounterProvider(methodHandler));
   }
 
+  /**
+   * Binds a post injection hook method annotated with the given annotation to the given method
+   * handler.
+   */
   protected <A extends Annotation> void bindMethodHandler(final Class<A> annotationType,
       final Key<? extends MethodHandler> methodHandlerKey) {
 
     bindMethodHandler(annotationType, encounterProvider(methodHandlerKey));
   }
 
+  /**
+   * Binds a post injection hook method annotated with the given annotation to the given method
+   * handler.
+   */
   protected <A extends Annotation> void bindMethodHandler(final Class<A> annotationType,
       final Class<? extends MethodHandler> methodHandlerType) {
 
@@ -362,7 +374,8 @@ public abstract class GuiceyFruitModule extends AbstractModule {
    * Returns true if the value to be injected is of the correct type otherwise an error is raised on
    * the encounter and false is returned
    */
-  protected <I> void checkInjectedValueType(Object value, Class<?> type, TypeEncounter<I> encounter) {
+  protected <I> void checkInjectedValueType(Object value, Class<?> type,
+      TypeEncounter<I> encounter) {
     // TODO check the type
   }
 
@@ -374,7 +387,8 @@ public abstract class GuiceyFruitModule extends AbstractModule {
    *
    * with this <code> bind(KMyType.class, SomeAnnotation.class) </code>
    */
-  protected <T> LinkedBindingBuilder<T> bind(Class<T> type, Class<? extends Annotation> annotationType) {
+  protected <T> LinkedBindingBuilder<T> bind(Class<T> type,
+      Class<? extends Annotation> annotationType) {
     return bind(Key.get(type, annotationType));
   }
 
