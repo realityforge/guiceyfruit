@@ -25,7 +25,7 @@
     -->
 
     <!-- OSGi bundles properties -->
-    <guiceyfruit.osgi.import.pkg>!javax.xml.bind.annotation.adapters,*</guiceyfruit.osgi.import.pkg>
+    <guiceyfruit.osgi.import.pkg>*</guiceyfruit.osgi.import.pkg>
     <guiceyfruit.osgi.activator></guiceyfruit.osgi.activator>
     <guiceyfruit.osgi.private.pkg>!*</guiceyfruit.osgi.private.pkg>
     <guiceyfruit.osgi.export>${guiceyfruit.osgi.export.pkg};${guiceyfruit.osgi.version}</guiceyfruit.osgi.export>
@@ -188,9 +188,9 @@
       </dependency>
 
       <dependency>
-        <groupId>aopalliance</groupId>
-        <artifactId>aopalliance</artifactId>
-        <version>1.0</version>
+        <groupId>org.apache.servicemix.bundles</groupId>
+        <artifactId>org.apache.servicemix.bundles.aopalliance</artifactId>
+        <version>1.0_1</version>
       </dependency>
 
       <dependency>

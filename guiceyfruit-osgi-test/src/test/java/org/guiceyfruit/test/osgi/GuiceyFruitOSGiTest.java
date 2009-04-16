@@ -18,13 +18,22 @@
 
 package org.guiceyfruit.test.osgi;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import javax.annotation.Resource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.guiceyfruit.jsr250.Jsr250Module;
+import org.guiceyfruit.support.GuiceyFruitModule;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.ops4j.pax.exam.CoreOptions.*;
+import static org.ops4j.pax.exam.CoreOptions.equinox;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.logProfile;
@@ -52,6 +61,29 @@ public class GuiceyFruitOSGiTest {
     for (Bundle b : bundleContext.getBundles()) {
       System.out.println("Bundle " + b.getBundleId() + " : " + b.getSymbolicName());
     }
+
+    Guice.createInjector(new GuiceyFruitModule() {
+    });
+
+    Injector injector = Guice.createInjector(new Jsr250Module() {
+      protected void configure() {
+        super.configure();
+
+        bind(MyBean.class);
+
+        bindInstance("foo", new AnotherBean("Foo"));
+        bindInstance("xyz", new AnotherBean("XYZ"));
+      }
+    });
+
+    MyBean bean = injector.getInstance(MyBean.class);
+    assertNotNull("Should have instantiated the bean", bean);
+    assertNotNull("Should have injected a foo", bean.foo);
+    assertNotNull("Should have injected a bar", bean.bar);
+
+    assertEquals("Should have injected correct foo", "Foo", bean.foo.name);
+    assertEquals("Should have injected correct bar", "XYZ", bean.bar.name);
+
   }
 
   @Configuration
@@ -62,12 +94,40 @@ public class GuiceyFruitOSGiTest {
         // this is how you set the default log level when using pax logging (logProfile)
         systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("INFO"),
 
-        // a maven dependency. This must be a bundle already.
-        // TODO
-        mavenBundle().groupId("org.guiceyfruit").artifactId("guiceyfruit-core").version("2.0-SNAPSHOT"),
+        // TODO why can't we find these from the maven pom.xml with transitive dependency?
+        mavenBundle().groupId("org.guiceyfruit").artifactId("guiceyfruit-core").version(
+            "2.0-SNAPSHOT"),
+        mavenBundle().groupId("org.guiceyfruit").artifactId("guice-all").version("2.0-SNAPSHOT"),
+        mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.aopalliance").version("1.0_1"),
 
-        //mavenBundle().groupId("org.guiceyfruit").artifactId("guiceyfruit-core"),
+        // TODO what OSGi bundle should we be using?
+        // we can move to the one from servicemix when its released
+        //mavenBundle().groupId("org.apache.servicemix.specs").artifactId("org.apache.servicemix.specs.jsr250-1.0").version("1.4.0"),
+
+        wrappedBundle(
+            mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").version("1.0")),
 
         equinox());
   }
+
+  public static class MyBean {
+    @Resource
+    public AnotherBean foo;
+
+    public AnotherBean bar;
+
+    @Resource(name = "xyz")
+    public void bar(AnotherBean bar) {
+      this.bar = bar;
+    }
+  }
+
+  static class AnotherBean {
+    public String name = "undefined";
+
+    AnotherBean(String name) {
+      this.name = name;
+    }
+  }
+
 }

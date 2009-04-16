@@ -46,14 +46,20 @@
         <include>commons-logging:commons-logging</include>
         <include>org.guiceyfruit:guice-all</include>
         <include>org.guiceyfruit:guice-servlet</include>
+
+        <!-- lets use the OSGi bundle versions -->
         <include>javax.annotation:jsr250-api</include>
-        
+        <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.aopalliance</include>
+<!--
+        <include>javax.annotation:jsr250-api</include>
+        <include>aopalliance:aopalliance</include>
+-->
+
 <!--
         <include>com.google.code.google-collections:google-collect</include>
         <include>cglib:cglib</include>
         <include>asm:asm</include>
 -->
-        <include>aopalliance:aopalliance</include>
       </includes>
     </dependencySet>
     

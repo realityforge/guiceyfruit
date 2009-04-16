@@ -65,10 +65,9 @@
     </dependency>
 
     <dependency>
-      <groupId>aopalliance</groupId>
-      <artifactId>aopalliance</artifactId>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.aopalliance</artifactId>
     </dependency>
-
   </dependencies>
 
   <build>

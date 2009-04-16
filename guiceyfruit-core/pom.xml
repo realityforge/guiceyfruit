@@ -17,7 +17,6 @@
       org.guiceyfruit.*
     </guiceyfruit.osgi.export.pkg>
     <guiceyfruit.osgi.import>
-      org.guiceyfruit.jsr250;resolution:=optional,
       javax.naming;resolution:=optional,
       javax.naming.spi;resolution:=optional,
       *
@@ -39,8 +38,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>aopalliance</groupId>
-      <artifactId>aopalliance</artifactId>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.aopalliance</artifactId>
     </dependency>
     <dependency>
       <groupId>${groupId}</groupId>
@@ -53,6 +52,15 @@
       <artifactId>jsr250-api</artifactId>
       <version>1.0</version>
     </dependency>
+    <!-- TODO switch to the OSGi bundle version of JSR 250 when its released -->
+<!--
+    <dependency>
+      <groupId>org.apache.servicemix.specs</groupId>
+      <artifactId>org.apache.servicemix.specs.jsr250-1.0</artifactId>
+      <version>1.4</version>
+    </dependency>
+-->
+
 
     <!-- testing -->
     <dependency>
