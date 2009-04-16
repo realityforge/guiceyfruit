@@ -34,8 +34,11 @@ public class ResourceWithoutJndiTest extends TestCase {
         bind(MyBean.class);
 
         bind(AnotherBean.class, "foo").toInstance(new AnotherBean("Foo"));
-        bind(AnotherBean.class, "xyz").toInstance(new AnotherBean("XYZ"));
+
+        // we can use this more concise helper method
+        bindInstance("xyz", new AnotherBean("XYZ"));
       }
+
     });
 
     MyBean bean = injector.getInstance(MyBean.class);

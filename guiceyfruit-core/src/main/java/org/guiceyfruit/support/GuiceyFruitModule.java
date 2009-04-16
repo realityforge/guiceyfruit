@@ -416,4 +416,16 @@ public abstract class GuiceyFruitModule extends AbstractModule {
   protected <T> LinkedBindingBuilder<T> bind(Class<T> type, String namedText) {
     return bind(type, Names.named(namedText));
   }
+
+  /**
+   * A helper method which binds a named instance to a key defined by the given name and the
+   * instances type. So this method is short hand for
+   *
+   * <code> bind(instance.getClass(), name).toInstance(instance); </code>
+   */
+  protected <T> void bindInstance(String name, T instance) {
+    // TODO not sure the generics ninja to avoid this cast
+    Class<T> aClass = (Class<T>) instance.getClass();
+    bind(aClass, name).toInstance(instance);
+  }
 }
