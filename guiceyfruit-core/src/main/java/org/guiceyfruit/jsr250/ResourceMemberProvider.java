@@ -19,15 +19,20 @@
 package org.guiceyfruit.jsr250;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
+import com.google.inject.Binding;
+import com.google.inject.name.Names;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.lang.annotation.Annotation;
 import javax.annotation.Resource;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import org.guiceyfruit.Injectors;
 import org.guiceyfruit.support.AnnotationMemberProviderSupport;
 
 /**
@@ -37,7 +42,13 @@ import org.guiceyfruit.support.AnnotationMemberProviderSupport;
  */
 public class ResourceMemberProvider extends AnnotationMemberProviderSupport<Resource> {
 
+  private Injector injector;
   private Context context;
+
+  @Inject
+  public ResourceMemberProvider(Injector injector) {
+    this.injector = injector;
+  }
 
   public Context getContext() {
     return context;
@@ -57,7 +68,14 @@ public class ResourceMemberProvider extends AnnotationMemberProviderSupport<Reso
   protected Object provide(Resource resource, Member member, TypeLiteral<?> requiredType,
       Class<?> memberType, Annotation[] annotations) {
     String name = getJndiName(resource, member);
+    
+    Binding<?> binding = Injectors.getBinding(injector, Key.get(requiredType, Names.named(name)));
+    if (binding != null) {
+      return binding.getProvider().get();
+    }
 
+    // TODO we may want to try avoid the dependency on JNDI classes
+    // for better operation in GAE?
     try {
       if (context == null) {
         context = new InitialContext();
