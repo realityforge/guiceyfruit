@@ -29,7 +29,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.ops4j.pax.exam.CoreOptions.equinox;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
@@ -105,9 +104,10 @@ public class GuiceyFruitOSGiTest {
         //mavenBundle().groupId("org.apache.servicemix.specs").artifactId("org.apache.servicemix.specs.jsr250-1.0").version("1.4.0"),
 
         wrappedBundle(
-            mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").version("1.0")),
+            mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").version("1.0"))
 
-        equinox());
+        //equinox()
+    );
   }
 
   public static class MyBean {
