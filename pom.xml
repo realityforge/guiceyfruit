@@ -277,6 +277,13 @@
             <Private-Package>${guiceyfruit.osgi.private.pkg}</Private-Package>
             <Implementation-Title>GuiceyFruit</Implementation-Title>
             <Implementation-Version>${project.version}</Implementation-Version>
+<!--
+  TODO using a Fragment would allow us to work with any Guice distro but
+  fragments with exports not supported in Felix so we're going to use our Guicey fork  
+  which exports the internal package from Guice
+  
+            <Fragment-Host>com.google.inject</Fragment-Host>
+-->
           </instructions>
         </configuration>
       </plugin>

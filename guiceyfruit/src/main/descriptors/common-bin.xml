@@ -48,15 +48,16 @@
         <include>org.guiceyfruit:guice-servlet</include>
 
         <!-- lets use the OSGi bundle versions -->
+        <include>org.aopalliance:com.springsource.org.aopalliance</include>
+        <include>com.google.collect:com.springsource.com.google.common.collect</include>
+<!--
         <include>javax.annotation:jsr250-api</include>
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.aopalliance</include>
-<!--
-        <include>javax.annotation:jsr250-api</include>
         <include>aopalliance:aopalliance</include>
+        <include>com.google.code.google-collections:google-collect</include>
 -->
 
-<!--
-        <include>com.google.code.google-collections:google-collect</include>
+<!-- not required as inside the guice-all jar
         <include>cglib:cglib</include>
         <include>asm:asm</include>
 -->

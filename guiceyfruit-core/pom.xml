@@ -34,33 +34,44 @@
         <enabled>true</enabled>
       </releases>
     </repository>
+    <repository>
+      <id>com.springsource.repository.bundles.external</id>
+      <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+      <url>http://repository.springsource.com/maven/bundles/external</url>
+    </repository>
   </repositories>
 
   <dependencies>
-    <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.aopalliance</artifactId>
-    </dependency>
     <dependency>
       <groupId>${groupId}</groupId>
       <artifactId>guice-all</artifactId>
       <version>${guice-version}</version>
     </dependency>
-
+    <!-- OSGi bundles of Guice dependencies -->
     <dependency>
       <groupId>javax.annotation</groupId>
-      <artifactId>jsr250-api</artifactId>
-      <version>1.0</version>
+      <artifactId>com.springsource.javax.annotation</artifactId>
+      <version>1.0.0</version>
     </dependency>
-    <!-- TODO switch to the OSGi bundle version of JSR 250 when its released -->
+    <dependency>
+      <groupId>org.aopalliance</groupId>
+      <artifactId>com.springsource.org.aopalliance</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+    <!--
+        <dependency>
+          <groupId>org.apache.servicemix.bundles</groupId>
+          <artifactId>org.apache.servicemix.bundles.aopalliance</artifactId>
+        </dependency>
+    -->
+    <!-- switch to the real google collections distro when its OSGi-ified -->
 <!--
     <dependency>
-      <groupId>org.apache.servicemix.specs</groupId>
-      <artifactId>org.apache.servicemix.specs.jsr250-1.0</artifactId>
-      <version>1.4</version>
+      <groupId>com.google.collect</groupId>
+      <artifactId>com.springsource.com.google.common.collect</artifactId>
+      <version>0.8.0.20080820</version>
     </dependency>
 -->
-
 
     <!-- testing -->
     <dependency>

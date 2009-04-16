@@ -29,10 +29,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import static org.ops4j.pax.exam.CoreOptions.equinox;
+import static org.ops4j.pax.exam.CoreOptions.felix;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.logProfile;
@@ -55,10 +56,10 @@ public class GuiceyFruitOSGiTest {
 
   @Test
   public void listBundles() {
-    System.out.println("************ Hello from OSGi ************");
+    LOG.info("************ Hello from OSGi ************");
 
     for (Bundle b : bundleContext.getBundles()) {
-      System.out.println("Bundle " + b.getBundleId() + " : " + b.getSymbolicName());
+      LOG.info("Bundle " + b.getBundleId() + " : " + b.getSymbolicName());
     }
 
     Guice.createInjector(new GuiceyFruitModule() {
@@ -83,6 +84,7 @@ public class GuiceyFruitOSGiTest {
     assertEquals("Should have injected correct foo", "Foo", bean.foo.name);
     assertEquals("Should have injected correct bar", "XYZ", bean.bar.name);
 
+    LOG.info("Created bean from GuiceyFruit: " + bean);
   }
 
   @Configuration
@@ -97,17 +99,14 @@ public class GuiceyFruitOSGiTest {
         mavenBundle().groupId("org.guiceyfruit").artifactId("guiceyfruit-core").version(
             "2.0-SNAPSHOT"),
         mavenBundle().groupId("org.guiceyfruit").artifactId("guice-all").version("2.0-SNAPSHOT"),
-        mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.aopalliance").version("1.0_1"),
 
-        // TODO what OSGi bundle should we be using?
-        // we can move to the one from servicemix when its released
-        //mavenBundle().groupId("org.apache.servicemix.specs").artifactId("org.apache.servicemix.specs.jsr250-1.0").version("1.4.0"),
+        // Guice dependencies
+        mavenBundle().groupId("javax.annotation")
+            .artifactId("com.springsource.javax.annotation").version("1.0.0"),
+        mavenBundle().groupId("org.aopalliance")
+            .artifactId("com.springsource.org.aopalliance").version("1.0.0"),
 
-        wrappedBundle(
-            mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").version("1.0"))
-
-        //equinox()
-    );
+        felix(), equinox());
   }
 
   public static class MyBean {
