@@ -31,14 +31,16 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.ops4j.pax.exam.CoreOptions.equinox;
 import static org.ops4j.pax.exam.CoreOptions.felix;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import org.ops4j.pax.exam.Inject;
+import static org.ops4j.pax.exam.MavenUtils.asInProject;
 import org.ops4j.pax.exam.Option;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.logProfile;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.options.MavenUrlProvisionOption;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
@@ -95,18 +97,19 @@ public class GuiceyFruitOSGiTest {
         // this is how you set the default log level when using pax logging (logProfile)
         systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("INFO"),
 
-        // TODO why can't we find these from the maven pom.xml with transitive dependency?
-        mavenBundle().groupId("org.guiceyfruit").artifactId("guiceyfruit-core").version(
-            "2.0-SNAPSHOT"),
-        mavenBundle().groupId("org.guiceyfruit").artifactId("guice-all").version("2.0-SNAPSHOT"),
+        mavenBundleAsInProject("org.guiceyfruit", "guiceyfruit-core"),
+        mavenBundleAsInProject("org.guiceyfruit", "guice-all"),
 
         // Guice dependencies
-        mavenBundle().groupId("javax.annotation")
-            .artifactId("com.springsource.javax.annotation").version("1.0.0"),
-        mavenBundle().groupId("org.aopalliance")
-            .artifactId("com.springsource.org.aopalliance").version("1.0.0"),
+        mavenBundleAsInProject("javax.annotation", "com.springsource.javax.annotation"),
+        mavenBundleAsInProject("org.aopalliance", "com.springsource.org.aopalliance"),
 
         felix(), equinox());
+  }
+
+  /** TODO we can remove this method when 0.4.1 of Pax Exam comes out! */
+  public static MavenUrlProvisionOption mavenBundleAsInProject(String groupId, String artifactId) {
+    return mavenBundle().groupId(groupId).artifactId(artifactId).version(asInProject());
   }
 
   public static class MyBean {

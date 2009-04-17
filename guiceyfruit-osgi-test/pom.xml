@@ -81,16 +81,31 @@
       <scope>test</scope>
     </dependency>
 
-
-    <!-- Here's the stuff we want to provision our osgi runtime with -->
     <dependency>
       <groupId>${groupId}</groupId>
       <artifactId>guiceyfruit-core</artifactId>
       <version>${version}</version>
-      <scope>provided</scope>
+      <scope>test</scope>
     </dependency>
 
-    
   </dependencies>
+
+  <build>
+    <plugins>
+      <!-- generate dependencies versions -->
+      <plugin>
+        <groupId>org.apache.servicemix.tooling</groupId>
+        <artifactId>depends-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-depends-file</id>
+            <goals>
+              <goal>generate-depends-file</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>
