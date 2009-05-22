@@ -1,9 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.guiceyfruit</groupId>
   <artifactId>parent</artifactId>
-  <version>2.0-SNAPSHOT</version>
+  <version>2.0</version>
   <packaging>pom</packaging>
 
   <name>GuiceyFruit Framework</name>
@@ -12,7 +11,7 @@
   <properties>
     <!-- allow it to be overloaded to specify a test module to override -->
     <!-- see: http://code.google.com/p/guiceyfruit/wiki/Testing -->
-    <org.guiceyfruit.modules/>
+    <org.guiceyfruit.modules />
 
     <!-- versions -->
     <felix-version>1.4.1</felix-version>
@@ -22,7 +21,7 @@
 
     <!-- OSGi bundles properties -->
     <guiceyfruit.osgi.import.pkg>*</guiceyfruit.osgi.import.pkg>
-    <guiceyfruit.osgi.activator/>
+    <guiceyfruit.osgi.activator />
     <guiceyfruit.osgi.private.pkg>!*</guiceyfruit.osgi.private.pkg>
     <guiceyfruit.osgi.export>${guiceyfruit.osgi.export.pkg};${guiceyfruit.osgi.version}</guiceyfruit.osgi.export>
     <guiceyfruit.osgi.version>version=${project.version}</guiceyfruit.osgi.version>
@@ -74,9 +73,9 @@
   </distributionManagement>
 
   <scm>
-    <connection>scm:svn:http://guiceyfruit.googlecode.com/svn/trunk</connection>
-    <developerConnection>scm:svn:https://guiceyfruit.googlecode.com/svn/trunk</developerConnection>
-    <url>http://guiceyfruit.googlecode.com/svn/trunk/</url>
+    <connection>scm:svn:http://guiceyfruit.googlecode.com/svn/tags/2.0</connection>
+    <developerConnection>scm:svn:https://guiceyfruit.googlecode.com/svn/tags/2.0</developerConnection>
+    <url>http://guiceyfruit.googlecode.com/svn/tags/2.0</url>
   </scm>
 
   <dependencyManagement>
