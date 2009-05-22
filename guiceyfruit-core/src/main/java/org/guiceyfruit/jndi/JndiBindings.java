@@ -22,7 +22,6 @@ import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
-import com.google.inject.jndi.JndiIntegration;
 import com.google.inject.name.Named;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -106,7 +105,7 @@ public class JndiBindings {
     // like 'className/name' to map to @Named annotations
     // or even 'className@annotationType(values) etc
     try {
-      Class<?> type = Classes.loadClass(expression, JndiIntegration.class.getClassLoader());
+      Class<?> type = Classes.loadClass(expression, JndiBindings.class.getClassLoader());
       return injector.getProvider(type);
     }
     catch (ClassNotFoundException e) {

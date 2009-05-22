@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.guiceyfruit</groupId>
   <artifactId>parent</artifactId>
@@ -11,17 +12,17 @@
   <properties>
     <!-- allow it to be overloaded to specify a test module to override -->
     <!-- see: http://code.google.com/p/guiceyfruit/wiki/Testing -->
-    <org.guiceyfruit.modules />
+    <org.guiceyfruit.modules/>
 
     <!-- versions -->
     <felix-version>1.4.1</felix-version>
 
-    <guice-version>2.0-beta-7</guice-version>
+    <guice-version>2.0</guice-version>
     <!--<guice-version>2.0-SNAPSHOT</guice-version>-->
 
     <!-- OSGi bundles properties -->
     <guiceyfruit.osgi.import.pkg>*</guiceyfruit.osgi.import.pkg>
-    <guiceyfruit.osgi.activator />
+    <guiceyfruit.osgi.activator/>
     <guiceyfruit.osgi.private.pkg>!*</guiceyfruit.osgi.private.pkg>
     <guiceyfruit.osgi.export>${guiceyfruit.osgi.export.pkg};${guiceyfruit.osgi.version}</guiceyfruit.osgi.export>
     <guiceyfruit.osgi.version>version=${project.version}</guiceyfruit.osgi.version>
@@ -272,15 +273,40 @@
             <Private-Package>${guiceyfruit.osgi.private.pkg}</Private-Package>
             <Implementation-Title>GuiceyFruit</Implementation-Title>
             <Implementation-Version>${project.version}</Implementation-Version>
-<!--
-  TODO using a Fragment would allow us to work with any Guice distro but
-  fragments with exports not supported in Felix so we're going to use our Guicey fork  
-  which exports the internal package from Guice
-  
-            <Fragment-Host>com.google.inject</Fragment-Host>
--->
+            <!--
+              TODO using a Fragment would allow us to work with any Guice distro but
+              fragments with exports not supported in Felix so we're going to use our Guicey fork
+              which exports the internal package from Guice
+
+                        <Fragment-Host>com.google.inject</Fragment-Host>
+            -->
           </instructions>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
