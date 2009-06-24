@@ -37,6 +37,7 @@
       <scope>runtime</scope>
       <includes>
         <include>org.guiceyfruit:guiceyfruit-core</include>
+        <include>org.guiceyfruit:guiceyfruit-ejb</include>
         <include>org.guiceyfruit:guiceyfruit-jpa</include>
         <include>org.guiceyfruit:guiceyfruit-junit3</include>
         <include>org.guiceyfruit:guiceyfruit-junit4</include>

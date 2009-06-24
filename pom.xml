@@ -34,6 +34,7 @@
 
   <modules>
     <module>guiceyfruit-core</module>
+    <module>guiceyfruit-ejb</module>
     <module>guiceyfruit-jpa</module>
     <module>guiceyfruit-junit3</module>
     <module>guiceyfruit-junit4</module>
@@ -83,6 +84,12 @@
       <dependency>
         <groupId>org.guiceyfruit</groupId>
         <artifactId>guiceyfruit-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.guiceyfruit</groupId>
+        <artifactId>guiceyfruit-ejb</artifactId>
         <version>${project.version}</version>
       </dependency>
 

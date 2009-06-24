@@ -15,44 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.guiceyfruit.ejb.support;
 
-package org.guiceyfruit.jsr250;
-
-import com.google.inject.Binding;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
-import org.guiceyfruit.Injectors;
-import org.guiceyfruit.support.AnnotationMemberProviderSupport;
+import org.guiceyfruit.jsr250.NamedProviderSupport;
 
-import javax.annotation.Resource;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import javax.ejb.EJB;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
 /**
- * Injects fields or methods with the results of the {@link Resource} annotation
- *
  * @version $Revision: 1.1 $
  */
-public class ResourceMemberProvider extends NamedProviderSupport<Resource> {
-
-    public boolean isNullParameterAllowed(Resource annotation, Method method, Class<?> parameterType,
-                                          int parameterIndex) {
-        // TODO can a @Resource be optional?
+public class EJBMemberProvider extends NamedProviderSupport<EJB> {
+    public boolean isNullParameterAllowed(EJB annotation, Method method, Class<?> parameterType, int parameterIndex) {
         return false;
     }
 
-    protected Object provide(Resource resource, Member member, TypeLiteral<?> requiredType,
-                             Class<?> memberType, Annotation[] annotations) {
-        String name = getValueName(resource.name(), member);
+    protected Object provide(EJB annotation, Member member, TypeLiteral<?> requiredType, Class<?> memberType, Annotation[] annotations) {
+        String name = getValueName(annotation.beanName(), member);
         return provideObjectFromNamedBindingOrJndi(requiredType, name);
     }
-
 }

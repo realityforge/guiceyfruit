@@ -50,6 +50,11 @@
 
     <dependency>
       <groupId>org.guiceyfruit</groupId>
+      <artifactId>guiceyfruit-ejb</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.guiceyfruit</groupId>
       <artifactId>guiceyfruit-jpa</artifactId>
     </dependency>
 
