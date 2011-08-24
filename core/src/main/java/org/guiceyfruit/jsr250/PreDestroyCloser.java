@@ -34,7 +34,7 @@ public class PreDestroyCloser implements Closer {
   private AnnotatedMethodCache methodCache = new AnnotatedMethodCache(PreDestroy.class);
 
   public void close(Object object) throws Throwable {
-    Class<? extends Object> type = object.getClass();
+    Class<?> type = object.getClass();
     Method method = methodCache.getMethod(type);
     if (method != null) {
       if (method != null) {
