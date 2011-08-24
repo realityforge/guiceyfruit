@@ -37,7 +37,7 @@
     <module>guiceyfruit-ejb</module>
     <module>guiceyfruit-jpa</module>
     <module>guiceyfruit-junit3</module>
-    <module>guiceyfruit-junit4</module>
+    <!--<module>guiceyfruit-junit4</module>-->
     <module>guiceyfruit-testng</module>
   </modules>
 
