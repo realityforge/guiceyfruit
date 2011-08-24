@@ -33,12 +33,12 @@
   </properties>
 
   <modules>
-    <module>guiceyfruit-core</module>
-    <module>guiceyfruit-ejb</module>
-    <module>guiceyfruit-jpa</module>
-    <module>guiceyfruit-junit3</module>
+    <module>core</module>
+    <module>ejb</module>
+    <module>jpa</module>
+    <module>junit3</module>
     <!--<module>guiceyfruit-junit4</module>-->
-    <module>guiceyfruit-testng</module>
+    <module>testng</module>
   </modules>
 
   <repositories>
