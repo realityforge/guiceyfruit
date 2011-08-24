@@ -42,7 +42,6 @@
     <module>guiceyfruit-spring</module>
     <module>guiceyfruit-spring-converter</module>
     <module>guiceyfruit-osgi-test</module>
-    <module>guiceyfruit</module>
   </modules>
 
   <repositories>
