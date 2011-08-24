@@ -25,7 +25,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
 /**
- * A useful base class for implementors meaning they only have to implement a single method whether
+ * A useful base class for implementers meaning they only have to implement a single method whether
  * a Field or Method parameter is being injected
  *
  * @version $Revision: 1.1 $
