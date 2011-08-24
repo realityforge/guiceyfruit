@@ -37,13 +37,11 @@ public class PreDestroyCloser implements Closer {
     Class<?> type = object.getClass();
     Method method = methodCache.getMethod(type);
     if (method != null) {
-      if (method != null) {
         try {
           method.invoke(object);
         }
         catch (InvocationTargetException e) {
           throw e.getTargetException();
-        }
       }
     }
   }
