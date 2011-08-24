@@ -1,5 +1,5 @@
-*.iws
-*.iml
-*.ipr
-*/target/
-.DS_Store
+/*.iws
+/*.iml
+/*/*.iml
+/*.ipr
+/*/target
