@@ -7,7 +7,7 @@
     <version>2.1-SNAPSHOT</version>
   </parent>
   <artifactId>guiceyfruit-junit3</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <name>GuiceyFruit :: JUnit3</name>
 
   <properties>
