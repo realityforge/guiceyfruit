@@ -82,6 +82,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.apache.servicemix.bundles</groupId>
+        <artifactId>org.apache.servicemix.bundles.aopalliance</artifactId>
+        <version>1.0_1</version>
+      </dependency>
+
+      <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
         <version>1.0.4</version>
