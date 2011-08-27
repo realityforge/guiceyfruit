@@ -21,6 +21,12 @@ package org.guiceyfruit.jpa;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import javax.persistence.Cache;
+import javax.persistence.PersistenceUnitUtil;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.metamodel.Metamodel;
 import junit.framework.TestCase;
 
 import javax.persistence.EntityManager;
@@ -51,7 +57,32 @@ public class InjectionTest extends TestCase {
                         new EntityManagerFactory() {
                             boolean open = true;
 
-                            public EntityManager createEntityManager() {
+                          public CriteriaBuilder getCriteriaBuilder()
+                          {
+                            return null;
+                          }
+
+                          public Metamodel getMetamodel()
+                          {
+                            return null;
+                          }
+
+                          public Map<String, Object> getProperties()
+                          {
+                            return null;
+                          }
+
+                          public Cache getCache()
+                          {
+                            return null;
+                          }
+
+                          public PersistenceUnitUtil getPersistenceUnitUtil()
+                          {
+                            return null;
+                          }
+
+                          public EntityManager createEntityManager() {
                                 return stubEntityManager;
                             }
 
@@ -66,6 +97,8 @@ public class InjectionTest extends TestCase {
                             public boolean isOpen() {
                                 return open;
                             }
+
+
                         }
                 );
             }
@@ -191,6 +224,96 @@ public class InjectionTest extends TestCase {
                 // TODO
                 return null;
             }
+
+          public <T> T find( final Class<T> entityClass, final Object primaryKey, final Map<String, Object> properties )
+          {
+            return null;
+          }
+
+          public <T> T find( final Class<T> entityClass, final Object primaryKey, final LockModeType lockMode )
+          {
+            return null;
+          }
+
+          public <T> T find( final Class<T> entityClass, final Object primaryKey, final LockModeType lockMode, final Map<String, Object> properties )
+          {
+            return null;
+          }
+
+          public void lock( final Object entity, final LockModeType lockMode, final Map<String, Object> properties )
+          {
+          
+          }
+
+          public void refresh( final Object entity, final Map<String, Object> properties )
+          {
+          
+          }
+
+          public void refresh( final Object entity, final LockModeType lockMode )
+          {
+          
+          }
+
+          public void refresh( final Object entity, final LockModeType lockMode, final Map<String, Object> properties )
+          {
+          
+          }
+
+          public void detach( final Object entity )
+          {
+          
+          }
+
+          public LockModeType getLockMode( final Object entity )
+          {
+            return null;
+          }
+
+          public void setProperty( final String propertyName, final Object value )
+          {
+          
+          }
+
+          public Map<String, Object> getProperties()
+          {
+            return null;
+          }
+
+          public <T> TypedQuery<T> createQuery( final CriteriaQuery<T> criteriaQuery )
+          {
+            return null;
+          }
+
+          public <T> TypedQuery<T> createQuery( final String qlString, final Class<T> resultClass )
+          {
+            return null;
+          }
+
+          public <T> TypedQuery<T> createNamedQuery( final String name, final Class<T> resultClass )
+          {
+            return null;
+          }
+
+          public <T> T unwrap( final Class<T> cls )
+          {
+            return null;
+          }
+
+          public EntityManagerFactory getEntityManagerFactory()
+          {
+            return null;
+          }
+
+          public CriteriaBuilder getCriteriaBuilder()
+          {
+            return null;
+          }
+
+          public Metamodel getMetamodel()
+          {
+            return null;
+          }
         };
     }
 

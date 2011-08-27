@@ -31,6 +31,7 @@ import org.guiceyfruit.support.CloseFailedException;
 import org.guiceyfruit.support.HasScopeAnnotation;
 import org.guiceyfruit.support.internal.CloseErrorsImpl;
 import com.google.common.base.Preconditions;
+import com.google.inject.spi.CachingProvider;
 
 /**
  * Represents a scope which caches objects around until the scope is closed.

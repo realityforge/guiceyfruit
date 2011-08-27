@@ -376,7 +376,7 @@ public final class Errors implements Serializable {
           InjectionPoint injectionPoint = dependency.getInjectionPoint();
           if (injectionPoint != null) {
             Member member = injectionPoint.getMember();
-            Class<? extends Member> memberType = MoreTypes.getRawType( member );
+            Class<? extends Member> memberType = MoreTypes.memberType(member);
             if (memberType == Field.class) {
               fmt.format("  for field at %s%n", StackTraceElements.forMember(member));
             } else if (memberType == Method.class || memberType == Constructor.class) {

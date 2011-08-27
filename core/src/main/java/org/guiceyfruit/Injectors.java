@@ -52,8 +52,7 @@ import org.guiceyfruit.support.Closers;
 import org.guiceyfruit.support.CompositeCloser;
 import org.guiceyfruit.support.HasScopeAnnotation;
 import org.guiceyfruit.support.internal.CloseErrorsImpl;
-
-//import com.google.inject.spi.CachedValue;
+import com.google.inject.spi.CachedValue;
 
 /** @version $Revision: 1.1 $ */
 public class Injectors {

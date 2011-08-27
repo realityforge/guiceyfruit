@@ -21,11 +21,27 @@
       <groupId>javax.annotation</groupId>
       <artifactId>com.springsource.javax.annotation</artifactId>
       <version>1.0.0</version>
+      <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>org.aopalliance</groupId>
-      <artifactId>com.springsource.org.aopalliance</artifactId>
-      <version>1.0.0</version>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.aopalliance</artifactId>
+      <version>1.0_1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>r09</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-ejb_3.1_spec</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.javax.persistence</groupId>
+      <artifactId>hibernate-jpa-2.0-api</artifactId>
+      <version>1.0.0.Final</version>
     </dependency>
 
     <!-- testing -->
