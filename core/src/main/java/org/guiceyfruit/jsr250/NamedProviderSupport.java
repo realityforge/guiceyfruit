@@ -17,23 +17,20 @@
  */
 package org.guiceyfruit.jsr250;
 
-import org.guiceyfruit.support.AnnotationMemberProviderSupport;
-import org.guiceyfruit.Injectors;
-
+import com.google.inject.Binding;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.ProvisionException;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Member;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-
-import com.google.inject.Inject;
-import com.google.inject.TypeLiteral;
-import com.google.inject.Binding;
-import com.google.inject.Key;
-import com.google.inject.ProvisionException;
-import com.google.inject.Injector;
-import com.google.inject.name.Names;
-
-import java.lang.reflect.Member;
-import java.lang.annotation.Annotation;
+import org.guiceyfruit.Injectors;
+import org.guiceyfruit.support.AnnotationMemberProviderSupport;
 
 /**
  * A useful base class for any provider which looks up values by name annotations or named

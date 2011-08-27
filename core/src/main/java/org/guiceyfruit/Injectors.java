@@ -18,6 +18,8 @@
 
 package org.guiceyfruit;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
 import com.google.inject.Guice;
@@ -29,12 +31,9 @@ import com.google.inject.Scope;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.BindingImpl;
-import com.google.inject.internal.Lists;
 import com.google.inject.internal.Scoping;
-import com.google.inject.internal.Sets;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.name.Names;
-import com.google.inject.spi.CachedValue;
 import com.google.inject.util.Modules;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -53,6 +52,8 @@ import org.guiceyfruit.support.Closers;
 import org.guiceyfruit.support.CompositeCloser;
 import org.guiceyfruit.support.HasScopeAnnotation;
 import org.guiceyfruit.support.internal.CloseErrorsImpl;
+
+//import com.google.inject.spi.CachedValue;
 
 /** @version $Revision: 1.1 $ */
 public class Injectors {

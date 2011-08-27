@@ -18,6 +18,9 @@
 
 package org.guiceyfruit.support;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.MembersInjector;
@@ -25,11 +28,7 @@ import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
 import com.google.inject.binder.LinkedBindingBuilder;
-import com.google.inject.internal.Lists;
-import com.google.inject.internal.Maps;
-import com.google.inject.internal.Sets;
 import com.google.inject.matcher.AbstractMatcher;
-import static com.google.inject.matcher.Matchers.any;
 import com.google.inject.name.Names;
 import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.TypeEncounter;
@@ -42,8 +41,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.guiceyfruit.Configures;
-import static org.guiceyfruit.support.EncounterProvider.encounterProvider;
 import org.guiceyfruit.support.internal.MethodKey;
+import static com.google.inject.matcher.Matchers.any;
+import static org.guiceyfruit.support.EncounterProvider.encounterProvider;
 
 /**
  * Adds some new helper methods to the base Guice module

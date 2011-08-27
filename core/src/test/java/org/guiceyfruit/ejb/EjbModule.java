@@ -27,7 +27,7 @@ import javax.ejb.EJB;
  *
  * @version $Revision: 1.1 $
  */
-public class EjbModule  extends Jsr250Module {
+public class EjbModule extends Jsr250Module {
   @Override
   protected void configure() {
     super.configure();

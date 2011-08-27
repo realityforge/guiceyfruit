@@ -18,10 +18,10 @@
 
 package org.guiceyfruit.support;
 
+import com.google.inject.TypeLiteral;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import com.google.inject.TypeLiteral;
 
 /**
  * A provider of an annotation based injection point which can use the value of an annotation

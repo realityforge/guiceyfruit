@@ -18,7 +18,7 @@
 
 package org.guiceyfruit.support;
 
-import com.google.inject.internal.Lists;
+import com.google.common.collect.Lists;
 import java.util.List;
 import org.guiceyfruit.support.internal.CloseErrorsImpl;
 

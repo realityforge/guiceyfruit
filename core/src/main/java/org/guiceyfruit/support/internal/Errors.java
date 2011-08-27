@@ -16,17 +16,15 @@
 
 package org.guiceyfruit.support.internal;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.inject.CreationException;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
 import com.google.inject.TypeLiteral;
-import com.google.inject.internal.ImmutableList;
-import com.google.inject.internal.Lists;
 import com.google.inject.internal.MatcherAndConverter;
 import com.google.inject.internal.MoreTypes;
-import static com.google.inject.internal.Preconditions.checkArgument;
-import static com.google.inject.internal.Preconditions.checkNotNull;
 import com.google.inject.internal.SourceProvider;
 import com.google.inject.internal.StackTraceElements;
 import com.google.inject.spi.Dependency;
@@ -44,6 +42,8 @@ import java.util.Comparator;
 import java.util.Formatter;
 import java.util.Iterator;
 import java.util.List;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A collection of error messages. If this type is passed as a method parameter, the method is
@@ -276,7 +276,7 @@ public final class Errors implements Serializable {
   }
 
   public Errors makeImmutable() {
-    errors = ImmutableList.copyOf(errors);
+    errors = ImmutableList.copyOf( errors );
     return this;
   }
 
@@ -376,7 +376,7 @@ public final class Errors implements Serializable {
           InjectionPoint injectionPoint = dependency.getInjectionPoint();
           if (injectionPoint != null) {
             Member member = injectionPoint.getMember();
-            Class<? extends Member> memberType = MoreTypes.memberType(member);
+            Class<? extends Member> memberType = MoreTypes.getRawType( member );
             if (memberType == Field.class) {
               fmt.format("  for field at %s%n", StackTraceElements.forMember(member));
             } else if (memberType == Method.class || memberType == Constructor.class) {

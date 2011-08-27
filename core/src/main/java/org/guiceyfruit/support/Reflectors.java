@@ -18,12 +18,12 @@
 
 package org.guiceyfruit.support;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.inject.TypeLiteral;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
-import com.google.inject.TypeLiteral;
-import com.google.inject.internal.Lists;
-import com.google.inject.internal.Maps;
 import org.guiceyfruit.support.internal.MethodKey;
 
 /**

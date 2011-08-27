@@ -18,8 +18,8 @@
 
 package org.guiceyfruit.support.internal;
 
-import java.util.Arrays;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 /**
  * A key of methods comparing the method name and parameter types

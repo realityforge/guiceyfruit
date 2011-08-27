@@ -18,23 +18,11 @@
 
 package org.guiceyfruit.jsr250;
 
-import com.google.inject.Binding;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
-import org.guiceyfruit.Injectors;
-import org.guiceyfruit.support.AnnotationMemberProviderSupport;
-
-import javax.annotation.Resource;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import javax.annotation.Resource;
 
 /**
  * Injects fields or methods with the results of the {@link Resource} annotation
